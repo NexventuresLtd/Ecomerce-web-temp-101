@@ -1,9 +1,0 @@
-// Export all navbar components for easier importing
-export { default as Navbar } from './NavBar';
-export { default as Logo } from './Logo';
-export { default as NavLinks } from './NavLinks';
-export { default as NavItem } from './NavItem';
-export { default as DropdownMenu } from './DropdownMenu';
-export { default as ThemeToggle } from './ThemeToggle';
-export { default as LanguageSelector } from './LanguageSelector';
-export { default as MobileMenu } from './MobileMenu';

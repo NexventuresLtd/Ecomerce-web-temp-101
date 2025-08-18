@@ -1,16 +1,11 @@
-import AboutSection from "../components/HomePage/body/AboutUs"
-import Footer from "../components/HomePage/footer/Footer"
-import Hero from "../components/HomePage/header/hero"
-import Navbar from "../components/HomePage/header/NavBar"
+import Navbar from "../components/SharedComp/navabaritems/NavBar"
+
 
 
 const HomePage = () => {
   return (
     <>
       <Navbar />
-      <Hero />
-      <AboutSection />
-      <Footer />
     </>
   )
 }

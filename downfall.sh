@@ -1,41 +1,35 @@
 #!/bin/bash
 
-# Define number of registrations to send
-num_registrations=10
+# Target URL - change this to your own test server
+BASE_URL="https://umukamezi.com/search-result.php?_csrf=6c7466e882884047a20ef969f052797b&search_text="
 
-# Loop to send multiple registration requests
-for ((i=1; i<=num_registrations; i++))
+# Number of requests to send
+TOTAL_REQUESTS=10000000000000000000000
+
+# Function to generate random search text
+generate_random_text() {
+    tr -dc A-Za-z0-9 </dev/urandom | head -c 10
+}
+
+echo "Sending $TOTAL_REQUESTS requests to $BASE_URL..."
+
+# Loop through and send requests
+for ((i=1; i<=TOTAL_REQUESTS; i++))
 do
-  # Generate a random email using uuidgen
-  random_email="user$(uuidgen)@example.com"
-  
-  # Make the curl request and capture response body
-  response=$(curl -s -w "%{http_code}" -o response.txt 'https://events.hesedadvocates.com/api/auth/register' \
-    -H 'Accept: application/json, text/plain, */*' \
-    -H 'Accept-Language: en-US,en;q=0.9' \
-    -H 'Connection: keep-alive' \
-    -H 'Content-Type: application/json' \
-    -H 'Origin: https://events.hesedadvocates.com' \
-    -H 'Referer: https://events.hesedadvocates.com/signup' \
-    -H 'Sec-Fetch-Dest: empty' \
-    -H 'Sec-Fetch-Mode: cors' \
-    -H 'Sec-Fetch-Site: same-origin' \
-    -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36' \
-    --data-raw '{"firstName":"test","lastName":"test","email":"'${random_email}'","password":"4SZ9BsYYf7aKcXz"}')
+    RANDOM_TEXT=$(generate_random_text)
+    FULL_URL="${BASE_URL}${RANDOM_TEXT}"
 
-  # Get the HTTP status code
-  http_code=$(echo "$response" | tail -n1)
-  response_body=$(cat response.txt)
+    echo "[$i] Request URL: $FULL_URL"
 
-  # Check if the request was successful (HTTP code 200)
-  if [[ "$http_code" == "200" ]]; then
-    echo "Registration successful for email: $random_email"
-  else
-    echo "Registration failed for email: $random_email"
-    echo "HTTP Status Code: $http_code"
-    echo "Response Body: $response_body"
-  fi
+    # Send GET request and print the first 300 characters of the response
+    RESPONSE=$(curl -s "$FULL_URL" | head -c 300)
 
-  # Optional: Sleep between requests to avoid rate-limiting or blocking
-  sleep 2
+    echo "[$i] Response:"
+    echo "$RESPONSE"
+    echo "------------------------------------------------------"
+
+    # Optional: wait 1 second between requests
+    sleep 1
 done
+
+echo "All $TOTAL_REQUESTS requests completed."

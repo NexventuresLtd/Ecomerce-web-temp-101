@@ -1,9 +1,0 @@
-// Export all footer components for easier importing
-export { default as Footer } from './Footer';
-export { default as CompanyInfo } from './CompanyInfo';
-export { default as QuickLinks } from './QuickLinks';
-export { default as ContactInfo } from './ContactInfo';
-export { default as Newsletter } from './Newsletter';
-export { default as SocialMediaLinks } from './SocialMediaLinks';
-export { default as BackToTopButton } from './BackToTopButton';
-export { default as FooterBottomBar } from './FooterBottomBar';
