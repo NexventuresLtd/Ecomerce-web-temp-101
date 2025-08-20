@@ -123,16 +123,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
         handleSignup({ "type": "LOCAL", provider: null });
     };
     const handelGoogleLogin = (msg?: string, userInfo?: any) => {
-        const formData = new FormData();
-        formData.append('fname', userInfo?.given_name);
-        formData.append('lname', userInfo?.family_name);
-        formData.append('email', userInfo?.email);
-        formData.append('phone', userInfo?.sub);
-        formData.append('password', userInfo?.email);
-        formData.append('confirmPassword', userInfo?.email);
-        formData.append('profile_pic', userInfo?.picture);
-
-        handleSignup({ "type": "GOOGLE", "provider": userInfo?.sub, "email": userInfo?.email, "msg": msg })
+        handleSignup({ "type": "GOOGLE", "provider": userInfo?.sub, "data": userInfo, "msg": msg })
     }
     const steps = [
         {

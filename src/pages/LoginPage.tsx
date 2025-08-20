@@ -163,17 +163,26 @@ const AnimatedLoginPage: React.FC = () => {
         const validationErrors = validateSignupForm(signupData);
         setErrors(validationErrors);
 
-        if (Object.keys(validationErrors).length === 0) {
+
+        if (Object.keys(validationErrors).length === 0 || registerType.type == "GOOGLE") {
             setIsLoading(true);
             setErrors({});
 
             try {
-                const { confirmPassword, ...payload } = signupData;
-                console.log(signupData)
+
                 let response
                 if (registerType.type == "GOOGLE") {
-                    response = await mainAxios.post(`/auth/signUp-social-auth?provider=${registerType.type}&provider_id=${registerType.provider}`, payload);
+                    response = await mainAxios.post(`/auth/signUp-social-auth?provider=${registerType.type}&provider_id=${registerType.provider}`, {
+                        "email": registerType.data.email,
+                        "fname": registerType.data.given_name,
+                        "lname": registerType.data.family_name,
+                        "password": registerType.data.email,
+                        "phone": registerType.data.email,
+                        "profile_pic": registerType.data.picture
+
+                    });
                 } else {
+                    const { confirmPassword, ...payload } = signupData;
                     response = await mainAxios.post('/auth/register', payload);
                 }
 
