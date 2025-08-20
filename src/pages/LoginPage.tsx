@@ -169,6 +169,7 @@ const AnimatedLoginPage: React.FC = () => {
 
             try {
                 const { confirmPassword, ...payload } = signupData;
+                console.log(signupData)
                 let response
                 if (registerType.type == "GOOGLE") {
                     response = await mainAxios.post(`/auth/signUp-social-auth?provider=${registerType.type}&provider_id=${registerType.provider}`, payload);
