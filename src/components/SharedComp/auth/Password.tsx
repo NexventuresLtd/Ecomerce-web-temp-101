@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Check, X, ArrowLeft, Loader, UserPlus } from 'lucide-react';
+import { Mail, Check, X, ArrowLeft, Loader } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
 
 interface PasswordResetProps {
@@ -14,7 +14,7 @@ const PasswordReset: React.FC<PasswordResetProps> = ({
     onBack,
     setShowSignupModal,
     onSuccess,
-    className = ''
+
 }) => {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
