@@ -15,6 +15,7 @@ import GoogleLoginButton from '../SharedComp/auth/GoogleLoginButton';
 
 interface LoginProps {
     isClothPulled: boolean;
+    setPasswordreset: React.Dispatch<React.SetStateAction<boolean>> ;
     errors: ValidationErrors;
     formData: FormData;
     setFormData: React.Dispatch<React.SetStateAction<FormData>>;
@@ -25,7 +26,7 @@ interface LoginProps {
     setSignupData: React.Dispatch<React.SetStateAction<SignupFormData>>;
     isLoading: boolean;
 }
-const Loginform = ({ isClothPulled, errors, formData, setFormData, handleLogin, handleGoogleLogin, setShowSignupModal, isLoading }: LoginProps) => {
+const Loginform = ({ isClothPulled, setPasswordreset, errors, formData, setFormData, handleLogin, handleGoogleLogin, setShowSignupModal, isLoading }: LoginProps) => {
     const [showPassword, setShowPassword] = useState(false);
     const handelGoogleLogin = (msg?: string, userInfo?: any) => {
         handleGoogleLogin({ "type": "GOOGLE", "provider": null, "email": userInfo?.email, "msg": msg })
@@ -131,15 +132,20 @@ const Loginform = ({ isClothPulled, errors, formData, setFormData, handleLogin, 
                             <div className="flex justify-between mt-3">
                                 {/* Create Account Link */}
                                 <button
-                                    onClick={() => setShowSignupModal(true)}
+                                    onClick={() => {setShowSignupModal(true);setPasswordreset(false)}}
                                     className="text-slate-800 hover:text-slate-800/80 font-medium text-sm transition-colors"
                                 >
                                     Create new account
                                 </button>
 
                                 <button
+                                    onClick={() => {
+                                        setPasswordreset(true);
+                                        setShowSignupModal(true)
+                                    }}
+
                                     type="button"
-                                    className="text-slate-800 hover:text-slate-800/80 text-sm font-medium transition-colors"
+                                    className="text-slate-800 cursor-pointer hover:text-slate-800/80 text-sm font-medium transition-colors"
                                 >
                                     Forgot Password?
                                 </button>

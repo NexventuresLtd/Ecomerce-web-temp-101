@@ -10,6 +10,7 @@ import { handleApiError } from '../app/utils/HandelHttpError';
 import { validateForm, validateSignupForm } from '../app/utils/AuthValidation';
 import { AlertCircle, CheckCircle2, X } from 'lucide-react';
 import OTPVerification from '../components/SharedComp/auth/OTPCleint';
+import PasswordReset from '../components/SharedComp/auth/Password';
 
 
 
@@ -19,6 +20,8 @@ const AnimatedLoginPage: React.FC = () => {
     const [showOTP, setShowOTP] = useState(false)
     const [NewUSer, setNewUser] = useState()
     const [showSignupModal, setShowSignupModal] = useState(false);
+    const [Passwordreset, setPasswordreset] = useState<boolean>(false);
+
     const [formData, setFormData] = useState<FormData>({ email: '', password: '' });
     const [signupData, setSignupData] = useState<SignupFormData>({
         email: '',
@@ -53,7 +56,7 @@ const AnimatedLoginPage: React.FC = () => {
                 setNotification({ type: null, message: null });
                 setErrors({});
             }, 2000);
-            return () => { clearTimeout(timer1);  };
+            return () => { clearTimeout(timer1); };
         }
     }, [notification]);
 
@@ -221,7 +224,17 @@ const AnimatedLoginPage: React.FC = () => {
 
     const handleBack = () => {
         setShowOTP(false);
+        setShowSignupModal(false)
         // Navigate back to email input
+    };
+    //------------------forgot password succes
+    const handleSuccess = () => {
+        console.log('Password reset instructions sent successfully');
+        // Optionally navigate away or show additional UI
+        setNotification({
+            type: 'success',
+            message: 'Password reset instructions sent successfully'
+        });
     };
     return (
         <div className="min-h-screen bg-primary relative overflow-hidden">
@@ -294,6 +307,7 @@ const AnimatedLoginPage: React.FC = () => {
                         handleLogin={handleLogin}
                         handleGoogleLogin={handleGoogleLogin}
                         setShowSignupModal={setShowSignupModal}
+                        setPasswordreset={setPasswordreset}
                         isClothPulled={isClothPulled}
                         isLoading={isLoading}
                         errors={errors}
@@ -307,7 +321,7 @@ const AnimatedLoginPage: React.FC = () => {
 
             {/* Signup Modal */}
             <AnimatePresence>
-                {showSignupModal && (
+                {showSignupModal && !Passwordreset && (
                     <RegisterForm
                         setShowSignupModal={setShowSignupModal}
                         isLoading={isLoading}
@@ -316,6 +330,13 @@ const AnimatedLoginPage: React.FC = () => {
                         signupData={signupData}
                         successMessage={successMessage}
                         setSignupData={setSignupData}
+                    />
+                )}
+                {showSignupModal && Passwordreset && (
+                    <PasswordReset
+                        setShowSignupModal={setShowSignupModal}
+                        onBack={handleBack}
+                        onSuccess={handleSuccess}
                     />
                 )}
             </AnimatePresence>
