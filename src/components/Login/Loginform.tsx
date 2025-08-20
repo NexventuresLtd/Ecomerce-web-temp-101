@@ -109,7 +109,7 @@ const Loginform = ({ isClothPulled, setPasswordreset, errors, formData, setFormD
                                 <motion.div
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="mb-4 p-3 hidden bg-red-50 text-red-700 rounded-lg flex items-start space-x-2"
+                                    className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg flex items-start space-x-2"
                                 >
                                     <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
                                     <span>{errors.general}</span>

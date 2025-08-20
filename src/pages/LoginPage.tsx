@@ -55,7 +55,7 @@ const AnimatedLoginPage: React.FC = () => {
             const timer1 = setTimeout(() => {
                 setNotification({ type: null, message: null });
                 setErrors({});
-            }, 2000);
+            }, 3000);
             return () => { clearTimeout(timer1); };
         }
     }, [notification]);
