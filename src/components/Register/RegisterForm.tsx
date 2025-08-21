@@ -139,7 +139,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             type="text"
                             value={signupData.fname}
                             onChange={(e) => setSignupData({ ...signupData, fname: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                            className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
                             placeholder="Enter your first name"
                             required
                         />
@@ -157,7 +157,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             type="text"
                             value={signupData.lname}
                             onChange={(e) => setSignupData({ ...signupData, lname: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                            className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
                             placeholder="Enter your last name"
                             required
                         />
@@ -181,7 +181,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             type="email"
                             value={signupData.email}
                             onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                            className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
                             placeholder="Enter your email"
                             required
                         />
@@ -199,7 +199,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             type="tel"
                             value={signupData.phone || ''}
                             onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                            className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
                             placeholder="+1234567890"
                         />
                     </div>
@@ -218,7 +218,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             type="password"
                             value={signupData.password}
                             onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                            className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
                             placeholder="Create a password (min 6 characters)"
                             required
                         />
@@ -236,7 +236,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             type="password"
                             value={signupData.confirmPassword}
                             onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                            className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
                             placeholder="Confirm your password"
                             required
                         />
@@ -305,13 +305,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
     ];
 
     return (
-        <motion.div
-            initial={{ opacity: 0, zoom: 0.7 }}
-            animate={{ opacity: 1, zoom: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={() => setShowSignupModal(false)}
-        >
+
             <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -416,7 +410,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
                                 (step === 2 && !signupData.email) ||
                                 (step === 3 && (!signupData.password || !signupData.confirmPassword || signupData.password !== signupData.confirmPassword))
                             }
-                            className="px-6 py-2 bg-primary text-white rounded-lg disabled:opacity-50"
+                            className="px-6 py-3 bg-primary text-white rounded-lg disabled:opacity-50"
                         >
                             Next
                         </motion.button>
@@ -426,7 +420,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             whileTap={{ scale: 0.98 }}
                             onClick={handleSubmit}
                             disabled={isLoading || !!successMessage || !signupData.profile_pic}
-                            className="px-6 py-2 bg-primary text-white rounded-lg disabled:opacity-50 flex items-center space-x-2"
+                            className="px-6 py-3 bg-primary text-white rounded-lg disabled:opacity-50 flex items-center space-x-2"
                         >
                             {isLoading ? (
                                 <>
@@ -456,7 +450,6 @@ const RegisterForm: React.FC<RegisterProps> = ({
                     <GoogleLoginButton title="Sign Up With" handelGoogleLogin={handelGoogleLogin} />
                 </div>
             </motion.div>
-        </motion.div>
     );
 };
 

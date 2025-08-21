@@ -27,10 +27,12 @@ interface LoginProps {
     setErrors: React.Dispatch<React.SetStateAction<ValidationErrors>>;
     setSignupData: React.Dispatch<React.SetStateAction<SignupFormData>>;
     isLoading: boolean;
+    setIsVerified: React.Dispatch<React.SetStateAction<boolean>>;
+    isVerified: boolean;
 }
-const Loginform = ({ isClothPulled, setPasswordreset, errors, formData, setFormData, handleLogin, handleGoogleLogin, setShowSignupModal, isLoading }: LoginProps) => {
+const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsVerified, formData, setFormData, handleLogin, handleGoogleLogin, setShowSignupModal, isLoading }: LoginProps) => {
     const [showPassword, setShowPassword] = useState(false);
-    const [isVerified, setIsVerified] = useState(false);
+
     const [whichMethod, setwhichMethod] = useState("smart");
 
     const handelGoogleLogin = (msg?: string, userInfo?: any) => {
@@ -62,13 +64,13 @@ const Loginform = ({ isClothPulled, setPasswordreset, errors, formData, setFormD
 
                                 <div className="bg-blue-50 rounded-xl p-4 flex gap-4 justify-center mb-4">
                                     <button
-                                    onClick={()=>setwhichMethod("smart")}
+                                        onClick={() => setwhichMethod("smart")}
                                         className="bg-white px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-100 hover:scale-105 transition-all duration-200"
                                     >
                                         Smart
                                     </button>
                                     <button
-                                    onClick={()=>setwhichMethod("pattern")}
+                                        onClick={() => setwhichMethod("pattern")}
                                         className="bg-white px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-100 hover:scale-105 transition-all duration-200"
                                     >
                                         Pattern

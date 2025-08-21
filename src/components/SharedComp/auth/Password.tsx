@@ -123,7 +123,7 @@ const PasswordReset: React.FC<PasswordResetProps> = ({
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                                     placeholder="Enter your email"
                                     disabled={isLoading}
                                     autoComplete="email"
@@ -147,7 +147,7 @@ const PasswordReset: React.FC<PasswordResetProps> = ({
                             <button
                                 type="submit"
                                 disabled={isLoading || !email}
-                                className="w-full py-3 px-4 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                                className="w-full py-4 px-4 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                             >
                                 {isLoading ? (
                                     <>

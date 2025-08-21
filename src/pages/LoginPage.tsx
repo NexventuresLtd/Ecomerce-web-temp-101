@@ -21,7 +21,7 @@ const AnimatedLoginPage: React.FC = () => {
     const [NewUSer, setNewUser] = useState()
     const [showSignupModal, setShowSignupModal] = useState(false);
     const [Passwordreset, setPasswordreset] = useState<boolean>(false);
-
+    const [isVerified, setIsVerified] = useState(false);
     const [formData, setFormData] = useState<FormData>({ email: '', password: '' });
     const [signupData, setSignupData] = useState<SignupFormData>({
         email: '',
@@ -313,43 +313,48 @@ const AnimatedLoginPage: React.FC = () => {
                         onBack={handleBack}
                     />
                     :
-                    <Loginform
-                        handleLogin={handleLogin}
-                        handleGoogleLogin={handleGoogleLogin}
-                        setShowSignupModal={setShowSignupModal}
-                        setPasswordreset={setPasswordreset}
-                        isClothPulled={isClothPulled}
-                        isLoading={isLoading}
-                        errors={errors}
-                        formData={formData}
-                        setErrors={setErrors}
-                        setSignupData={setSignupData}
-                        setFormData={setFormData} />
+                    <>
+                        {!showSignupModal &&
+                            <Loginform
+                                isVerified={isVerified}
+                                setIsVerified={setIsVerified}
+                                handleLogin={handleLogin}
+                                handleGoogleLogin={handleGoogleLogin}
+                                setShowSignupModal={setShowSignupModal}
+                                setPasswordreset={setPasswordreset}
+                                isClothPulled={isClothPulled}
+                                isLoading={isLoading}
+                                errors={errors}
+                                formData={formData}
+                                setErrors={setErrors}
+                                setSignupData={setSignupData}
+                                setFormData={setFormData} />
+                        }
+                        {/* Signup Modal */}
+                        {showSignupModal && !Passwordreset && (
+                            <RegisterForm
+                                setShowSignupModal={setShowSignupModal}
+                                isLoading={isLoading}
+                                errors={errors}
+                                handleSignup={handleSignup}
+                                signupData={signupData}
+                                successMessage={successMessage}
+                                setSignupData={setSignupData}
+                            />
+                        )}
+                        {showSignupModal && Passwordreset && (
+                            <PasswordReset
+                                setShowSignupModal={setShowSignupModal}
+                                onBack={handleBack}
+                                onSuccess={handleSuccess}
+                            />
+                        )}
+                    </>
                 }
 
             </div>
 
-            {/* Signup Modal */}
-            <AnimatePresence>
-                {showSignupModal && !Passwordreset && (
-                    <RegisterForm
-                        setShowSignupModal={setShowSignupModal}
-                        isLoading={isLoading}
-                        errors={errors}
-                        handleSignup={handleSignup}
-                        signupData={signupData}
-                        successMessage={successMessage}
-                        setSignupData={setSignupData}
-                    />
-                )}
-                {showSignupModal && Passwordreset && (
-                    <PasswordReset
-                        setShowSignupModal={setShowSignupModal}
-                        onBack={handleBack}
-                        onSuccess={handleSuccess}
-                    />
-                )}
-            </AnimatePresence>
+
         </div>
     );
 };
