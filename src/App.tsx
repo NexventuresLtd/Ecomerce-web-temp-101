@@ -10,7 +10,7 @@ export default function App() {
       <ScrollToHash />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<AnimatedLoginPage />} />
+        <Route path="/authentication" element={<AnimatedLoginPage />} />
         <Route path="*" element={<HomePage />} />
       </Routes>
     </BrowserRouter>
