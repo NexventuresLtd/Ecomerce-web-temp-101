@@ -12,13 +12,13 @@ export const handVariant: Variants = {
 };
 
 export const formVariant: Variants = {
-    hidden: { opacity: 0, y: 150,zoom:0.5 },
+    hidden: { opacity: 0, y: 0,zoom:0.9 },
     visible: {
         opacity: 1,
         zoom:1,
         y: 0,
         transition: {
-            duration: 0.8,
+            duration: 0.2,
             ease: "easeOut",
             delay: 0.3
         }
