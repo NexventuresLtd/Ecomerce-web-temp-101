@@ -59,7 +59,7 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
                         </span>
                         {product.originalPrice && (
                             <span className="text-lg text-gray-500 line-through">
-                                ${product.originalPrice}
+                                Rwf {product.originalPrice}
                             </span>
                         )}
                     </div>

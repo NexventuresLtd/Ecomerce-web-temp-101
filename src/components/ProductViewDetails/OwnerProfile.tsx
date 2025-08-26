@@ -137,10 +137,10 @@ const OwnerProfile: React.FC<OwnerProfileProps> = ({ owner, products }) => {
 
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center space-x-2">
-                                                <span className="font-bold text-gray-900">${product.price}</span>
+                                                <span className="font-bold text-gray-900">Rwf {product.price}</span>
                                                 {product.originalPrice && (
                                                     <span className="text-xs text-gray-500 line-through">
-                                                        ${product.originalPrice}
+                                                        Rwf {product.originalPrice}
                                                     </span>
                                                 )}
                                             </div>

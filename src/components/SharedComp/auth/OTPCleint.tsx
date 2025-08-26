@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, RotateCcw, Check, X, ArrowLeft } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
@@ -86,9 +86,20 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-        if (e.key === 'Backspace' && !otp[index] && index > 0) {
-            // Move to previous input on backspace if current is empty
+        if (e.key === 'Backspace') {
+            if (!otp[index] && index > 0) {
+                // Move to previous input on backspace if current is empty
+                setActiveInput(index - 1);
+            }
+            
+            // Clear current input on backspace
+            const newOtp = [...otp];
+            newOtp[index] = '';
+            setOtp(newOtp);
+        } else if (e.key === 'ArrowLeft' && index > 0) {
             setActiveInput(index - 1);
+        } else if (e.key === 'ArrowRight' && index < 5) {
+            setActiveInput(index + 1);
         }
     };
 
@@ -118,6 +129,12 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Don't submit if already loading, successful, or OTP is incomplete
+        if (isLoading || success || otp.some(d => d === '')) {
+            return;
+        }
+        
         setIsLoading(true);
         setError('');
 
@@ -144,6 +161,8 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
     };
 
     const resendOTP = async () => {
+        if (countdown > 0) return;
+        
         setIsLoading(true);
         setError('');
 
@@ -154,7 +173,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
             });
 
             if (response.status === 200) {
-                setVerificationCode(response.data.verification_Code);
+                setVerificationCode(response.data.verification_Code || response.data.verification_code);
                 setOtp(new Array(6).fill(''));
                 setActiveInput(0);
                 setCountdown(60); // 60 seconds countdown
@@ -169,13 +188,20 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
     // Auto-submit when all OTP fields are filled
     useEffect(() => {
         if (otp.every(value => value !== '') && verificationCode) {
-            handleSubmit({ preventDefault: () => { } } as React.FormEvent);
+            // Using a synthetic event to avoid type issues
+            const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
+            handleSubmit(syntheticEvent);
         }
     }, [otp, verificationCode]);
 
     // Initialize with a verification code when component mounts
     useEffect(() => {
         resendOTP();
+        
+        // Cleanup function to cancel any pending operations
+        return () => {
+            setIsLoading(false);
+        };
     }, []);
 
     return (
@@ -192,6 +218,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
                         onClick={onBack}
                         className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                         aria-label="Go back"
+                        type="button"
                     >
                         <ArrowLeft size={20} />
                     </button>
@@ -218,7 +245,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
                     {otp.map((digit, index) => (
                         <motion.input
                             key={index}
-                            ref={(el) => { (inputRefs.current[index] = el) }}
+                            ref={(el) => { inputRefs.current[index] = el; }}
                             type="text"
                             inputMode="numeric"
                             pattern="[A-Z0-9]*"
@@ -281,11 +308,11 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
                     onClick={resendOTP}
                     disabled={isLoading || countdown > 0}
                     className="text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto"
+                    type="button"
                 >
                     <RotateCcw size={16} className="mr-1" />
                     {countdown > 0 ? `Resend in ${countdown}s` : 'Resend Code'}
                 </button>
-                <a href='/' className='text-primary text-center block mt-2'>Home</a>
             </div>
         </motion.div>
     );

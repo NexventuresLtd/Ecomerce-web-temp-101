@@ -65,9 +65,9 @@ const ProductDetails: React.FC = () => {
 
             {/* Price */}
             <div className="flex items-center space-x-4">
-              <span className="text-4xl font-bold text-blue-600">${product.price}</span>
+              <span className="text-4xl font-bold text-blue-600">Rwf {product.price}</span>
               {product.originalPrice && (
-                <span className="text-xl text-gray-500 line-through">${product.originalPrice}</span>
+                <span className="text-xl text-gray-500 line-through">Rwf {product.originalPrice}</span>
               )}
             </div>
 

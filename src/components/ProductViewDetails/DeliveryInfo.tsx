@@ -12,7 +12,7 @@ const DeliveryInfo: React.FC<DeliveryInfoProps> = ({ product }) => {
       <div className="flex items-center space-x-3">
         <Truck className="w-5 h-5 text-green-600" />
         <span className="text-gray-700">
-          {product.deliveryFee === 0 ? 'Free delivery' : `Delivery fee: $${product.deliveryFee}`}
+          {product.deliveryFee === 0 ? 'Free delivery' : `Delivery fee: Rwf ${product.deliveryFee}`}
         </span>
       </div>
       <div className="flex items-center space-x-3">
