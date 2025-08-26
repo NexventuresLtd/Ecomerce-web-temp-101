@@ -354,7 +354,6 @@ const AnimatedLoginPage: React.FC = () => {
 
             </div>
 
-
         </div>
     );
 };

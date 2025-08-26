@@ -229,7 +229,7 @@ const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsV
 
                                 {/* Google Sign In */}
                                 <GoogleLoginButton title="Sign In With" handelGoogleLogin={handelGoogleLogin} />
-
+                                <a href='/' className='text-primary text-center block cursor-pointer hover:text-secondary'>Back To Shopping</a>
 
                             </div>
                         </>

@@ -285,6 +285,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
                     <RotateCcw size={16} className="mr-1" />
                     {countdown > 0 ? `Resend in ${countdown}s` : 'Resend Code'}
                 </button>
+                <a href='/' className='text-primary text-center block mt-2'>Home</a>
             </div>
         </motion.div>
     );
