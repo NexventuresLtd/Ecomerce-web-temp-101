@@ -1,3 +1,101 @@
 @import "tailwindcss";
 
-.bg-primary{ background-color: #1d293d; }   /* Dark Blue */
+/* colors.css */
+
+/* =========================
+   Primary Palette
+   ========================= */
+.bg-primary-light { background-color: #24364f; }
+.bg-primary { background-color: #1d293d; }
+.bg-primary-dark { background-color: #141b29; }
+
+.text-primary-light { color: #24364f; }
+.text-primary { color: #1d293d; }
+.text-primary-dark { color: #141b29; }
+
+.border-primary-light { border-color: #24364f; }
+.border-primary { border-color: #1d293d; }
+.border-primary-dark { border-color: #141b29; }
+
+/* Hover Variants */
+.hover\:bg-primary:hover { background-color: #1d293d; }
+.hover\:text-primary:hover { color: #1d293d; }
+
+/* =========================
+   Secondary Palette
+   ========================= */
+.bg-secondary-light { background-color: #60a5fa; }
+.bg-secondary { background-color: #3b82f6; }
+.bg-secondary-dark { background-color: #1e40af; }
+
+.text-secondary-light { color: #60a5fa; }
+.text-secondary { color: #3b82f6; }
+.text-secondary-dark { color: #1e40af; }
+
+.hover\:bg-secondary:hover { background-color: #3b82f6; }
+.hover\:text-secondary:hover { color: #3b82f6; }
+
+/* =========================
+   Accent Palette
+   ========================= */
+.bg-accent-light { background-color: #fcd34d; }
+.bg-accent { background-color: #f59e0b; }
+.bg-accent-dark { background-color: #b45309; }
+
+.text-accent-light { color: #fcd34d; }
+.text-accent { color: #f59e0b; }
+.text-accent-dark { color: #b45309; }
+
+.hover\:bg-accent:hover { background-color: #f59e0b; }
+.hover\:text-accent:hover { color: #f59e0b; }
+
+/* =========================
+   Neutrals
+   ========================= */
+.bg-light { background-color: #f9fafb; }
+.bg-dark { background-color: #111827; }
+.text-muted { color: #6b7280; }
+
+.hover\:bg-light:hover { background-color: #f9fafb; }
+.hover\:bg-dark:hover { background-color: #111827; }
+
+/* =========================
+   Feedback
+   ========================= */
+.bg-success { background-color: #10b981; }
+.bg-warning { background-color: #facc15; }
+.bg-error { background-color: #ef4444; }
+
+.text-success { color: #10b981; }
+.text-warning { color: #facc15; }
+.text-error { color: #ef4444; }
+
+.hover\:bg-success:hover { background-color: #10b981; }
+.hover\:bg-warning:hover { background-color: #facc15; }
+.hover\:bg-error:hover { background-color: #ef4444; }
+
+/* =========================
+   Opacity Utilities (Tailwind-like)
+   ========================= */
+.bg-primary\/90 { background-color: rgba(29, 41, 61, 0.9); }
+.bg-primary\/80 { background-color: rgba(29, 41, 61, 0.8); }
+.bg-primary\/70 { background-color: rgba(29, 41, 61, 0.7); }
+.bg-primary\/50 { background-color: rgba(29, 41, 61, 0.5); }
+.bg-primary\/30 { background-color: rgba(29, 41, 61, 0.3); }
+.bg-primary\/20 { background-color: rgba(29, 41, 61, 0.2); }
+
+.bg-secondary\/90 { background-color: rgba(59, 130, 246, 0.9); }
+.bg-secondary\/70 { background-color: rgba(59, 130, 246, 0.7); }
+.bg-secondary\/50 { background-color: rgba(59, 130, 246, 0.5); }
+.bg-secondary\/30 { background-color: rgba(59, 130, 246, 0.3); }
+.bg-secondary\/20 { background-color: rgba(59, 130, 246, 0.2); }
+
+.bg-accent\/90 { background-color: rgba(245, 158, 11, 0.9); }
+.bg-accent\/70 { background-color: rgba(245, 158, 11, 0.7); }
+.bg-accent\/50 { background-color: rgba(245, 158, 11, 0.5); }
+.bg-accent\/30 { background-color: rgba(245, 158, 11, 0.3); }
+.bg-accent\/20 { background-color: rgba(245, 158, 11, 0.2); }
+
+.bg-success\/20 { background-color: rgba(16, 185, 129, 0.2); }
+.bg-warning\/20 { background-color: rgba(250, 204, 21, 0.2); }
+.bg-error\/20 { background-color: rgba(239, 68, 68, 0.2); }

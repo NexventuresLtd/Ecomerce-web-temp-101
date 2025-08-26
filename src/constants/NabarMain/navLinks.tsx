@@ -10,14 +10,15 @@ export const mainNavItems: NavItem[] = [
     { name: 'Home', href: '#', hasDropdown: false },
     { name: 'Cameras', href: '#', hasDropdown: true },
     { name: 'Computers', href: '#', hasDropdown: true },
-    { name: 'Pro Video', href: '#', hasDropdown: true },
-    { name: 'Lighting', href: '#', hasDropdown: true },
     { name: 'Pro Audio', href: '#', hasDropdown: true },
-    { name: 'Camcorders', href: '#', hasDropdown: true },
-    { name: 'Audio-Visual', href: '#', hasDropdown: true },
-    { name: 'Mobile', href: '#', hasDropdown: true },
-    { name: 'Used', href: '#', hasDropdown: true },
-    { name: 'More...', href: '#', hasDropdown: true }
+    { name: 'Pro Games', href: '#', hasDropdown: true },
+    { name: 'Tablet', href: '#', hasDropdown: true },
+    { name: 'Lighting', href: '#', hasDropdown: true },
+    { name: 'Phone', href: '#', hasDropdown: true },
+    { name: 'Other Accessories', href: '#', hasDropdown: true },
+    { name: 'About Us', href: '#', hasDropdown: false },
+    { name: 'FAQ', href: '#', hasDropdown: false },
+    { name: 'Contact US', href: '#', hasDropdown: false }
 ];
 
 export const proVideoCategories: CategoryItem[] = [

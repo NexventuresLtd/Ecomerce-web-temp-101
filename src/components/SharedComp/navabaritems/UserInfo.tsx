@@ -1,5 +1,7 @@
-import { Heart, Menu, ShoppingCart, User, X } from "lucide-react";
+import { Heart, LogOut, Menu, ShoppingCart, User, X } from "lucide-react";
 import LanguageDropdown from "./LanguageChanger";
+import { getUserInfo } from "../../../app/Localstorage";
+import { logout } from "../../../app/utils/HandelLogout";
 
 interface SecondNavProps {
     isMenuOpen: boolean
@@ -24,11 +26,18 @@ export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown,
                     </div>
                 </div>
                 <div className={`${showMenu ? 'hidden xl:flex' : 'flex xl:hidden'}  items-center space-x-2`}>
-                    <User className="w-5 h-5 text-gray-600" />
-                    <div className="text-xs cursor-pointer hover:underline" onClick={() => window.location.href = '/authentication'}>
-                        <div className="text-gray-600">Hello, Log In</div>
-                        <div className="font-semibold">Account & Orders</div>
-                    </div>
+                    {!getUserInfo ? <>
+                        <User className="w-5 h-5 text-gray-600" />
+                        <div className="text-xs cursor-pointer hover:underline" onClick={() => window.location.href = '/authentication'}>
+                            <div className="text-gray-600">Hello, Log In</div>
+                            <div className="font-semibold">Account & Orders</div>
+                        </div>
+                    </>:
+                    <button className="p-2 text-xs font-bold text-red-600 cursor-pointer" onClick={()=> logout()}>
+                        <LogOut/>
+                        Logout
+                    </button>
+                }
                 </div>
                 <div className={`${showMenu ? 'hidden xl:flex' : 'flex xl:hidden'} `}>
                     {/* Language Dropdown */}

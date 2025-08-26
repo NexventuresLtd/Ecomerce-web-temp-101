@@ -1,7 +1,7 @@
 import { proVideoCategories, proVideoSubCategories } from "../../constants/NabarMain/navLinks";
 
   export const generateDropdownContent = (itemName: string) => {
-    if (itemName === 'Pro Video') {
+    if (itemName === 'Pro Audio') {
       return (
         <div className="p-6">
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 mb-6 pb-6 ">
