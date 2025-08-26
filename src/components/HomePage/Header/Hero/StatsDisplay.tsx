@@ -17,7 +17,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ stats }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.8, duration: 0.5 }}
-      className="flex items-center gap-6 text-sm text-slate-300"
+      className="flex justify-center mt-10 items-center gap-6 text-sm text-slate-300"
     >
       <div className="flex items-center gap-1">
         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />

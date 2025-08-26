@@ -20,9 +20,13 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
         }
     };
 
-    const handleMobileClick = (itemName: string) => {
+    const handleMobileClick = (item: any) => {
+        if(!item.hasDropdown){
+            window.location.href = "/"+item.name
+            return
+        }
         if (isMobile) {
-            setActiveDropdown(activeDropdown === itemName ? null : itemName);
+            setActiveDropdown(activeDropdown === item.name ? null : item.name);
         }
     };
 
@@ -41,7 +45,7 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
                                 // onMouseLeave={handleItemLeave}
                                 >
                                     <button
-                                        onClick={() => handleMobileClick(item.name)}
+                                        onClick={() => handleMobileClick(item)}
                                         className="flex items-center px-4 py-3 cursor-pointer text-white hover:bg-slate-700 transition-colors duration-200 text-sm font-medium"
                                     >
                                         {item.name}

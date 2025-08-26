@@ -50,7 +50,7 @@ const Hero: React.FC = () => {
   const currentSlideData = heroData.slides[currentSlide];
 
   return (
-    <section className="bg-primary/90 min-h-screen relative overflow-hidden">
+    <section className="bg-primary/90 min-h-[400px] relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0">
         <video
@@ -61,7 +61,8 @@ const Hero: React.FC = () => {
           playsInline      // for mobile browsers
           className="absolute top-0 left-0 w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-secondary/20 opacity-100"></div> {/* Overlay */}
+        <div className="absolute inset-0 bg-secondary/30 opacity-100"></div> {/* Overlay */}
+        <div className="absolute inset-0 bg-black/40 opacity-100"></div> {/* Overlay */}
       </div>
 
       <div className="w-full mx-auto px-6 py-12 relative z-10">
@@ -69,20 +70,20 @@ const Hero: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center hidden mb-12"
         >
           <h1 className="text-4xl font-bold text-white mb-2 uppercase animate-bounce">Umukamezi wakamejeje</h1>
           {/* <p className="text-secondary text-lg">{"Shop With The Best Shop"}</p> */}
         </motion.div>
 
         {/* Main Hero Content */}
-        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-11/12 mx-auto">
+        <div className="grid lg:grid-cols-1 justify-center gap-12 items-center max-w-11/12 mx-auto">
           {/* Content Side */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className="space-y-8 order-2 lg:order-1"
+            className="space-y-8 order-2 lg:order-1 text-center"
           >
             <AnimatePresence mode="wait">
               <motion.div
@@ -91,7 +92,7 @@ const Hero: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 30 }}
                 transition={{ duration: 0.5 }}
-                className="space-y-6"
+                className="space-y-6 m-auto"
               >
                 {/* Badge */}
                 {currentSlideData.badge && (
@@ -99,7 +100,7 @@ const Hero: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.2, duration: 0.4 }}
-                    className="inline-flex items-center gap-2 bg-secondary/20 text-secondary px-4 py-2 rounded-full text-sm font-medium border border-secondary/30"
+                    className="inline-flex justify-center items-center gap-2 bg-secondary/20 text-third px-4 py-2 rounded-full text-sm font-medium border border-secondary/30"
                   >
                     <Zap className="w-4 h-4" />
                     {currentSlideData.badge}
@@ -121,7 +122,7 @@ const Hero: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.5 }}
-                  className="text-xl md:text-2xl text-secondary font-semibold"
+                  className="text-xl md:text-2xl text-third font-semibold"
                 >
                   {currentSlideData.subtitle}
                 </motion.h3>
@@ -131,11 +132,10 @@ const Hero: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5, duration: 0.5 }}
-                  className="text-lg text-slate-300 leading-relaxed max-w-xl"
+                  className="text-lg text-slate-300 leading-relaxed max-w-xl m-auto"
                 >
                   {currentSlideData.description}
                 </motion.p>
-
                 {/* Stats */}
                 <StatsDisplay stats={currentSlideData.stats} />
 
@@ -146,6 +146,7 @@ const Hero: React.FC = () => {
                   onPrimaryClick={handlePrimaryClick}
                   onSecondaryClick={handleSecondaryClick}
                 />
+
               </motion.div>
             </AnimatePresence>
 
@@ -163,6 +164,7 @@ const Hero: React.FC = () => {
                 onDotClick={handleDotClick}
               />
             </motion.div>
+
           </motion.div>
 
           {/* Image Side */}
@@ -170,7 +172,7 @@ const Hero: React.FC = () => {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.1 }}
-            className="relative h-[400px] md:h-[500px] lg:h-[600px] order-1 lg:order-2"
+            className="relative hidden h-[400px] md:h-[500px] lg:h-[600px] order-1 lg:order-2"
           >
             <HeroImage
               currentSlide={currentSlide}

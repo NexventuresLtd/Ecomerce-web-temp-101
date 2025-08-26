@@ -2,12 +2,12 @@ import type { CategoryItem, NavItem } from "../../types/Navbar/navTypes";
 
 export const topNavItems = [
     { name: 'B2B, Gov, Students & More', href: '#' },
-    { name: 'News, Tips & Reviews', href: '#' },
+    { name: 'umukamezi250@gmail.com', href: 'mailto:umukamezi250@gmail.com' },
     { name: 'About Us', href: '#' }
 ];
 
 export const mainNavItems: NavItem[] = [
-    { name: 'Home', href: '#', hasDropdown: false },
+    { name: 'Home', href: '/', hasDropdown: false },
     { name: 'Cameras', href: '#', hasDropdown: true },
     { name: 'Computers', href: '#', hasDropdown: true },
     { name: 'Pro Audio', href: '#', hasDropdown: true },

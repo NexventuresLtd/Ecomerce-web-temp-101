@@ -28,7 +28,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                             <User className="w-5 h-5 text-gray-600" />
                             <div className='text-xs'>
                                 <div className="text-gray-600">Ask Our Experts</div>
-                                <div className="font-semibold">250.790.225.000</div>
+                                <div className="font-semibold">250781691713</div>
                             </div>
                         </div>
 

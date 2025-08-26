@@ -19,7 +19,7 @@ const CarouselControls: React.FC<CarouselControlsProps> = ({
   onDotClick 
 }) => {
   return (
-    <div className="flex items-center justify-between w-full">
+    <div className="flex items-center justify-center w-full gap-13 mt-6">
       <div className="flex gap-2">
         {Array.from({ length: totalSlides }).map((_, index) => (
           <motion.button
@@ -27,7 +27,7 @@ const CarouselControls: React.FC<CarouselControlsProps> = ({
             whileHover={{ scale: 1.2 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => onDotClick(index)}
-            className={`w-3 h-3 rounded-full transition-colors duration-200 ${index === currentSlide ? 'bg-blue-500' : 'bg-slate-600'
+            className={`w-3 h-3 rounded-full transition-colors duration-200 ${index === currentSlide ? 'bg-third' : 'bg-slate-600'
               }`}
           />
         ))}

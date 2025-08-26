@@ -19,7 +19,7 @@ const TopNav = () => {
                             <span>The Professional's Source since 1973</span>
                             <div className="flex items-center space-x-2">
                                 <Phone className="w-3 h-3" />
-                                <span>250.790.225.000</span>
+                                <span>250781691713</span>
                             </div>
                             <HelpCircle className="w-3 h-3" />
                             <MessageCircle className="w-3 h-3" />

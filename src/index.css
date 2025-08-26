@@ -27,10 +27,12 @@
 .bg-secondary-light { background-color: #60a5fa; }
 .bg-secondary { background-color: #3b82f6; }
 .bg-secondary-dark { background-color: #1e40af; }
+.bg-third { background-color: #f63b3b; }
 
 .text-secondary-light { color: #60a5fa; }
 .text-secondary { color: #3b82f6; }
 .text-secondary-dark { color: #1e40af; }
+.text-third { color: #f63b3b; }
 
 .hover\:bg-secondary:hover { background-color: #3b82f6; }
 .hover\:text-secondary:hover { color: #3b82f6; }
