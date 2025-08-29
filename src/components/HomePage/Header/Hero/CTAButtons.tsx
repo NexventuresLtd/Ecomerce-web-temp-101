@@ -27,7 +27,7 @@ const CTAButtons: React.FC<CTAButtonsProps> = ({
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={onPrimaryClick}
-        className="group bg-third text-white px-8 py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-colors duration-200"
+        className="group bg-secondary text-white px-8 py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-colors duration-200"
       >
         {primary}
         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
@@ -36,7 +36,7 @@ const CTAButtons: React.FC<CTAButtonsProps> = ({
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={onSecondaryClick}
-        className="bg-third-light text-white px-8 py-4 rounded-2xl font-semibold transition-colors duration-200 border border-slate-600"
+        className="cursor-pointer text-white px-8 py-4 rounded-2xl font-semibold transition-colors duration-200 border border-slate-600"
       >
         {secondary}
       </motion.button>

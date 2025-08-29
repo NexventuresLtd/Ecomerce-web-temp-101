@@ -22,18 +22,18 @@ const Navbar: React.FC = () => {
   }, []);
 
   // Close dropdown when clicking outside
-  useEffect(() => {
+  // useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (secondNavRef.current && !secondNavRef.current.contains(event.target as Node)) {
         setActiveDropdown(null);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+    // document.addEventListener('mousedown', handleClickOutside);
+    // return () => {
+    //   document.removeEventListener('mousedown', handleClickOutside);
+    // };
+  // }, []);
 
   // Sticky on scroll
   useEffect(() => {
@@ -65,6 +65,7 @@ const Navbar: React.FC = () => {
 
       <ThirdMenuNav
         activeDropdown={activeDropdown}
+        handleClickOutside={handleClickOutside}
         setIsMenuOpen={setIsMenuOpen}
         isMobile={isMobile}
         setActiveDropdown={setActiveDropdown}

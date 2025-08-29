@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, RotateCcw, Check, X, ArrowLeft } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
@@ -18,6 +18,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
     onBack,
     className = ''
 }) => {
+    const hasSentOtp = useRef(false);
     const [otp, setOtp] = useState<string[]>(new Array(6).fill(''));
     const [verificationCode, setVerificationCode] = useState('');
     const [activeInput, setActiveInput] = useState(0);
@@ -91,7 +92,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
                 // Move to previous input on backspace if current is empty
                 setActiveInput(index - 1);
             }
-            
+
             // Clear current input on backspace
             const newOtp = [...otp];
             newOtp[index] = '';
@@ -129,12 +130,12 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Don't submit if already loading, successful, or OTP is incomplete
         if (isLoading || success || otp.some(d => d === '')) {
             return;
         }
-        
+
         setIsLoading(true);
         setError('');
 
@@ -162,7 +163,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
 
     const resendOTP = async () => {
         if (countdown > 0) return;
-        
+
         setIsLoading(true);
         setError('');
 
@@ -189,15 +190,18 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
     useEffect(() => {
         if (otp.every(value => value !== '') && verificationCode) {
             // Using a synthetic event to avoid type issues
-            const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
+            const syntheticEvent = { preventDefault: () => { } } as React.FormEvent;
             handleSubmit(syntheticEvent);
         }
     }, [otp, verificationCode]);
 
     // Initialize with a verification code when component mounts
     useEffect(() => {
-        resendOTP();
-        
+        if (!hasSentOtp.current) {
+            resendOTP();
+            hasSentOtp.current = true;
+        }
+
         // Cleanup function to cancel any pending operations
         return () => {
             setIsLoading(false);
@@ -210,7 +214,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className={`bg-white rounded-xl shadow-lg p-6 w-full max-w-md ${className}`}
+            className={`bg-white rounded-xl shadindexow-lg p-6 w-full max-w-md ${className}`}
         >
             <div className="flex items-center justify-between mb-6">
                 {onBack && (
@@ -252,11 +256,11 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
                             value={digit}
                             onChange={(e) => handleChange(e, index)}
                             onKeyDown={(e) => handleKeyDown(e, index)}
-                            onPaste={handlePaste}
+                            onPaste={(e) => handlePaste(e)}
                             onFocus={() => setActiveInput(index)}
                             className="w-12 h-12 border border-gray-300 rounded-lg text-center text-xl font-semibold focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                             maxLength={1}
-                            disabled={isLoading || success}
+                            disabled={(isLoading && otp.some(d => d != '')) || success}
                             whileFocus={{ scale: 1.05 }}
                             transition={{ type: "spring", stiffness: 400, damping: 17 }}
                         />
@@ -293,10 +297,10 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
 
                 <button
                     type="submit"
-                    disabled={isLoading || success || otp.some(d => d === '')}
+                    disabled={(isLoading && otp.some(d => d === '')) || success}
                     className="w-full py-3 px-4 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                    {isLoading ? 'Verifying...' : success ? 'Verified!' : 'Verify Code'}
+                    {(isLoading && otp.some(d => d != '')) ? 'Verifying...' : success ? 'Verified!' : 'Verify Code'}
                 </button>
             </form>
 
@@ -305,7 +309,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
                     Didn't receive the code?
                 </p>
                 <button
-                    onClick={resendOTP}
+                    onClick={() => resendOTP()}
                     disabled={isLoading || countdown > 0}
                     className="text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto"
                     type="button"

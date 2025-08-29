@@ -1,5 +1,4 @@
 import axios from "axios";
-import CryptoJS from "crypto-js";
 import { refreshToken, token } from "../app/Localstorage";
 
 // Create Axios instance
@@ -27,7 +26,9 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Helper function to decrypt response
+/* 
+// 🔒 Helper function to decrypt response
+// Disabled for now
 export const decryptData = (encrypted: string): string | null => {
   try {
     const [ivBase64, ciphertextBase64] = encrypted.split(":");
@@ -35,11 +36,9 @@ export const decryptData = (encrypted: string): string | null => {
       throw new Error("Invalid encrypted format: expected 'iv:ciphertext'");
     }
 
-    // 👇 key must be same as SECRET_KEY_DATA (before Python pads)
     let keyStr = import.meta.env.VITE_SECRET_KEY_DATA as string;
     if (!keyStr) { throw new Error("VITE_SECRET_KEY_DATA missing") };
 
-    // Manually pad/truncate like Python did
     const keyBytes = new Uint8Array(16);
     for (let i = 0; i < Math.min(keyStr.length, 16); i++) {
       keyBytes[i] = keyStr.charCodeAt(i);
@@ -57,7 +56,7 @@ export const decryptData = (encrypted: string): string | null => {
     });
 
     const out = decrypted.toString(CryptoJS.enc.Utf8);
-    if (!out) {throw new Error("Empty result after decryption")};
+    if (!out) { throw new Error("Empty result after decryption") };
 
     return JSON.parse(out);
   } catch (err) {
@@ -65,23 +64,25 @@ export const decryptData = (encrypted: string): string | null => {
     return null;
   }
 };
+*/
 
 // RESPONSE INTERCEPTOR
 mainAxios.interceptors.response.use(
   response => {
-    // Decrypt encrypted_data if present
+    console.log("Response:", response);
+    // 🔒 Decryption disabled for now
+    /*
     if (response.data?.encrypted_data) {
       const decrypted = decryptData(response.data.encrypted_data);
-      // console.log(decrypted)
       response.data.decrypted_data = decrypted;
       delete response.data.encrypted_data;
     }
+    */
     return response;
   },
   async error => {
     const originalRequest = error.config;
 
-    // Skip token refresh for login endpoints
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
@@ -123,8 +124,6 @@ mainAxios.interceptors.response.use(
       } catch (err) {
         processQueue(err, null);
         localStorage.setItem("redirectPath", window.location.pathname);
-        // Optionally redirect to login
-        // window.location.href = "/login";
         return Promise.reject(err);
       } finally {
         isRefreshing = false;

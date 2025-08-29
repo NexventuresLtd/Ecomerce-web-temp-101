@@ -53,12 +53,8 @@ const Hero: React.FC = () => {
     <section className="bg-primary/90 min-h-[400px] relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0">
-        <video
-          src="/3dVideo/3dCamer.mp4"   // use leading / if in public folder
-          autoPlay
-          muted            // required for autoplay
-          loop             // repeat video
-          playsInline      // for mobile browsers
+        <img
+          src={currentSlideData.imageUrl}   // use leading / if in public folder     // for mobile browsers
           className="absolute top-0 left-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-secondary/30 opacity-100"></div> {/* Overlay */}
@@ -100,7 +96,7 @@ const Hero: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.2, duration: 0.4 }}
-                    className="inline-flex justify-center items-center gap-2 bg-secondary/20 text-third px-4 py-2 rounded-full text-sm font-medium border border-secondary/30"
+                    className="inline-flex justify-center items-center gap-2 bg-secondary/20 text-secondary px-4 py-2 rounded-full text-sm font-medium border border-secondary/30"
                   >
                     <Zap className="w-4 h-4" />
                     {currentSlideData.badge}
@@ -122,7 +118,7 @@ const Hero: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.5 }}
-                  className="text-xl md:text-2xl text-third font-semibold"
+                  className="text-xl md:text-2xl text-secondary font-semibold"
                 >
                   {currentSlideData.subtitle}
                 </motion.h3>

@@ -66,7 +66,7 @@ const AnimatedLoginPage: React.FC = () => {
         localStorage.setItem("authToken", newUser.access_token);
         localStorage.setItem("refresh", newUser.refresh_token);
         // Save user info
-        localStorage.setItem("userInfo", JSON.stringify(newUser.decrypted_data.UserInfo));
+        localStorage.setItem("userInfo", JSON.stringify(newUser.encrypted_data));
     }
 
     // Handle form submission
@@ -97,14 +97,14 @@ const AnimatedLoginPage: React.FC = () => {
                 const newUser = response?.data;
 
                 setNewUser(newUser)
-                if (newUser?.decrypted_data?.UserInfo?.two_factor) {
+                if (newUser?.encrypted_data?.two_factor) {
                     setShowOTP(true)
                 } else {
                     // Save tokens
                     localStorage.setItem("authToken", newUser.access_token);
                     localStorage.setItem("refresh", newUser.refresh_token);
                     // Save user info
-                    localStorage.setItem("userInfo", JSON.stringify(newUser.decrypted_data.UserInfo));
+                    localStorage.setItem("userInfo", JSON.stringify(newUser.encrypted_data));
                     window.location.href = "/"
                 }
 
@@ -143,7 +143,7 @@ const AnimatedLoginPage: React.FC = () => {
             localStorage.setItem("authToken", newUser.access_token);
             localStorage.setItem("refresh", newUser.refresh_token);
             // Save user info
-            localStorage.setItem("userInfo", JSON.stringify(newUser.decrypted_data.UserInfo));
+            localStorage.setItem("userInfo", JSON.stringify(newUser.encrypted_data));
             window.location.href = "/"
 
         } catch (error) {

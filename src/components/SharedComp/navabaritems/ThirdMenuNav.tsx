@@ -9,9 +9,10 @@ interface ThirdMenuNavProps {
     isMenuOpen: boolean;
     setIsMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setActiveDropdown: React.Dispatch<React.SetStateAction<string | null>>;
+    handleClickOutside?: (event: any) => void;
 }
 
-const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, setActiveDropdown, isMenuOpen, setIsMenuOpen }) => {
+const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, setActiveDropdown, isMenuOpen, setIsMenuOpen, handleClickOutside }) => {
     const dropdownContainerRef = useRef<HTMLDivElement>(null);
 
     const handleItemHover = (itemName: string) => {
@@ -22,7 +23,7 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
 
     const handleMobileClick = (item: any) => {
         if (!item.hasDropdown) {
-            window.location.href = "/" + item.name
+            window.location.href = item.href
             return
         }
         if (isMobile) {
@@ -33,7 +34,7 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
     return (
         <>
             <div className={`${isMobile ? 'bg-white' : 'bg-primary'} relative`}>
-                <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-full md:max-w-11/12 mx-auto px-4 sm:px-6 lg:px-2">
                     {/* Desktop Navigation */}
                     <div className="hidden xl:flex relative">
                         <div className="flex w-full">
@@ -56,7 +57,7 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
 
                         {/* Single Fixed Position Dropdown */}
                         <div
-                            onMouseLeave={() => setActiveDropdown(null)}
+                            onMouseLeave={(e) => handleClickOutside?.(e)}
                             ref={dropdownContainerRef}
                             className={`absolute left-0 top-full w-full bg-gray-100 rounded-b-2xl z-20 transition-opacity duration-200 ${activeDropdown ? 'opacity-100 visible' : 'opacity-10 invisible'
                                 }`}

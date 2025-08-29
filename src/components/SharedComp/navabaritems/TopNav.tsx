@@ -6,7 +6,7 @@ const TopNav = () => {
         <>
             {/* Top Bar */}
             <div className="bg-gray-100 border-b border-gray-200 hidden xl:block">
-                <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-full md:max-w-11/12 mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-8 text-xs">
                         <div className="flex space-x-4">
                             {topNavItems.map((item) => (

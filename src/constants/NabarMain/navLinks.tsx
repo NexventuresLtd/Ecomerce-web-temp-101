@@ -16,16 +16,16 @@ export const mainNavItems: NavItem[] = [
     { name: 'Lighting', href: '#', hasDropdown: true },
     { name: 'Phone', href: '#', hasDropdown: true },
     { name: 'Other Accessories', href: '#', hasDropdown: true },
-    { name: 'About Us', href: '#', hasDropdown: false },
+    { name: 'About Us', href: '/about', hasDropdown: false },
     { name: 'FAQ', href: '#', hasDropdown: false },
     { name: 'Contact US', href: '#', hasDropdown: false }
 ];
 
 export const proVideoCategories: CategoryItem[] = [
-    { name: 'Camcorders', image: '📹', href: '#' },
-    { name: 'Digital Cinema Cameras', image: '🎥', href: '#' },
-    { name: 'Studio & EFP Cameras', image: '📷', href: '#' },
-    { name: 'PTZ Cameras & Solutions', image: '🔄', href: '#' }
+    { name: 'Camcorders', image: '📹', href: '/products' },
+    { name: 'Digital Cinema Cameras', image: '🎥', href: '/products' },
+    { name: 'Studio & EFP Cameras', image: '📷', href: '/products' },
+    { name: 'PTZ Cameras & Solutions', image: '🔄', href: '/products' }
 ];
 
 export const proVideoSubCategories = [

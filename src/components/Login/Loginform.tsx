@@ -13,6 +13,7 @@ import { formVariant } from '../../constants/auth/authVariants';
 import type { FormData, SignupFormData, ValidationErrors } from '../../types/auth/auth';
 import GoogleLoginButton from '../SharedComp/auth/GoogleLoginButton';
 import { InteractivePatternCaptcha, SmartLogicCaptcha } from '../SharedComp/auth/rechaprtch';
+import DragCaptcha from '../SharedComp/auth/DragCaptcha';
 
 
 interface LoginProps {
@@ -33,10 +34,11 @@ interface LoginProps {
 const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsVerified, formData, setFormData, handleLogin, handleGoogleLogin, setShowSignupModal, isLoading }: LoginProps) => {
     const [showPassword, setShowPassword] = useState(false);
 
-    const [whichMethod, setwhichMethod] = useState("smart");
-
+    const [whichMethod, setwhichMethod] = useState("drag");
+    const [resetCaptcha, setResetCaptcha] = useState(false);
     const handelGoogleLogin = (msg?: string, userInfo?: any) => {
         handleGoogleLogin({ "type": "GOOGLE", "provider": null, "email": userInfo?.email, "msg": msg })
+        setResetCaptcha(prev => !prev);
     }
     //------Handel rechatp
     const handleVerify = (success: boolean) => {
@@ -64,6 +66,12 @@ const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsV
 
                                 <div className="bg-blue-50 rounded-xl p-4 flex gap-4 justify-center mb-4">
                                     <button
+                                        onClick={() => setwhichMethod("drag")}
+                                        className="bg-white px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-100 hover:scale-105 transition-all duration-200"
+                                    >
+                                        Drag
+                                    </button>
+                                    <button
                                         onClick={() => setwhichMethod("smart")}
                                         className="bg-white px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-100 hover:scale-105 transition-all duration-200"
                                     >
@@ -78,17 +86,22 @@ const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsV
                                 </div>
                             </div>
 
-                            {whichMethod == "smart" ?
-                                <SmartLogicCaptcha
-                                    onVerify={handleVerify}
-                                    theme={"light"}
+                            {whichMethod == "drag" ?
+                                <DragCaptcha
+                                    onVerify={setIsVerified}
+                                    resetTrigger={resetCaptcha}
                                 />
-                                :
-                                <InteractivePatternCaptcha
-                                    onVerify={handleVerify}
-                                    theme="light"
-                                    className=""
-                                />
+                                : whichMethod == "smart" ?
+                                    <SmartLogicCaptcha
+                                        onVerify={handleVerify}
+                                        theme={"light"}
+                                    />
+                                    :
+                                    <InteractivePatternCaptcha
+                                        onVerify={handleVerify}
+                                        theme="light"
+                                        className=""
+                                    />
                             }
                         </> :
                         <>
