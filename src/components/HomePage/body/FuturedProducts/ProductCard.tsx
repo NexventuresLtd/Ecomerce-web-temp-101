@@ -44,29 +44,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index, onProductClic
       <motion.div
         whileHover={{ scale: 1.02 }}
         transition={{ duration: 0.3 }}
-        className="relative flex justify-center items-center  h-full"
+        className="relative "
       >
-        <div className='w-full h-full'>
+        <div className='relative h-64'>
 
           {/* Product Image Section */}
-          <div className="relative h-full w-full">
-            <ProductImage
-              product={product}
-              isHovered={isHovered}
-              currentImage={currentImage}
-            />
-            <ProductBadges product={product} />
-            <ProductActions product={product} isHovered={isHovered} />
-          </div>
-
+          <ProductImage
+            product={product}
+            isHovered={isHovered}
+            currentImage={currentImage}
+          />
+          <ProductBadges product={product} />
+          <ProductActions product={product} isHovered={isHovered} />
         </div>
-        <div className='w-full h-full'>
-          {/* CTA Button */}
-          <div className="px-6 pb-6">
-            {/* Product Info Section */}
-            <ProductInfo product={product} onProductClick={onProductClick} />
-            <ProductCTA product={product} onProductClick={onProductClick} />
-          </div>
+
+
+        {/* CTA Button */}
+        <div className="px-6 pb-6">
+          {/* Product Info Section */}
+          <ProductInfo product={product} onProductClick={onProductClick} />
+          <ProductCTA product={product} onProductClick={onProductClick} />
         </div>
       </motion.div>
     </motion.div>

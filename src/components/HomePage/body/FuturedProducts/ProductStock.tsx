@@ -17,7 +17,7 @@ const ProductStock: React.FC<ProductStockProps> = ({ product }) => {
   };
 
   return (
-    <div className="mb-4">
+    <div className="">
       {getStockStatus()}
     </div>
   );

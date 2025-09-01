@@ -9,7 +9,7 @@ interface ProductPriceProps {
 
 const ProductPrice: React.FC<ProductPriceProps> = ({ product }) => {
   return (
-    <div className="flex items-center gap-3 mb-1">
+    <div className="flex items-center gap-3">
       <span className="text-lg font-bold text-gray-900">
         {RWF.format(product.price)}
       </span>

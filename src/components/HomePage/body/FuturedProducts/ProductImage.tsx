@@ -11,7 +11,7 @@ interface ProductImageProps {
 
 const ProductImage: React.FC<ProductImageProps> = ({ product, isHovered, currentImage }) => {
   return (
-    <div className="relative overflow-hidden aspect-auto h-full w-full">
+    <div className="relative overflow-hidden aspect-square h-full w-full">
       <motion.img
         src={currentImage}
         alt={product.title}

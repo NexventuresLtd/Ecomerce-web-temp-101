@@ -18,14 +18,14 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onProductClick }) =>
 
   return (
     <div className="p-6">
-      <div className="mb-2">
+      <div className="">
         <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">
           {product.category}
         </span>
       </div>
 
       <h3 
-        className="font-bold text-sm text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-primary"
+        className="font-bold text-sm text-gray-900 line-clamp-2 cursor-pointer hover:text-primary"
         onClick={handleTitleClick}
       >
         {product.title}
