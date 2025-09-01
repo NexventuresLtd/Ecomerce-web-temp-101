@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Zap } from 'lucide-react';
 
 import HeroImage from './HeroImage';
-import StatsDisplay from './StatsDisplay';
+// import StatsDisplay from './StatsDisplay';
 import CTAButtons from './CTAButtons';
 import CarouselControls from './CarouselControls';
 import { heroData } from '../../../../constants/HeroHome/HeroData';
@@ -44,13 +44,13 @@ const Hero: React.FC = () => {
   };
 
   const handleSecondaryClick = () => {
-    console.log('Secondary CTA clicked:', heroData.slides[currentSlide].ctaSecondary);
+    window.location.href = "/products";
   };
 
   const currentSlideData = heroData.slides[currentSlide];
 
   return (
-    <section className="bg-primary/90 min-h-[400px] relative overflow-hidden">
+    <section className="bg-primary/90 min-h-[500px] relative overflow-hidden justify-center items-center flex">
       {/* Background Pattern */}
       <div className="absolute inset-0">
         <img
@@ -96,7 +96,7 @@ const Hero: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.2, duration: 0.4 }}
-                    className="inline-flex justify-center items-center gap-2 bg-secondary/20 text-secondary px-4 py-2 rounded-full text-sm font-medium border border-secondary/30"
+                    className=" hidden justify-center items-center gap-2 bg-secondary/20 text-secondary px-4 py-2 rounded-full text-sm font-medium border border-secondary/30"
                   >
                     <Zap className="w-4 h-4" />
                     {currentSlideData.badge}
@@ -108,7 +108,7 @@ const Hero: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
-                  className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight"
+                  className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight"
                 >
                   {currentSlideData.title}
                 </motion.h2>
@@ -118,7 +118,7 @@ const Hero: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.5 }}
-                  className="text-xl md:text-2xl text-secondary font-semibold"
+                  className="text-xl hidden md:text-2xl text-secondary font-semibold"
                 >
                   {currentSlideData.subtitle}
                 </motion.h3>
@@ -128,14 +128,15 @@ const Hero: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5, duration: 0.5 }}
-                  className="text-lg text-slate-300 leading-relaxed max-w-xl m-auto"
+                  className="text-lg mb-2 text-slate-300 leading-relaxed max-w-xl m-auto"
                 >
                   {currentSlideData.description}
                 </motion.p>
                 {/* Stats */}
-                <StatsDisplay stats={currentSlideData.stats} />
+                {/* <StatsDisplay stats={currentSlideData.stats} /> */}
 
                 {/* CTA Buttons */}
+
                 <CTAButtons
                   primary={currentSlideData.ctaPrimary}
                   secondary={currentSlideData.ctaSecondary}

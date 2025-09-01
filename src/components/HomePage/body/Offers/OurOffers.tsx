@@ -6,9 +6,16 @@ import { useNavigation } from '../../../../hooks/product/useNavigation';
 import SkeletonLoader from '../../../Skeltons/Product';
 import { ShoppingCartIcon } from 'lucide-react';
 import { handleClickWhatsapp } from '../../../../app/ProductWhasapp';
+import { RWF } from '../../../../app/priceConver';
 
-
-
+// Props interface
+interface OffersProps {
+  title?: string;
+  subtitle?: string;
+  showLoadMore?: boolean;
+  products?: Product[];
+  initialDisplayCount?: number;
+}
 
 // Offer Card Component
 interface OfferCardProps {
@@ -19,6 +26,7 @@ interface OfferCardProps {
 
 const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick }) => {
     const primaryImage = product.images.find(img => img.isprimary)?.image || product.images[0]?.image;
+    const [showDescription, setShowDescription] = useState(false);
 
     return (
         <motion.div
@@ -26,6 +34,8 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
             className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-all duration-300 group cursor-pointer"
+            onMouseEnter={() => setShowDescription(true)}
+            onMouseLeave={() => setShowDescription(false)}
         >
             <div className="relative overflow-hidden"
                 onClick={() => onProductClick(product.id)}
@@ -45,31 +55,39 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
                         NEW
                     </div>
                 )}
+                
+                {/* Description overlay on hover */}
+                <AnimatePresence>
+                    {showDescription && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/80 bg-opacity-70 flex items-center justify-center p-4"
+                        >
+                            <p className="text-white text-sm text-center">
+                                {product.description}
+                            </p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
                     {product.title}
                 </h3>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {product.description}
-                </p>
 
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-4 w-full">
                     <div className="flex items-center space-x-2">
-                        <span className="text-2xl font-bold text-gray-900">
-                            Rwf {product.price}
+                        <span className="text-xl font-bold text-gray-900">
+                            Rwf {RWF.format(product.price)}
                         </span>
                         {product.originalPrice && (
-                            <span className="text-lg text-gray-500 line-through">
-                                Rwf {product.originalPrice}
+                            <span className="text-sm text-gray-500 line-through">
+                                Rwf {RWF.format(product.originalPrice)}
                             </span>
                         )}
-                    </div>
-                    <div className="flex items-center text-yellow-400">
-                        <span className="text-sm text-gray-600 ml-1">
-                            {product.rating} ({product.reviewsCount})
-                        </span>
                     </div>
                 </div>
 
@@ -97,23 +115,29 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
 };
 
 // Main Offers Component
-const Offers: React.FC = () => {
-    const [displayedProducts, setDisplayedProducts] = useState<Product[]>(productsData.slice(0, 4));
+const Offers: React.FC<OffersProps> = ({ 
+  title = "Suggestions For You", 
+  subtitle = "Grab them before they're gone! Limited time deals on your favorite products.", 
+  showLoadMore = true,
+  products = productsData,
+  initialDisplayCount = 6
+}) => {
+    const [displayedProducts, setDisplayedProducts] = useState<Product[]>(products.slice(0, initialDisplayCount));
     const [isLoading, setIsLoading] = useState(false);
-    const [currentIndex, setCurrentIndex] = useState(3);
+    const [currentIndex, setCurrentIndex] = useState(initialDisplayCount);
     const { navigateToProduct } = useNavigation();
 
     const loadMoreProducts = async () => {
-        if (currentIndex >= productsData.length) return;
+        if (currentIndex >= products.length) return;
 
         setIsLoading(true);
 
         // Simulate loading time
         await new Promise(resolve => setTimeout(resolve, 1500));
 
-        const nextProducts = productsData.slice(currentIndex, currentIndex + 3);
+        const nextProducts = products.slice(currentIndex, currentIndex + 6);
         setDisplayedProducts(prev => [...prev, ...nextProducts]);
-        setCurrentIndex(prev => prev + 4);
+        setCurrentIndex(prev => prev + 6);
         setIsLoading(false);
     };
 
@@ -121,10 +145,10 @@ const Offers: React.FC = () => {
         navigateToProduct(productId);
     };
 
-    const hasMoreProducts = currentIndex < productsData.length;
+    const hasMoreProducts = currentIndex < products.length;
 
     return (
-        <section className="py-16 bg-gray-50">
+        <section className="py-6 bg-gray-50">
             <div className="max-w-full md:max-w-11/12 mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <motion.div
@@ -134,15 +158,15 @@ const Offers: React.FC = () => {
                     className="text-center mb-12"
                 >
                     <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                        Suggestions For You
+                        {title}
                     </h2>
                     <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                        Grab them before they're gone! Limited time deals on your favorite products.
+                        {subtitle}
                     </p>
                 </motion.div>
 
                 {/* Products Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 mb-12">
                     {displayedProducts.map((product, index) => (
                         <OfferCard
                             key={product.id}
@@ -166,7 +190,7 @@ const Offers: React.FC = () => {
                 </div>
 
                 {/* Load More Button */}
-                {(hasMoreProducts || isLoading) && (
+                {showLoadMore && (hasMoreProducts || isLoading) && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -178,6 +202,19 @@ const Offers: React.FC = () => {
                             className="bg-primary hover:bg-primary/80 disabled:bg-primary/20 text-white font-semibold rounded-2xl px-8 py-3 transition-colors duration-300 disabled:cursor-not-allowed"
                         >
                             {isLoading ? 'Loading...' : 'Load More Offers'}
+                        </button>
+                    </motion.div>
+                )}
+                
+                {/* View All Products Button */}
+                {!showLoadMore && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-center"
+                    >
+                        <button className="bg-primary hover:bg-primary/80 text-white font-semibold rounded-2xl px-8 py-3 transition-colors duration-300">
+                            View All Products
                         </button>
                     </motion.div>
                 )}
