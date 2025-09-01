@@ -4,6 +4,7 @@ import { Star, ShoppingCart } from 'lucide-react';
 import type { Product } from '../../../../types/Product/ProductType';
 import { useNavigation } from '../../../../hooks/product/useNavigation';
 import { productsData } from '../../../../constants/ProductsData/ProductData';
+import { handleClickWhatsapp } from '../../../../app/ProductWhasapp';
 
 
 
@@ -142,17 +143,32 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
                 </div>
 
                 {/* CTA Button */}
-                <button
-                    className={`w-full px-4 py-3 rounded-2xl font-semibold text-white transition-all duration-300 flex items-center justify-center gap-2 group-hover:scale-[1.02] ${product.bgColor === 'bg-primary' ? 'bg-blue-600 hover:bg-blue-700' :
-                        product.bgColor === 'bg-secondary' ? 'bg-purple-600 hover:bg-purple-700' :
-                            product.bgColor === 'bg-accent' ? 'bg-emerald-600 hover:bg-emerald-700' :
-                                product.bgColor === 'bg-third' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-primary hover:bg-primary/80'
-                        }`}
-                    disabled={product.instock === 0}
-                >
-                    <ShoppingCart size={18} />
-                    {product.instock === 0 ? 'Out of Stock' : 'Shop Now'}
-                </button>
+                <div className="flex gap-2">
+
+                    <button
+                        className={`w-full px-3 text-xs py-3 rounded-2xl font-semibold text-white transition-all duration-300 flex items-center justify-center gap-2 group-hover:scale-[1.02] ${product.bgColor === 'bg-primary' ? 'bg-blue-600 hover:bg-blue-700' :
+                            product.bgColor === 'bg-secondary' ? 'bg-purple-600 hover:bg-purple-700' :
+                                product.bgColor === 'bg-accent' ? 'bg-emerald-600 hover:bg-emerald-700' :
+                                    product.bgColor === 'bg-third' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-primary hover:bg-primary/80'
+                            }`}
+                        disabled={product.instock === 0}
+                    >
+                        <ShoppingCart size={18} />
+                        {product.instock === 0 ? 'Out of Stock' : 'Shop Now'}
+                    </button>
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`w-full py-3 px-3 rounded-xl text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2 bg-green-600 hover:bg-primary/90 cursor-pointer
+                      `}
+                        onClick={() => handleClickWhatsapp(product.title)}
+                    >
+                        <>
+                            <ShoppingCart size={18} />
+                            Ask on Whatsapp
+                        </>
+                    </motion.button>
+                </div>
             </div>
         </motion.div>
     );

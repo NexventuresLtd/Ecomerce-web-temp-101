@@ -4,6 +4,8 @@ import type { Product } from '../../../../types/Product/ProductType';
 import { productsData } from '../../../../constants/ProductsData/ProductData';
 import { useNavigation } from '../../../../hooks/product/useNavigation';
 import SkeletonLoader from '../../../Skeltons/Product';
+import { ShoppingCartIcon } from 'lucide-react';
+import { handleClickWhatsapp } from '../../../../app/ProductWhasapp';
 
 
 
@@ -24,9 +26,10 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
             className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-all duration-300 group cursor-pointer"
-            onClick={() => onProductClick(product.id)}
         >
-            <div className="relative overflow-hidden">
+            <div className="relative overflow-hidden"
+                onClick={() => onProductClick(product.id)}
+            >
                 <img
                     src={primaryImage}
                     alt={product.title}
@@ -70,9 +73,24 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
                     </div>
                 </div>
 
-                <button className="w-full bg-primary hover:bg-blue-700 text-white font-semibold rounded-2xl px-6 py-3 transition-colors duration-300">
-                    Shop Now
-                </button>
+                <div className="flex gap-2">
+                    <button className="w-full bg-primary text-xs text-white font-semibold rounded-2xl px-3 py-3 transition-colors duration-300 flex items-center justify-center gap-2">
+                        <ShoppingCartIcon size={18} />
+                        Shop Now
+                    </button>
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`w-full py-3 px-3 rounded-xl text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2 bg-green-600 hover:bg-primary/90 cursor-pointer
+      `}
+                        onClick={() => handleClickWhatsapp(product.title)}
+                    >
+                        <>
+                            <ShoppingCartIcon size={18} />
+                            Ask on Whatsapp
+                        </>
+                    </motion.button>
+                </div>
             </div>
         </motion.div>
     );
