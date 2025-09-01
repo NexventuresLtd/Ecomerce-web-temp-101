@@ -44,12 +44,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index, onProductClic
       <motion.div
         whileHover={{ scale: 1.02 }}
         transition={{ duration: 0.3 }}
-        className="relative flex flex-row"
+        className="relative flex justify-center items-center  h-full"
       >
         <div className='w-full h-full'>
 
           {/* Product Image Section */}
-          <div className="relative ">
+          <div className="relative h-full w-full">
             <ProductImage
               product={product}
               isHovered={isHovered}
