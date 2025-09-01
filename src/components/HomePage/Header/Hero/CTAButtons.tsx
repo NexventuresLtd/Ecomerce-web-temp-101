@@ -12,7 +12,6 @@ interface CTAButtonsProps {
 
 const CTAButtons: React.FC<CTAButtonsProps> = ({ 
   primary, 
-  secondary, 
   onPrimaryClick, 
   onSecondaryClick 
 }) => {

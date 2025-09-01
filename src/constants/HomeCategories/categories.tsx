@@ -3,9 +3,9 @@ import {
     Computer,
     Headphones,
     Gamepad2,
-    Tablet,
+    // Tablet,
     Sun,
-    Smartphone,
+    // Smartphone,
     Zap,
 } from 'lucide-react';
 import type { Category } from '../../types/HomeCategories';
