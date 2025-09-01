@@ -60,12 +60,12 @@ interface ValueItem {
 // Mock data
 const aboutData = {
     hero: {
-        title: "About NexShop",
+        title: "About Umukamezi",
         subtitle: "Connecting buyers and sellers in a seamless marketplace experience"
     },
     story: {
         title: "Our Story",
-        content: "Founded in 2023, NexShop emerged from a vision to create the most trusted and efficient marketplace platform. We believe in empowering businesses of all sizes to reach global audiences while providing customers with unparalleled shopping experiences.",
+        content: "Founded in 2020, Umukamezi emerged from a vision to create the most trusted and efficient marketplace platform. We believe in empowering businesses of all sizes to reach global audiences while providing customers with unparalleled shopping experiences.",
         mission: "To revolutionize e-commerce by building bridges between quality sellers and discerning buyers worldwide.",
         vision: "To become the world's most trusted marketplace where everyone can buy and sell with confidence."
     },
@@ -123,27 +123,27 @@ const aboutData = {
             image: "kad.jpeg",
             bio: "Former e-commerce executive with 15+ years of experience"
         },
-        {
-            id: 2,
-            name: "Michael Chen",
-            role: "CTO",
-            image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
-            bio: "Tech visionary specializing in scalable marketplace solutions"
-        },
-        {
-            id: 3,
-            name: "Emily Rodriguez",
-            role: "Head of Operations",
-            image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face",
-            bio: "Operations expert focused on streamlining seller experiences"
-        },
-        {
-            id: 4,
-            name: "David Kim",
-            role: "Head of Design",
-            image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
-            bio: "UX/UI designer passionate about creating intuitive experiences"
-        }
+        // {
+        //     id: 2,
+        //     name: "Chancelline niyo",
+        //     role: "CTO",
+        //     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
+        //     bio: "Tech visionary specializing in scalable marketplace solutions"
+        // },
+        // {
+        //     id: 3,
+        //     name: "Emily Rodriguez",
+        //     role: "Head of Operations",
+        //     image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face",
+        //     bio: "Operations expert focused on streamlining seller experiences"
+        // },
+        // {
+        //     id: 4,
+        //     name: "David Kim",
+        //     role: "Head of Design",
+        //     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
+        //     bio: "UX/UI designer passionate about creating intuitive experiences"
+        // }
     ] as TeamMember[],
     stats: [
         {
@@ -173,7 +173,7 @@ const aboutData = {
             id: 1,
             name: "Alex Thompson",
             role: "Small Business Owner",
-            content: "NexShop transformed my local business into a global operation. The platform is incredibly user-friendly and the support team is outstanding.",
+            content: "Umukamezi transformed my local business into a global operation. The platform is incredibly user-friendly and the support team is outstanding.",
             rating: 5,
             avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=face"
         },
@@ -181,7 +181,7 @@ const aboutData = {
             id: 2,
             name: "Maria Garcia",
             role: "Fashion Retailer",
-            content: "The verification process gave me confidence, and the sales tools are fantastic. I've tripled my revenue since joining NexShop.",
+            content: "The verification process gave me confidence, and the sales tools are fantastic. I've tripled my revenue since joining Umukamezi.",
             rating: 5,
             avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&crop=face"
         },
@@ -189,7 +189,7 @@ const aboutData = {
             id: 3,
             name: "James Wilson",
             role: "Regular Customer",
-            content: "Shopping on NexShop is always a great experience. Fast delivery, quality products, and excellent customer service every time.",
+            content: "Shopping on Umukamezi is always a great experience. Fast delivery, quality products, and excellent customer service every time.",
             rating: 5,
             avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop&crop=face"
         }
@@ -311,7 +311,7 @@ const USPSection: React.FC = () => {
                     className="text-center mb-16"
                     {...fadeInUp}
                 >
-                    <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose NexShop</h2>
+                    <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose Umukamezi</h2>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                         We provide everything you need for a seamless marketplace experience
                     </p>
@@ -354,12 +354,12 @@ const TeamSection: React.FC = () => {
                 >
                     <h2 className="text-4xl font-bold text-gray-900 mb-4">Meet Our Team</h2>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                        The passionate individuals behind NexShop's success
+                        The passionate individuals behind Umukamezi's success
                     </p>
                 </motion.div>
 
                 <motion.div
-                    className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
+                    className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 "
                     variants={stagger}
                     initial="initial"
                     whileInView="animate"
@@ -555,10 +555,10 @@ const CTASection: React.FC = () => {
         <section className="py-20 px-4 bg-gray-900 text-white">
             <div className="max-w-4xl mx-auto text-center">
                 <motion.div {...fadeInUp}>
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6">Join NexShop Today</h2>
+                    <h2 className="text-4xl md:text-5xl font-bold mb-6">Join Umukamezi Today</h2>
                     <p className="text-xl opacity-90 mb-12 max-w-2xl mx-auto">
                         Whether you're looking to shop for amazing products or grow your business,
-                        NexShop is the perfect platform for you.
+                        Umukamezi is the perfect platform for you.
                     </p>
 
                     <motion.div

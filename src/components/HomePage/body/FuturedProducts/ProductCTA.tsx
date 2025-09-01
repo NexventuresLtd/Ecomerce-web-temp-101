@@ -17,7 +17,7 @@ const ProductCTA: React.FC<ProductCTAProps> = ({ product, onProductClick }) => {
     <motion.button
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
-      className={`w-full py-3 px-6 rounded-xl font-semibold text-white transition-colors flex items-center justify-center gap-2 ${
+      className={`w-full py-3 px-6 rounded-xl text-sm font-semibold text-white transition-colors flex items-center justify-center gap-2 ${
         product.instock === 0
           ? 'bg-gray-400 cursor-not-allowed'
           : 'bg-primary hover:bg-primary/90 cursor-pointer'

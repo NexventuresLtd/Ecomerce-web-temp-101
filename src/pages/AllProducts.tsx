@@ -14,6 +14,10 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/SharedComp/navabaritems/NavBar';
 import Footer from '../components/SharedComp/footer';
+import { ownerData, productsData } from '../constants/ProductsData/ProductData';
+import { RWF } from '../app/priceConver';
+import Offers from '../components/HomePage/body/Offers/OurOffers';
+import { useNavigation } from '../hooks/product/useNavigation';
 
 // Types
 interface ProductColor {
@@ -50,214 +54,14 @@ interface Product {
     category: string;
     brand: string;
     bgColor?: 'bg-primary' | 'bg-secondary' | 'bg-accent' | 'bg-third';
-    ownerId: string;
+
 }
 
-interface Owner {
-    id: string;
-    name: string;
-    isverified: boolean;
-    email: string;
-    image: string;
-    JoinedAt: string;
-}
 
 // Sample Data
-const owners: Owner[] = [
-    {
-        id: '1',
-        name: 'Alice Mukamana',
-        isverified: true,
-        email: 'alice@umukamezi.rw',
-        image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
-        JoinedAt: '2023-01-15'
-    },
-    {
-        id: '2',
-        name: 'Jean Baptiste',
-        isverified: false,
-        email: 'jean@umukamezi.rw',
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-        JoinedAt: '2023-03-20'
-    },
-    {
-        id: '3',
-        name: 'Grace Uwimana',
-        isverified: true,
-        email: 'grace@umukamezi.rw',
-        image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
-        JoinedAt: '2022-11-08'
-    }
-];
 
-const products: Product[] = [
-    {
-        id: '1',
-        title: 'Premium Wireless Headphones',
-        description: 'High-quality noise-canceling wireless headphones with premium sound.',
-        price: 89.99,
-        originalPrice: 129.99,
-        discount: 30,
-        rating: 4.8,
-        isNew: true,
-        isFeatured: true,
-        link: '/products/headphones-1',
-        reviewsCount: 124,
-        instock: 25,
-        deliveryFee: 5.00,
-        images: [
-            { isprimary: true, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop' }
-        ],
-        hoverImage: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&h=400&fit=crop',
-        tags: ['electronics', 'audio', 'wireless'],
-        colors: [
-            { name: 'Black', value: '#000000' },
-            { name: 'White', value: '#FFFFFF' }
-        ],
-        features: ['Noise Canceling', '40H Battery', 'Quick Charge'],
-        category: 'Electronics',
-        brand: 'TechSound',
-        bgColor: 'bg-primary',
-        ownerId: '1'
-    },
-    {
-        id: '2',
-        title: 'Artisan Coffee Mug Set',
-        description: 'Handcrafted ceramic coffee mugs perfect for your morning brew.',
-        price: 24.99,
-        rating: 4.5,
-        isNew: false,
-        isFeatured: false,
-        link: '/products/coffee-mugs',
-        reviewsCount: 89,
-        instock: 15,
-        deliveryFee: 3.50,
-        images: [
-            { isprimary: true, image: 'https://images.unsplash.com/photo-1514228742587-6b1558fcf93a?w=400&h=400&fit=crop' }
-        ],
-        hoverImage: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=400&fit=crop',
-        tags: ['kitchen', 'ceramic', 'handmade'],
-        colors: [
-            { name: 'Earth Brown', value: '#8B4513' },
-            { name: 'Ocean Blue', value: '#4682B4' }
-        ],
-        features: ['Dishwasher Safe', '350ml Capacity', 'Ceramic'],
-        category: 'Home & Kitchen',
-        brand: 'CraftWare',
-        ownerId: '2'
-    },
-    {
-        id: '3',
-        title: 'Organic Cotton T-Shirt',
-        description: 'Sustainable and comfortable organic cotton t-shirt for everyday wear.',
-        price: 19.99,
-        originalPrice: 29.99,
-        discount: 33,
-        rating: 4.3,
-        isNew: false,
-        isFeatured: true,
-        link: '/products/cotton-tshirt',
-        reviewsCount: 156,
-        instock: 40,
-        deliveryFee: 2.99,
-        images: [
-            { isprimary: true, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop' }
-        ],
-        hoverImage: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=400&fit=crop',
-        tags: ['clothing', 'organic', 'sustainable'],
-        colors: [
-            { name: 'Navy', value: '#000080' },
-            { name: 'Forest Green', value: '#228B22' },
-            { name: 'White', value: '#FFFFFF' }
-        ],
-        features: ['100% Organic Cotton', 'Pre-shrunk', 'Fair Trade'],
-        category: 'Fashion',
-        brand: 'EcoWear',
-        ownerId: '3'
-    },
-    {
-        id: '4',
-        title: 'Smart Fitness Watch',
-        description: 'Advanced fitness tracker with heart rate monitoring and GPS.',
-        price: 199.99,
-        rating: 4.7,
-        isNew: true,
-        isFeatured: false,
-        link: '/products/fitness-watch',
-        reviewsCount: 203,
-        instock: 8,
-        deliveryFee: 0,
-        images: [
-            { isprimary: true, image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop' }
-        ],
-        hoverImage: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=400&h=400&fit=crop',
-        tags: ['electronics', 'fitness', 'smartwatch'],
-        colors: [
-            { name: 'Space Gray', value: '#4A4A4A' },
-            { name: 'Rose Gold', value: '#E8B4A0' }
-        ],
-        features: ['GPS Tracking', 'Heart Rate Monitor', '7-Day Battery'],
-        category: 'Electronics',
-        brand: 'FitTech',
-        bgColor: 'bg-secondary',
-        ownerId: '1'
-    },
-    {
-        id: '5',
-        title: 'Minimalist Desk Lamp',
-        description: 'Modern LED desk lamp with adjustable brightness and USB charging.',
-        price: 45.99,
-        originalPrice: 59.99,
-        discount: 23,
-        rating: 4.4,
-        isNew: false,
-        isFeatured: false,
-        link: '/products/desk-lamp',
-        reviewsCount: 67,
-        instock: 18,
-        deliveryFee: 4.99,
-        images: [
-            { isprimary: true, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop' }
-        ],
-        hoverImage: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop',
-        tags: ['lighting', 'office', 'modern'],
-        colors: [
-            { name: 'Matte Black', value: '#2C2C2C' },
-            { name: 'White', value: '#FFFFFF' }
-        ],
-        features: ['LED', 'USB Charging', 'Touch Control'],
-        category: 'Home & Office',
-        brand: 'ModernLight',
-        ownerId: '2'
-    },
-    {
-        id: '6',
-        title: 'Leather Crossbody Bag',
-        description: 'Premium leather crossbody bag perfect for daily essentials.',
-        price: 79.99,
-        rating: 4.6,
-        isNew: false,
-        isFeatured: true,
-        link: '/products/crossbody-bag',
-        reviewsCount: 91,
-        instock: 12,
-        deliveryFee: 6.99,
-        images: [
-            { isprimary: true, image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop' }
-        ],
-        hoverImage: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop',
-        tags: ['accessories', 'leather', 'bag'],
-        colors: [
-            { name: 'Cognac Brown', value: '#A0522D' },
-            { name: 'Black', value: '#000000' }
-        ],
-        features: ['Genuine Leather', 'Multiple Compartments', 'Adjustable Strap'],
-        category: 'Fashion',
-        brand: 'LeatherCraft',
-        bgColor: 'bg-accent',
-        ownerId: '3'
-    }
-];
+
+const products: Product[] = productsData
 
 // Filter Types
 interface FilterState {
@@ -274,23 +78,23 @@ type SortOption = 'price-asc' | 'price-desc' | 'newest' | 'rating' | 'featured';
 // Product Card Component
 interface ProductCardProps {
     product: Product;
-    owner: Owner;
     index: number;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, owner, index }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
 
     const primaryImage = product.images.find(img => img.isprimary)?.image || '';
     const displayImage = isHovered && product.hoverImage ? product.hoverImage : primaryImage;
-
+    const { navigateToProduct } = useNavigation();
     return (
         <motion.div
+            onClick={() => navigateToProduct(product.id)}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-blue-300 transition-all duration-300 group"
+            className="bg-white cursor-pointer border border-gray-200 rounded-lg overflow-hidden hover:border-blue-300 transition-all duration-300 group"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
@@ -338,12 +142,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, owner, index }) => {
                 <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="bg-white bg-opacity-90 rounded-lg p-2 flex items-center gap-2 text-xs">
                         <img
-                            src={owner.image}
-                            alt={owner.name}
+                            src={ownerData[0].image}
+                            alt={ownerData[0].name}
                             className="w-6 h-6 rounded-full"
                         />
-                        <span className="text-gray-700 font-medium">{owner.name}</span>
-                        {owner.isverified && (
+                        <span className="text-gray-700 font-medium">{ownerData[0].name}</span>
+                        {ownerData[0].isverified && (
                             <Check className="w-3 h-3 text-blue-500" />
                         )}
                     </div>
@@ -375,11 +179,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, owner, index }) => {
                 {/* Price */}
                 <div className="flex items-center gap-2 mb-3">
                     <span className="text-lg font-semibold text-gray-900">
-                        ${product.price}
+                        {RWF.format(product.price)}
                     </span>
                     {product.originalPrice && (
                         <span className="text-sm text-gray-500 line-through">
-                            ${product.originalPrice}
+                            {RWF.format(product.originalPrice)}
                         </span>
                     )}
                 </div>
@@ -541,8 +345,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, onFiltersChange,
                         className="w-full"
                     />
                     <div className="flex justify-between text-sm text-gray-500">
-                        <span>$0</span>
-                        <span>${filters.priceRange[1]}</span>
+                        <span>Rwf 0</span>
+                        <span>Rwf {RWF.format(filters.priceRange[1])}</span>
                     </div>
                 </div>
             </div>
@@ -805,10 +609,7 @@ const AllProductsPage: React.FC = () => {
         setCurrentPage(1);
     }, [filters, currentSort, searchQuery]);
 
-    // Get owner for a product
-    const getOwner = (ownerId: string): Owner => {
-        return owners.find(owner => owner.id === ownerId) || owners[0];
-    };
+
 
     return (
         <>
@@ -906,7 +707,6 @@ const AllProductsPage: React.FC = () => {
                                             <ProductCard
                                                 key={product.id}
                                                 product={product}
-                                                owner={getOwner(product.ownerId)}
                                                 index={index}
                                             />
                                         ))}
@@ -959,6 +759,7 @@ const AllProductsPage: React.FC = () => {
                     </div>
                 </div>
             </div>
+            <Offers />
             <Footer />
         </>
     );

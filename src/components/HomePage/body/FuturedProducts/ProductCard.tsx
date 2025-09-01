@@ -60,7 +60,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index, onProductClic
           </div>
 
         </div>
-        <div className='w-full h-fullyy'>
+        <div className='w-full h-full'>
           {/* CTA Button */}
           <div className="px-6 pb-6">
             {/* Product Info Section */}

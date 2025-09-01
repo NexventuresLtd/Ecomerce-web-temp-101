@@ -17,8 +17,8 @@ export const mainNavItems: NavItem[] = [
     { name: 'Phone', href: '#', hasDropdown: true },
     { name: 'Other Accessories', href: '#', hasDropdown: true },
     { name: 'About Us', href: '/about', hasDropdown: false },
-    { name: 'FAQ', href: '#', hasDropdown: false },
-    { name: 'Contact US', href: '#', hasDropdown: false }
+    { name: 'Vlog', href: '/vlog', hasDropdown: false },
+    { name: 'Contact US', href: '/contact', hasDropdown: false }
 ];
 
 export const proVideoCategories: CategoryItem[] = [

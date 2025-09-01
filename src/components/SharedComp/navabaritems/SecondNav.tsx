@@ -53,7 +53,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
 
                         {/* Search Bar */}
 
-                        <div className={`${isMenuOpen ? 'max-xl:hidden' : ''} flex-1 max-w-2xl mx-4`}>
+                        <div className={`${isMenuOpen ? 'max-xl:hidden' : ''} flex-1 max-w-4xl mx-4`}>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                 <input
@@ -61,7 +61,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
                                     placeholder="Search for products..."
-                                    className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-lg"
+                                    className="w-full pl-10 pr-10 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-lg"
                                 />
                                 {query && (
                                     <button

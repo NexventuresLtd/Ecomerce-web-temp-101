@@ -1,5 +1,5 @@
 import { Heart, LogOut, Menu, ShoppingCart, User, X } from "lucide-react";
-import LanguageDropdown from "./LanguageChanger";
+// import LanguageDropdown from "./LanguageChanger";
 import { getUserInfo } from "../../../app/Localstorage";
 import { logout } from "../../../app/utils/HandelLogout";
 
@@ -16,11 +16,13 @@ export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown,
 
                 {/* Cart */}
                 <div className={`${showMenu ? 'hidden xl:flex' : 'flex xl:hidden'} items-center space-x-1 gap-2`}>
-                    <div className="flex flex-col items-start sm:items-center ">
+                    <div onClick={() =>
+                        window.location.href = '/shopping-cart'
+                    } className="flex flex-col items-start sm:items-center curorsor-pointer">
                         <ShoppingCart className="w-6 h-6 text-gray-600" />
                         <span className="hidden sm:inline text-xs">My Cart</span>
                     </div>
-                    <div className="flex flex-col items-start sm:items-center">
+                    <div onClick={()=> window.location.href = '/wish-list'} className="flex cursor-pointer flex-col items-start sm:items-center">
                         <Heart className="w-6 h-6 text-gray-600" />
                         <span className="hidden sm:inline text-xs ">Wishlist</span>
                     </div>
@@ -32,16 +34,16 @@ export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown,
                             <div className="text-gray-600">Hello, Log In</div>
                             <div className="font-semibold">Account & Orders</div>
                         </div>
-                    </>:
-                    <button className="p-2 text-xs font-bold text-red-600 cursor-pointer" onClick={()=> logout()}>
-                        <LogOut/>
-                        Logout
-                    </button>
-                }
+                    </> :
+                        <button className="p-2 text-xs font-bold text-red-600 cursor-pointer" onClick={() => logout()}>
+                            <LogOut />
+                            Logout
+                        </button>
+                    }
                 </div>
                 <div className={`${showMenu ? 'hidden xl:flex' : 'flex xl:hidden'} `}>
                     {/* Language Dropdown */}
-                    <LanguageDropdown />
+                    {/* <LanguageDropdown /> */}
                 </div>
 
 

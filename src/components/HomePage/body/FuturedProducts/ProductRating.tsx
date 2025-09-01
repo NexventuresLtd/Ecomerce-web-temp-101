@@ -24,7 +24,7 @@ const ProductRating: React.FC<ProductRatingProps> = ({ product }) => {
       <div className="flex items-center">
         {renderStars(product.rating)}
       </div>
-      <span className="text-sm text-gray-500">
+      <span className="text-xs text-gray-500">
         ({product.reviewsCount.toLocaleString()})
       </span>
     </div>

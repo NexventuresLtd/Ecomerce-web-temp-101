@@ -8,11 +8,11 @@ interface ProductStockProps {
 const ProductStock: React.FC<ProductStockProps> = ({ product }) => {
   const getStockStatus = () => {
     if (product.instock === 0) {
-      return <span className="text-red-600 text-sm font-medium">Out of Stock</span>;
+      return <span className="text-red-600 text-xs font-medium">Out of Stock</span>;
     } else if (product.instock < 10) {
-      return <span className="text-orange-600 text-sm font-medium">Low Stock</span>;
+      return <span className="text-orange-600 text-xs font-medium">Low Stock</span>;
     } else {
-      return <span className="text-green-600 text-sm font-medium">In Stock</span>;
+      return <span className="text-green-600 text-xs font-medium">In Stock</span>;
     }
   };
 

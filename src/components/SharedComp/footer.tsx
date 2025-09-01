@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Facebook, 
-  Twitter, 
-  Instagram, 
-  Youtube, 
-  CreditCard, 
+import {
+  Facebook,
+  Twitter,
+  Instagram,
+  Youtube,
+  CreditCard,
   Smartphone,
   Shield,
   Truck
@@ -53,7 +53,7 @@ const socialLinks: SocialLink[] = [
 ];
 
 // Newsletter Form Component
-interface NewsletterFormProps {}
+interface NewsletterFormProps { }
 
 const NewsletterForm: React.FC<NewsletterFormProps> = () => {
   const [email, setEmail] = React.useState('');
@@ -61,9 +61,9 @@ const NewsletterForm: React.FC<NewsletterFormProps> = () => {
 
   const handleSubmit = async () => {
     if (!email || isSubmitting) return;
-    
+
     setIsSubmitting(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       console.log('Newsletter signup:', email);
@@ -154,13 +154,19 @@ const Footer: React.FC = () => {
           {/* Brand & About */}
           <motion.div variants={itemVariants} className="space-y-4 lg:col-span-1">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">N</span>
+              {/* Logo */}
+              <div className="flex-shrink-0 cursor-pointer" onClick={() => window.location.href = "/"}>
+                <div className="px-4 py-3">
+                  <div className="text-transparent uppercase bg-clip-text bg-black font-extrabold text-3xl leading-tight h-14 w-22 overflow-hidden">
+                    <img src="/Umukamezilogo.jpg" className='w-full h-full object-cover scale-150' alt="" />
+                  </div>
+                </div>
               </div>
-              <h2 className="text-2xl font-bold">NexShop</h2>
+
+              <h2 className="text-2xl font-bold capitalize">Umukamezi</h2>
             </div>
             <p className="text-white/80 text-sm leading-relaxed max-w-sm">
-              Your ultimate destination for premium products. We bring you the latest trends 
+              Your ultimate destination for premium products. We bring you the latest trends
               and quality items at unbeatable prices, delivered right to your doorstep.
             </p>
             <div className="flex items-center space-x-4 pt-2">
@@ -223,16 +229,16 @@ const Footer: React.FC = () => {
       </div>
 
       {/* Bottom Bar */}
-      <motion.div 
+      <motion.div
         variants={itemVariants}
         className="border-t border-white/10"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
             <div className="text-white/60 text-sm text-center sm:text-left">
-              © {currentYear} NexShop. All rights reserved.
+              © {currentYear} Umukamezi. All rights reserved.
             </div>
-            
+
             {/* Payment Methods */}
             <div className="flex items-center space-x-4">
               <span className="text-white/60 text-xs">We accept:</span>

@@ -13,7 +13,7 @@ const TutorialVideo: React.FC<TutorialVideoProps> = ({ product }) => {
   if (!product.tutorialVideo) return null;
 
   return (
-    <motion.div 
+    <motion.div
       className="mb-12"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -34,18 +34,13 @@ const TutorialVideo: React.FC<TutorialVideoProps> = ({ product }) => {
       <AnimatePresence>
         {showVideo && (
           <motion.div
-            className="bg-white rounded-2xl shadow-lg overflow-hidden"
+            className="bg-white rounded-2xl overflow-hidden"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
           >
-            <iframe
-              src={product.tutorialVideo}
-              className="w-full h-96"
-              frameBorder="0"
-              allowFullScreen
-              title="Product Tutorial"
-            />
+
+          <iframe className="w-full h-96 md:h-126"  src={product.tutorialVideo} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
           </motion.div>
         )}
       </AnimatePresence>

@@ -31,7 +31,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) =>
         <img
           src={displayImage}
           alt={product.title}
-          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+          className="w-full h-full object-contain transition-transform duration-500 hover:scale-105"
           loading="lazy"
         />
         {product.isNew && (
