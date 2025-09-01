@@ -19,12 +19,12 @@ const CategoryOverlay: React.FC<CategoryOverlayProps> = ({
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="absolute bottom-2 right-2 z-0 opacity-20 group-hover:opacity-30 transition-opacity duration-300"
+            className="absolute bottom-2 right-2 z-0 opacity-20 group-hover:opacity-30 transition-opacity duration-300 h-full w-full"
         >
             <img
                 src={overlayImage}
                 alt={`${name} overlay`}
-                className={`${classes !="" ? classes : 'w-24 h-24 object-contain'} `}
+                className={`${classes !== "" ? classes : 'w-full h-full aspect-auto object-cover'} `}
             />
         </motion.div>
     );

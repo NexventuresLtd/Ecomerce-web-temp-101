@@ -21,11 +21,6 @@ export const categoriesData: Category[] = [
         textColor: "text-white",
         hoverBg: "hover:bg-slate-800",
         link: "#",
-        badge: {
-            text: "New",
-            type: "new",
-            color: "bg-green-500"
-        },
         stats: {
             productCount: 1247,
             discount: 15
@@ -43,11 +38,6 @@ export const categoriesData: Category[] = [
         textColor: "text-white",
         hoverBg: "hover:bg-blue-200",
         link: "#",
-        badge: {
-            text: "Trending",
-            type: "trending",
-            color: "bg-blue-500"
-        },
         stats: {
             productCount: 2847,
             discount: 20
@@ -65,11 +55,6 @@ export const categoriesData: Category[] = [
         textColor: "text-white",
         hoverBg: "hover:bg-purple-200",
         link: "#",
-        badge: {
-            text: "Hot",
-            type: "hot",
-            color: "bg-red-500"
-        },
         stats: {
             productCount: 856,
             discount: 10
@@ -94,28 +79,6 @@ export const categoriesData: Category[] = [
         overlayImage: "https://www.kinhank-retrogame.com/cdn/shop/files/SuperConsoleX2Pro-main.webp?v=1716428705"
     },
     {
-        id: 5,
-        name: "Tablet",
-        description: "Latest tablets and accessories",
-        icon: Tablet,
-        // bgColor: "bg-amber-100/70",
-        bgColor: "bg-slate-900/90",
-        textColor: "text-white",
-        hoverBg: "hover:bg-amber-200",
-        link: "#",
-        badge: {
-            text: "New",
-            type: "new",
-            color: "bg-green-500"
-        },
-        stats: {
-            productCount: 987,
-            discount: 25
-        },
-        bgImage: "https://cdn.mos.cms.futurecdn.net/BuGDmGGkiM3sqMP6i6FEXf.jpg",
-        overlayImage: "https://cdn.thewirecutter.com/wp-content/media/2024/05/protablets-2048px-232431.jpg?auto=webp&quality=75&width=1024"
-    },
-    {
         id: 6,
         name: "Lighting",
         description: "Professional lighting equipment",
@@ -132,28 +95,6 @@ export const categoriesData: Category[] = [
         overlayImage: "https://www.cirrolite.com/files/Gibraltar_The-Hub-2.jpg"
     },
     {
-        id: 7,
-        name: "Phone",
-        description: "Latest smartphones and accessories",
-        icon: Smartphone,
-        // bgColor: "bg-green-200/70",
-        bgColor: "bg-slate-900/90",
-        textColor: "text-white",
-        hoverBg: "hover:bg-green-200",
-        link: "#",
-        badge: {
-            text: "Hot",
-            type: "hot",
-            color: "bg-red-500"
-        },
-        stats: {
-            productCount: 2109,
-            discount: 30
-        },
-        bgImage: "https://www.theboardresults.in/wp-content/uploads/2022/08/iPhone-14-pro-max-Price.jpg",
-        overlayImage: "https://images-na.ssl-images-amazon.com/images/I/618E1CfbObL._SL250_.jpg"
-    },
-    {
         id: 8,
         name: "Other Accessories",
         description: "Various tech accessories",
@@ -163,11 +104,6 @@ export const categoriesData: Category[] = [
         textColor: "text-white",
         hoverBg: "hover:bg-gray-200",
         link: "#",
-        badge: {
-            text: "Trending",
-            type: "trending",
-            color: "bg-blue-500"
-        },
         stats: {
             productCount: 3456
         },

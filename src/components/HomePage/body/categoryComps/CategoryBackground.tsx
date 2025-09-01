@@ -14,7 +14,7 @@ const CategoryBackground: React.FC<CategoryBackgroundProps> = ({
 }) => {
   if (bgImage) {
     return (
-      <div className="absolute inset-0 z-0 overflow-hidden">
+      <div className="absolute inset-0 z-10 overflow-hidden">
         <img 
           src={bgImage} 
           alt={`${name} background`}

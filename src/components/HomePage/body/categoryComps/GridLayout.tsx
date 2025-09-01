@@ -9,10 +9,10 @@ interface GridLayoutProps {
   onCategoryClick: (category: Category) => void;
 }
 
-const GridLayout: React.FC<GridLayoutProps> = ({ 
-  categories, 
-  showStats, 
-  onCategoryClick 
+const GridLayout: React.FC<GridLayoutProps> = ({
+  categories,
+  showStats,
+  onCategoryClick
 }) => {
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -32,15 +32,16 @@ const GridLayout: React.FC<GridLayoutProps> = ({
       whileInView="visible"
       viewport={{ once: true, margin: "-100px" }}
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 lg:gap-26 mx-auto lg:container">
         {categories.map((category, index) => (
-          <div key={category.id} className="h-full">
+          <div key={category.id} className="h-full pb-5">
             <CategoryCard
               category={category}
               index={index}
               showStats={showStats}
               onClick={onCategoryClick}
             />
+            <div className='text-center font-bold text-2xl uppercase p-2 text-primary'>{category.name}</div>
           </div>
         ))}
       </div>

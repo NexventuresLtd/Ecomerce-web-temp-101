@@ -75,12 +75,12 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
             whileHover="hover"
-            className="relative group cursor-pointer h-full"
+            className="relative group cursor-pointer h-64"
             onClick={() => onClick(category)}
         >
             <motion.div
                 onHoverStart={() => setClasessStyle('z-50 h-full w-full top-0 left-0 object-cover')}
-                onHoverEnd={()=>setClasessStyle("")}
+                onHoverEnd={() => setClasessStyle("")}
                 variants={hoverVariants}
                 className={`
           relative overflow-hidden rounded-2xl p-6 transition-all duration-300 h-full
@@ -89,7 +89,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
           flex flex-col
         `}
             >
-                {classesStyle =="" && <CategoryBackground
+                {classesStyle !== "" && <CategoryBackground
                     bgImage={category.bgImage}
                     bgColor={category.bgColor}
                     name={category.name}
@@ -101,39 +101,40 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
                     name={category.name}
                 />
 
-                {classesStyle =="" && <> <CategoryBadge badge={category.badge} />
+                {classesStyle !== "" && <> <CategoryBadge badge={category.badge} /> </>}
 
-                    <div className="relative z-10 flex flex-col items-center text-center space-y-4 flex-grow">
-                        <motion.div
-                            variants={iconVariants}
-                            className="relative"
-                        >
-                            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                                <Icon className="w-8 h-8" />
-                            </div>
-                        </motion.div>
-
-                        <div className="space-y-2 flex-grow flex flex-col justify-center">
-                            <h3 className="text-xl font-bold group-hover:scale-105 transition-transform duration-200">
-                                {category.name}
-                            </h3>
-                            {category.description && (
-                                <p className="text-sm opacity-80 leading-relaxed">
-                                    {category.description}
-                                </p>
-                            )}
-                            <CategoryStats stats={category.stats} showStats={showStats} />
+                <div className={`${classesStyle !== "" ? '' : 'text-transparent'} relative z-10 flex flex-col items-center text-center space-y-4 flex-grow`}>
+                    <motion.div
+                        variants={iconVariants}
+                        className="relative"
+                    >
+                        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                            <Icon className="w-8 h-8" />
                         </div>
+                    </motion.div>
 
-                        <motion.div
-                            initial={{ opacity: 0, x: -10 }}
-                            whileHover={{ opacity: 1, x: 0 }}
-                            className="absolute bottom-4 right-4 text-current opacity-0 group-hover:opacity-60 transition-all duration-200"
-                        >
-                            <ArrowRight className="w-5 h-5" />
-                        </motion.div>
+                    <div className="space-y-2 flex-grow flex flex-col justify-center">
+                        <h3 className="text-xl font-bold group-hover:scale-105 transition-transform duration-200">
+                            {category.name}
+                        </h3>
+                        {category.description && (
+                            <p className="text-sm opacity-80 leading-relaxed">
+                                {category.description}
+                            </p>
+                        )}
+                        {classesStyle !== "" &&
+                            <CategoryStats stats={category.stats} showStats={showStats} />
+                        }
                     </div>
-                </>}
+
+                    <motion.div
+                        initial={{ opacity: 0, x: -10 }}
+                        whileHover={{ opacity: 1, x: 0 }}
+                        className="absolute bottom-4 right-4 text-current opacity-0 group-hover:opacity-60 transition-all duration-200"
+                    >
+                        <ArrowRight className="w-5 h-5" />
+                    </motion.div>
+                </div>
             </motion.div>
         </motion.div>
     );
