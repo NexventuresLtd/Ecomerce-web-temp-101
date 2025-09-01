@@ -14,7 +14,7 @@ export const productsData: Product[] = [
         isFeatured: true,
         link: "/products/1",
         reviewsCount: 532,
-        instock: 40,
+        instock: 0,
         deliveryFee: 5,
         images: [
             { isprimary: true, image: "https://images-cdn.ubuy.co.id/68381354ecd281cdcd0d216d-canon-eos-rebel-t7-dslr-camera-with.jpg" },

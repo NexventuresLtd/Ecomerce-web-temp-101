@@ -32,7 +32,7 @@ const GridLayout: React.FC<GridLayoutProps> = ({
       whileInView="visible"
       viewport={{ once: true, margin: "-100px" }}
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 lg:gap-26 mx-auto lg:container">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 lg:gap-26 2xl:gap-0 mx-auto max-w-5xl 2xl:max-w-full">
         {categories.map((category, index) => (
           <div key={category.id} className="h-full pb-5">
             <CategoryCard

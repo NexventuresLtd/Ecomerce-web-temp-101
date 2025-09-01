@@ -107,7 +107,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
                         variants={iconVariants}
                         className="relative"
                     >
-                        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                        <div className={`w-16 h-16 rounded-full bg-white/20 flex items-center justify-center ${classesStyle !== "" ? 'backdrop-blur-sm' : 'text-transparent'} `}>
                             <Icon className="w-8 h-8" />
                         </div>
                     </motion.div>

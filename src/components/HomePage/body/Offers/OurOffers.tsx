@@ -10,11 +10,11 @@ import { RWF } from '../../../../app/priceConver';
 
 // Props interface
 interface OffersProps {
-  title?: string;
-  subtitle?: string;
-  showLoadMore?: boolean;
-  products?: Product[];
-  initialDisplayCount?: number;
+    title?: string;
+    subtitle?: string;
+    showLoadMore?: boolean;
+    products?: Product[];
+    initialDisplayCount?: number;
 }
 
 // Offer Card Component
@@ -43,7 +43,7 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
                 <img
                     src={primaryImage}
                     alt={product.title}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-48 object-contain group-hover:scale-105 transition-transform duration-300"
                 />
                 {product.discount && (
                     <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
@@ -55,7 +55,7 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
                         NEW
                     </div>
                 )}
-                
+
                 {/* Description overlay on hover */}
                 <AnimatePresence>
                     {showDescription && (
@@ -63,8 +63,11 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/80 bg-opacity-70 flex items-center justify-center p-4"
+                            className="absolute inset-0 bg-black/80 bg-opacity-70 flex flex-col items-center justify-center gap-3 p-4"
                         >
+                            <p className="text-white text-lg text-center font-medium">
+                                {product.title}
+                            </p>
                             <p className="text-white text-sm text-center">
                                 {product.description}
                             </p>
@@ -90,9 +93,15 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
                         )}
                     </div>
                 </div>
+                <div className={`${product.instock < 1 ? 'bg-red-500' : 'bg-primary'} text-white px-3 py-1 rounded-full text-sm w-fit ml-auto mb-2 font-semibold`}>
+                    {product.instock < 1 ? 'Out of Stock' : `${product.instock} in Stock`}
+                </div>
 
                 <div className="flex gap-2">
-                    <button className="w-full bg-primary text-xs text-white font-semibold rounded-2xl px-3 py-3 transition-colors duration-300 flex items-center justify-center gap-2">
+                    <button
+                        disabled={product.instock < 1}
+                        onClick={() => onProductClick(product.id)}
+                        className={`${product.instock < 1 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} w-full bg-primary text-xs text-white font-semibold rounded-2xl px-3 py-3 transition-colors duration-300 flex items-center justify-center gap-2`}>
                         <ShoppingCartIcon size={18} />
                         Shop Now
                     </button>
@@ -115,17 +124,17 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
 };
 
 // Main Offers Component
-const Offers: React.FC<OffersProps> = ({ 
-  title = "Suggestions For You", 
-  subtitle = "Grab them before they're gone! Limited time deals on your favorite products.", 
-  showLoadMore = true,
-  products = productsData,
-  initialDisplayCount = 6
+const Offers: React.FC<OffersProps> = ({
+    title = "Suggestions For You",
+    subtitle = "Grab them before they're gone! Limited time deals on your favorite products.",
+    showLoadMore = true,
+    products = productsData,
+    initialDisplayCount = 6
 }) => {
     const [displayedProducts, setDisplayedProducts] = useState<Product[]>(products.slice(0, initialDisplayCount));
     const [isLoading, setIsLoading] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(initialDisplayCount);
-    const { navigateToProduct } = useNavigation();
+    const { navigateToProduct, navigateToProducts } = useNavigation();
 
     const loadMoreProducts = async () => {
         if (currentIndex >= products.length) return;
@@ -157,7 +166,7 @@ const Offers: React.FC<OffersProps> = ({
                     transition={{ duration: 0.6 }}
                     className="text-center mb-12"
                 >
-                    <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                    <h2 className="text-4xl uppercase font-bold text-gray-900 mb-4">
                         {title}
                     </h2>
                     <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -205,15 +214,16 @@ const Offers: React.FC<OffersProps> = ({
                         </button>
                     </motion.div>
                 )}
-                
+
                 {/* View All Products Button */}
                 {!showLoadMore && (
                     <motion.div
+                        onClick={() => navigateToProducts()}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="text-center"
                     >
-                        <button className="bg-primary hover:bg-primary/80 text-white font-semibold rounded-2xl px-8 py-3 transition-colors duration-300">
+                        <button className="bg-primary cursor-pointer hover:bg-primary/80 text-white font-semibold rounded-2xl px-8 py-3 transition-colors duration-300">
                             View All Products
                         </button>
                     </motion.div>

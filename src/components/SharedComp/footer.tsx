@@ -73,19 +73,19 @@ const NewsletterForm: React.FC<NewsletterFormProps> = () => {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 max-w-md">
+    <div className="flex flex-col md:flex-row gap-2">
       <input
         type="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Enter your email"
-        className="flex-1 rounded-2xl px-4 py-2 bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition-all"
+        className="flex-1 rounded-2xl px-2 py-2 bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition-all"
         aria-label="Email address for newsletter"
       />
       <button
         onClick={handleSubmit}
         disabled={isSubmitting}
-        className="rounded-2xl px-6 py-2 bg-white text-slate-900 font-medium hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+        className="rounded-2xl px-4 py-2 bg-white text-slate-900 font-medium hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
         aria-label="Subscribe to newsletter"
       >
         {isSubmitting ? 'Subscribing...' : 'Subscribe'}
@@ -146,7 +146,7 @@ const Footer: React.FC = () => {
       whileInView="visible"
       viewport={{ once: true }}
       variants={containerVariants}
-      className="bg-slate-900 text-white"
+      className="bg-slate-900 text-white "
     >
       {/* Main Footer Content */}
       <div className="max-w-full md:max-w-11/12 mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
@@ -163,7 +163,6 @@ const Footer: React.FC = () => {
                 </div>
               </div>
 
-              <h2 className="text-2xl font-bold capitalize">Umukamezi</h2>
             </div>
             <p className="text-white/80 text-sm leading-relaxed max-w-sm">
               Your ultimate destination for premium products. We bring you the latest trends

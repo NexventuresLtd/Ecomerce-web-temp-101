@@ -1,67 +1,24 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ChevronDown,
     Star,
-    ShoppingCart,
-    Eye,
     Search,
     SlidersHorizontal,
     X,
-    Check,
-    ChevronLeft,
-    ChevronRight
+    ShoppingCartIcon
 } from 'lucide-react';
 import Navbar from '../components/SharedComp/navabaritems/NavBar';
 import Footer from '../components/SharedComp/footer';
-import { ownerData, productsData } from '../constants/ProductsData/ProductData';
+import { productsData } from '../constants/ProductsData/ProductData';
 import { RWF } from '../app/priceConver';
 import Offers from '../components/HomePage/body/Offers/OurOffers';
 import { useNavigation } from '../hooks/product/useNavigation';
+import type { Product } from '../types/Product/ProductType';
+import { handleClickWhatsapp } from '../app/ProductWhasapp';
+import SkeletonLoader from '../components/Skeltons/Product';
 
-// Types
-interface ProductColor {
-    name: string;
-    value: string;
-    image?: string;
-}
-
-interface ProductImage {
-    isprimary: boolean;
-    image?: string;
-}
-
-interface Product {
-    id: string;
-    title: string;
-    description: string;
-    price: number;
-    originalPrice?: number;
-    discount?: number;
-    rating: number;
-    isNew: boolean;
-    isFeatured: boolean;
-    link: string;
-    reviewsCount: number;
-    instock: number;
-    deliveryFee: number;
-    images: ProductImage[];
-    hoverImage?: string;
-    tags: string[];
-    colors: ProductColor[];
-    features: string[];
-    tutorialVideo?: string;
-    category: string;
-    brand: string;
-    bgColor?: 'bg-primary' | 'bg-secondary' | 'bg-accent' | 'bg-third';
-
-}
-
-
-// Sample Data
-
-
-const products: Product[] = productsData
+const products: Product[] = productsData;
 
 // Filter Types
 interface FilterState {
@@ -75,139 +32,104 @@ interface FilterState {
 // Sort Types
 type SortOption = 'price-asc' | 'price-desc' | 'newest' | 'rating' | 'featured';
 
-// Product Card Component
+// Product Card Component matching the Offers component structure
 interface ProductCardProps {
     product: Product;
     index: number;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
-    const [isHovered, setIsHovered] = useState(false);
-    const [imageLoaded, setImageLoaded] = useState(false);
-
-    const primaryImage = product.images.find(img => img.isprimary)?.image || '';
-    const displayImage = isHovered && product.hoverImage ? product.hoverImage : primaryImage;
+    const [showDescription, setShowDescription] = useState(false);
+    const primaryImage = product.images.find(img => img.isprimary)?.image || product.images[0]?.image;
     const { navigateToProduct } = useNavigation();
+
     return (
         <motion.div
-            onClick={() => navigateToProduct(product.id)}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="bg-white cursor-pointer border border-gray-200 rounded-lg overflow-hidden hover:border-blue-300 transition-all duration-300 group"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-all duration-300 group cursor-pointer"
+            onMouseEnter={() => setShowDescription(true)}
+            onMouseLeave={() => setShowDescription(false)}
+            onClick={() => navigateToProduct(product.id)}
         >
-            {/* Image Container */}
-            <div className="relative aspect-square overflow-hidden bg-gray-100">
-                {!imageLoaded && (
-                    <div className="absolute inset-0 bg-gray-200 animate-pulse" />
-                )}
+            <div className="relative overflow-hidden">
                 <img
-                    src={displayImage}
+                    src={primaryImage}
                     alt={product.title}
-                    className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${imageLoaded ? 'opacity-100' : 'opacity-0'
-                        }`}
-                    onLoad={() => setImageLoaded(true)}
-                    loading="lazy"
+                    className="w-full h-48 object-contain group-hover:scale-105 transition-transform duration-300"
                 />
-
-                {/* Badges */}
-                <div className="absolute top-2 left-2 flex flex-col gap-1">
-                    {product.isNew && (
-                        <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                            New
-                        </span>
-                    )}
-                    {product.isFeatured && (
-                        <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                            Featured
-                        </span>
-                    )}
-                    {product.discount && (
-                        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                            -{product.discount}%
-                        </span>
-                    )}
-                </div>
-
-                {/* Quick Actions */}
-                <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button className="bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors">
-                        <Eye className="w-4 h-4 text-gray-600" />
-                    </button>
-                </div>
-
-                {/* Owner Info Tooltip */}
-                <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="bg-white bg-opacity-90 rounded-lg p-2 flex items-center gap-2 text-xs">
-                        <img
-                            src={ownerData[0].image}
-                            alt={ownerData[0].name}
-                            className="w-6 h-6 rounded-full"
-                        />
-                        <span className="text-gray-700 font-medium">{ownerData[0].name}</span>
-                        {ownerData[0].isverified && (
-                            <Check className="w-3 h-3 text-blue-500" />
-                        )}
+                {product.discount && (
+                    <div className="absolute hidden top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                        -{product.discount}%
                     </div>
-                </div>
+                )}
+                {product.isNew && (
+                    <div className="absolute hidden top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                        NEW
+                    </div>
+                )}
+
+                {/* Description overlay on hover */}
+                <AnimatePresence>
+                    {showDescription && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/80 bg-opacity-70 flex flex-col items-center justify-center gap-3 p-4"
+                        >
+                            <p className="text-white text-lg text-center font-medium">
+                                {product.title}
+                            </p>
+                            <p className="text-white text-sm text-center">
+                                {product.description}
+                            </p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
-            {/* Product Info */}
-            <div className="p-4">
-                <h3 className="font-medium text-gray-900 mb-1 line-clamp-2">
+            <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
                     {product.title}
                 </h3>
 
-                {/* Rating */}
-                <div className="flex items-center gap-1 mb-2">
-                    <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                            <Star
-                                key={i}
-                                className={`w-4 h-4 ${i < Math.floor(product.rating)
-                                    ? 'text-yellow-400 fill-current'
-                                    : 'text-gray-300'
-                                    }`}
-                            />
-                        ))}
+                <div className="flex items-center justify-between mb-4 w-full">
+                    <div className="flex items-center space-x-2">
+                        <span className="text-xl font-bold text-gray-900">
+                            {RWF.format(product.price)}
+                        </span>
+                        {product.originalPrice && (
+                            <span className="text-sm text-gray-500 line-through">
+                                {RWF.format(product.originalPrice)}
+                            </span>
+                        )}
                     </div>
-                    <span className="text-sm text-gray-500">({product.reviewsCount})</span>
                 </div>
-
-                {/* Price */}
-                <div className="flex items-center gap-2 mb-3">
-                    <span className="text-lg font-semibold text-gray-900">
-                        {RWF.format(product.price)}
-                    </span>
-                    {product.originalPrice && (
-                        <span className="text-sm text-gray-500 line-through">
-                            {RWF.format(product.originalPrice)}
-                        </span>
-                    )}
+                <div className={`${product.instock < 1 ? 'bg-red-500' : 'bg-primary'} text-white px-3 py-1 rounded-full text-sm w-fit ml-auto mb-2 font-semibold`}>
+                    {product.instock < 1 ? 'Out of Stock' : `${product.instock} in Stock`}
                 </div>
-
-                {/* Stock Status */}
-                <div className="mb-3">
-                    {product.instock > 0 ? (
-                        <span className="text-sm text-green-600">
-                            {product.instock} in stock
-                        </span>
-                    ) : (
-                        <span className="text-sm text-red-600">Out of stock</span>
-                    )}
-                </div>
-
-                {/* Actions */}
                 <div className="flex gap-2">
                     <button
-                        className="flex-1 bg-primary text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:bg-gray-400"
-                        disabled={product.instock === 0}
-                    >
-                        <ShoppingCart className="w-4 h-4" />
-                        Add to Cart
+                        disabled={product.instock < 1}
+                        onClick={() => navigateToProduct(product.id)}
+                        className={`${product.instock < 1 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} w-full bg-primary text-xs text-white font-semibold rounded-2xl px-3 py-3 transition-colors duration-300 flex items-center justify-center gap-2`}>
+                        <ShoppingCartIcon size={18} />
+                        Shop Now
                     </button>
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`w-full py-3 px-3 rounded-xl text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2 bg-green-600 hover:bg-primary/90 cursor-pointer
+                  `}
+                        onClick={() => handleClickWhatsapp(product.title)}
+                    >
+                        <>
+                            <ShoppingCartIcon size={18} />
+                            Whatsapp
+                        </>
+                    </motion.button>
                 </div>
             </div>
         </motion.div>
@@ -459,59 +381,24 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, onFiltersChange,
     );
 };
 
-// Pagination Component
-interface PaginationProps {
-    currentPage: number;
-    totalPages: number;
-    onPageChange: (page: number) => void;
+// Load More Button Component
+interface LoadMoreButtonProps {
+    isLoading: boolean;
+    hasMore: boolean;
+    onClick: () => void;
 }
 
-const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
-    const getPageNumbers = () => {
-        const pages = [];
-        const showPages = 5;
-        let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
-        let endPage = Math.min(totalPages, startPage + showPages - 1);
-
-        if (endPage - startPage + 1 < showPages) {
-            startPage = Math.max(1, endPage - showPages + 1);
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(i);
-        }
-        return pages;
-    };
+const LoadMoreButton: React.FC<LoadMoreButtonProps> = ({ isLoading, hasMore, onClick }) => {
+    if (!hasMore) return null;
 
     return (
-        <div className="flex items-center justify-center gap-2 mt-8">
+        <div className="text-center mt-8">
             <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage <= 1}
-                className="p-2 rounded-lg border border-gray-300 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                onClick={onClick}
+                disabled={isLoading}
+                className="bg-primary hover:bg-primary/80 disabled:bg-primary/20 text-white font-semibold rounded-2xl px-8 py-3 transition-colors duration-300 disabled:cursor-not-allowed"
             >
-                <ChevronLeft className="w-5 h-5" />
-            </button>
-
-            {getPageNumbers().map((page) => (
-                <button
-                    key={page}
-                    onClick={() => onPageChange(page)}
-                    className={`px-4 py-2 rounded-lg border transition-colors ${currentPage === page
-                        ? 'bg-primary text-white border-blue-600'
-                        : 'border-gray-300 hover:border-gray-400 text-gray-700'
-                        }`}
-                >
-                    {page}
-                </button>
-            ))}
-
-            <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage >= totalPages}
-                className="p-2 rounded-lg border border-gray-300 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-                <ChevronRight className="w-5 h-5" />
+                {isLoading ? 'Loading...' : 'Load More Products'}
             </button>
         </div>
     );
@@ -528,11 +415,11 @@ const AllProductsPage: React.FC = () => {
     });
 
     const [currentSort, setCurrentSort] = useState<SortOption>('featured');
-    const [currentPage, setCurrentPage] = useState(1);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-
-    const itemsPerPage = 12;
+    const [displayCount, setDisplayCount] = useState(12);
+    const [isLoading, setIsLoading] = useState(false);
+    const [autoLoadEnabled, setAutoLoadEnabled] = useState(true);
 
     // Filter and sort products
     const filteredAndSortedProducts = useMemo(() => {
@@ -599,23 +486,52 @@ const AllProductsPage: React.FC = () => {
         return filtered;
     }, [filters, currentSort, searchQuery]);
 
-    // Pagination
-    const totalPages = Math.ceil(filteredAndSortedProducts.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedProducts = filteredAndSortedProducts.slice(startIndex, startIndex + itemsPerPage);
-
-    // Reset page when filters change
+    // Reset display count when filters change
     React.useEffect(() => {
-        setCurrentPage(1);
+        setDisplayCount(12);
     }, [filters, currentSort, searchQuery]);
 
+    // Displayed products based on display count
+    const displayedProducts = filteredAndSortedProducts.slice(0, displayCount);
+    const hasMoreProducts = displayCount < filteredAndSortedProducts.length;
 
+    // Load more products function
+    const loadMoreProducts = useCallback(async () => {
+        if (isLoading || !hasMoreProducts) return;
+
+        setIsLoading(true);
+        // Simulate loading time
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setDisplayCount(prev => prev + 12);
+        setIsLoading(false);
+    }, [isLoading, hasMoreProducts]);
+
+    useEffect(() => {
+        if (!autoLoadEnabled) return;
+
+        const container = document.getElementById('main_content');
+        if (!container) return;
+
+        const handleScroll = () => {
+            const scrollTop = container.scrollTop;
+            const scrollHeight = container.scrollHeight;
+            const clientHeight = container.clientHeight;
+
+            // Load more when within 20% of bottom
+            if (scrollTop + clientHeight >= scrollHeight - clientHeight * 0.1) {
+                loadMoreProducts();
+            }
+        };
+
+        container.addEventListener('scroll', handleScroll);
+        return () => container.removeEventListener('scroll', handleScroll);
+    }, [autoLoadEnabled, loadMoreProducts]);
 
     return (
         <>
             <Navbar />
-            <div className="min-h-screen max-w-full md:max-w-11/12 m-auto">
-                <div className="flex">
+            <div className="min-h-screen max-w-full m-auto ">
+                <div className="flex ">
                     <div className="h-[calc(100vh-64px)]">
                         {/* Filter Sidebar */}
                         <FilterSidebar
@@ -627,7 +543,7 @@ const AllProductsPage: React.FC = () => {
                     </div>
 
                     {/* Main Content */}
-                    <div className="flex-1 lg:ml-0 h-[calc(100vh-64px)] overflow-y-auto">
+                    <div className="flex-1 lg:ml-0 h-[calc(100vh-64px)] overflow-y-auto " id='main_content'>
                         {/* Header */}
                         <div className="bg-white border-b border-gray-200 px-4 lg:px-8 py-6">
                             <div className="max-w-full mx-auto">
@@ -640,7 +556,7 @@ const AllProductsPage: React.FC = () => {
                                     </div>
                                     <button
                                         onClick={() => setIsFilterOpen(true)}
-                                        className="lg:hidden bg-white border border-gray-300 rounded-lg px-4 py-2 flex items-center gap-2 hover:border-gray-400 transition-colors"
+                                        className="lg-hidden bg-white border border-gray-300 rounded-lg px-4 py-2 flex items-center gap-2 hover:border-gray-400 transition-colors"
                                     >
                                         <SlidersHorizontal className="w-4 h-4" />
                                         <span>Filters</span>
@@ -648,7 +564,7 @@ const AllProductsPage: React.FC = () => {
                                 </div>
 
                                 {/* Search Bar */}
-                                <div className="relative max-w-md">
+                                <div className="relative max-w-md hidden">
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                     <input
                                         type="text"
@@ -666,7 +582,7 @@ const AllProductsPage: React.FC = () => {
                             <div className="max-w-full mx-auto flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <p className="text-sm text-gray-600">
-                                        Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredAndSortedProducts.length)} of {filteredAndSortedProducts.length} products
+                                        Showing {Math.min(displayedProducts.length, filteredAndSortedProducts.length)} of {filteredAndSortedProducts.length} products
                                     </p>
                                     {(filters.categories.length > 0 || filters.brands.length > 0 || filters.minRating > 0 || filters.inStockOnly || searchQuery) && (
                                         <button
@@ -686,30 +602,48 @@ const AllProductsPage: React.FC = () => {
                                         </button>
                                     )}
                                 </div>
-                                <SortDropdown
-                                    currentSort={currentSort}
-                                    onSortChange={setCurrentSort}
-                                />
+                                <div className="flex items-center gap-4">
+                                    <label className="flex items-center text-sm text-gray-700">
+                                        <input
+                                            type="checkbox"
+                                            checked={autoLoadEnabled}
+                                            onChange={(e) => setAutoLoadEnabled(e.target.checked)}
+                                            className="mr-2"
+                                        />
+                                        Auto-load
+                                    </label>
+                                    <SortDropdown
+                                        currentSort={currentSort}
+                                        onSortChange={setCurrentSort}
+                                    />
+                                </div>
                             </div>
                         </div>
 
                         {/* Product Grid */}
                         <div className="px-4 lg:px-8 py-8">
                             <div className="max-w-full mx-auto">
-                                {paginatedProducts.length > 0 ? (
+                                {displayedProducts.length > 0 ? (
                                     <motion.div
-                                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                                        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.5 }}
                                     >
-                                        {paginatedProducts.map((product, index) => (
+                                        {displayedProducts.map((product, index) => (
                                             <ProductCard
                                                 key={product.id}
                                                 product={product}
                                                 index={index}
                                             />
                                         ))}
+                                        {/* Skeleton Loaders */}
+                                        {isLoading && <>
+                                            {[...Array(12)].map((_,) => (
+                                                <SkeletonLoader />
+                                            ))}
+                                        </>}
+
                                     </motion.div>
                                 ) : (
                                     <motion.div
@@ -746,13 +680,23 @@ const AllProductsPage: React.FC = () => {
                                     </motion.div>
                                 )}
 
-                                {/* Pagination */}
-                                {totalPages > 1 && (
-                                    <Pagination
-                                        currentPage={currentPage}
-                                        totalPages={totalPages}
-                                        onPageChange={setCurrentPage}
+
+
+
+                                {/* Load More Button - Only show if auto-load is disabled */}
+                                {!autoLoadEnabled && (
+                                    <LoadMoreButton
+                                        isLoading={isLoading}
+                                        hasMore={hasMoreProducts}
+                                        onClick={loadMoreProducts}
                                     />
+                                )}
+
+                                {/* End of results message */}
+                                {!hasMoreProducts && displayedProducts.length > 0 && (
+                                    <div className="text-center mt-12 py-8 border-t border-gray-200">
+                                        <p className="text-gray-600">You've reached the end of the products list.</p>
+                                    </div>
                                 )}
                             </div>
                         </div>

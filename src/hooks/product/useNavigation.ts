@@ -8,7 +8,7 @@ export const useNavigation = () => {
   };
 
   const navigateToProducts = () => {
-    navigate('/product');
+    navigate('/products');
   };
 
   return {

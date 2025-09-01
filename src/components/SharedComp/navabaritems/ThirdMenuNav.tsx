@@ -34,10 +34,10 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
     return (
         <>
             <div className={`${isMobile ? 'bg-white' : 'bg-primary'} relative`}>
-                <div className="max-w-full md:max-w-11/12 mx-auto px-4 sm:px-6 lg:px-2">
+                <div className="max-w-full md:max-w-11/12 mx-auto px-4 sm:px-6 lg:px-0">
                     {/* Desktop Navigation */}
                     <div className="hidden xl:flex relative">
-                        <div className="flex w-full">
+                        <div className="flex w-full xl:justify-between 2xl:justify-center 2xl:gap-10 ">
                             {mainNavItems.map((item) => (
                                 <div
                                     key={item.name}
@@ -46,10 +46,10 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
                                 >
                                     <button
                                         onClick={() => handleMobileClick(item)}
-                                        className="flex items-center px-4 py-3 cursor-pointer text-white hover:bg-slate-700 transition-colors duration-200 text-sm font-medium"
+                                        className="flex items-center py-3 cursor-pointer text-white hover:bg-slate-700 transition-colors duration-200 text-sm "
                                     >
                                         {item.name}
-                                        {item.hasDropdown && <ChevronDown className="ml-1 w-4 h-4" />}
+                                        {item.hasDropdown && <ChevronDown className="ml-0 w-4 h-4" />}
                                     </button>
                                 </div>
                             ))}

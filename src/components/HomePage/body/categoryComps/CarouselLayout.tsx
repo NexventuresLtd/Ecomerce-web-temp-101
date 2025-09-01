@@ -17,16 +17,16 @@ interface CarouselLayoutProps {
   canScrollNext: boolean;
 }
 
-const CarouselLayout: React.FC<CarouselLayoutProps> = ({ 
-  categories, 
-  showStats, 
-  onCategoryClick, 
-  itemsPerView, 
-  currentIndex, 
-  onPrev, 
-  onNext, 
-  canScrollPrev, 
-  canScrollNext 
+const CarouselLayout: React.FC<CarouselLayoutProps> = ({
+  categories,
+  showStats,
+  onCategoryClick,
+  itemsPerView,
+  currentIndex,
+  onPrev,
+  onNext,
+  canScrollPrev,
+  canScrollNext
 }) => {
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -68,6 +68,7 @@ const CarouselLayout: React.FC<CarouselLayoutProps> = ({
                   showStats={showStats}
                   onClick={onCategoryClick}
                 />
+                <div className='text-center font-bold text-2xl uppercase p-2 text-primary'>{category.name}</div>
               </div>
             </div>
           ))}
