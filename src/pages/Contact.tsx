@@ -12,7 +12,7 @@ import {
     Linkedin,
     Github,
     ChevronDown,
-    ChevronUp,
+    // ChevronUp,
     X
 } from 'lucide-react';
 import Footer from '../components/SharedComp/footer';
@@ -297,7 +297,7 @@ const ContactPage: React.FC = () => {
                         <div className="bg-white border border-gray-100 rounded-2xl p-8">
                             <h3 className="text-xl font-bold text-gray-900 mb-6">Connect With Us</h3>
                             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3 gap-4">
-                                {socialLinks.map((social, index) => (
+                                {socialLinks.map((social) => (
                                     <motion.a
                                         key={social.platform}
                                         href={social.url}

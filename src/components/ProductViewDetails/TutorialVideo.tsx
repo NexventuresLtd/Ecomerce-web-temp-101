@@ -40,7 +40,7 @@ const TutorialVideo: React.FC<TutorialVideoProps> = ({ product }) => {
             exit={{ opacity: 0, height: 0 }}
           >
 
-          <iframe className="w-full h-96 md:h-126"  src={product.tutorialVideo} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+          <iframe className="w-full h-96 md:h-126"  src={product.tutorialVideo} title="YouTube video player"  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ></iframe>
           </motion.div>
         )}
       </AnimatePresence>
