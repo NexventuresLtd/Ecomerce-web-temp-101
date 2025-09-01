@@ -85,7 +85,6 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
                 className={`
           relative overflow-hidden rounded-2xl p-6 transition-all duration-300 h-full
           ${category.hoverBg} ${category.textColor}
-          border border-gray-200/50 group-hover:border-gray-300/50
           flex flex-col
         `}
             >

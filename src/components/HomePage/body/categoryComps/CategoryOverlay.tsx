@@ -24,7 +24,7 @@ const CategoryOverlay: React.FC<CategoryOverlayProps> = ({
             <img
                 src={overlayImage}
                 alt={`${name} overlay`}
-                className={`${classes !== "" ? classes : 'w-full h-full aspect-auto object-cover'} `}
+                className={`${classes !== "" ? classes : 'w-full h-full aspect-square object-contain'} `}
             />
         </motion.div>
     );
