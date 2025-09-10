@@ -15,8 +15,8 @@ import {
     // ChevronUp,
     X
 } from 'lucide-react';
-import Footer from '../components/SharedComp/footer';
-import Navbar from '../components/SharedComp/navabaritems/NavBar';
+import Footer from '../../components/SharedComp/footer';
+import Navbar from '../../components/SharedComp/navabaritems/NavBar';
 
 export interface SocialLink {
     platform: string;

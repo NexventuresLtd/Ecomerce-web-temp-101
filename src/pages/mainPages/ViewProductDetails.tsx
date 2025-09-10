@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Heart,
-    Share2,
+    
     ShoppingCart,
     Star,
     Plus,
@@ -15,17 +15,14 @@ import {
     Check,
     Play,
     X,
-    Facebook,
-    Twitter,
-    MessageCircle,
-    Mail,
     Award,
+    Download,
 } from 'lucide-react';
-import Navbar from '../components/SharedComp/navabaritems/NavBar';
-import Offers from '../components/HomePage/body/Offers/OurOffers';
-import Footer from '../components/SharedComp/footer';
-import { RWF } from '../app/priceConver';
-import { useProduct } from '../hooks/product/useProduct';
+import Navbar from '../../components/SharedComp/navabaritems/NavBar';
+import Offers from '../../components/HomePage/body/Offers/OurOffers';
+import Footer from '../../components/SharedComp/footer';
+import { RWF } from '../../app/priceConver';
+import { useProduct } from '../../hooks/product/useProduct';
 
 const ProductViewPage: React.FC = () => {
     const { product, loading, error } = useProduct();
@@ -50,7 +47,7 @@ const ProductViewPage: React.FC = () => {
     // Handle quantity change
     const updateQuantity = (action: 'increase' | 'decrease') => {
         if (!product) return;
-        
+
         if (action === 'increase' && quantity < product.instock) {
             setQuantity(prev => prev + 1);
         } else if (action === 'decrease' && quantity > 1) {
@@ -61,7 +58,7 @@ const ProductViewPage: React.FC = () => {
     // Handle image navigation
     const navigateImage = (direction: 'next' | 'prev') => {
         if (!product) return;
-        
+
         if (direction === 'next') {
             setSelectedImageIndex(prev =>
                 prev === product.images.length - 1 ? 0 : prev + 1
@@ -373,44 +370,36 @@ const ProductViewPage: React.FC = () => {
 
                                 <div className="relative" ref={shareRef}>
                                     <button
-                                        onClick={() => setShowShareMenu(!showShareMenu)}
+                                        onClick={() => {
+                                            const imageUrl = product.images[0].image ?? ''; // get the image URL with fallback
+                                            const link = document.createElement("a");
+                                            link.href = imageUrl;
+                                            link.download = "Umukamezi-product-image.jpg"; // you can customize the filename
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                        }}
                                         className="p-3 rounded-lg border border-gray-300 hover:border-gray-400 text-gray-600 transition-colors"
                                     >
-                                        <Share2 className="w-5 h-5" />
+                                        <Download size={20} />
                                     </button>
+
 
                                     <AnimatePresence>
                                         {showShareMenu && (
                                             <motion.div
-                                                initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                                                // initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                                                // animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                // exit={{ opacity: 0, scale: 0.9, y: -10 }}
                                                 className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg border p-2 min-w-[200px] z-10"
                                             >
-                                                <div className="grid grid-cols-2 gap-1">
-                                                    <button className="flex items-center gap-2 p-2 text-sm hover:bg-gray-50 rounded transition-colors">
-                                                        <Facebook className="w-4 h-4 text-blue-600" />
-                                                        Facebook
-                                                    </button>
-                                                    <button className="flex items-center gap-2 p-2 text-sm hover:bg-gray-50 rounded transition-colors">
-                                                        <Twitter className="w-4 h-4 text-blue-400" />
-                                                        Twitter
-                                                    </button>
-                                                    <button className="flex items-center gap-2 p-2 text-sm hover:bg-gray-50 rounded transition-colors">
-                                                        <MessageCircle className="w-4 h-4 text-green-600" />
-                                                        WhatsApp
-                                                    </button>
-                                                    <button className="flex items-center gap-2 p-2 text-sm hover:bg-gray-50 rounded transition-colors">
-                                                        <Mail className="w-4 h-4 text-gray-600" />
-                                                        Email
-                                                    </button>
-                                                </div>
+
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
                                 </div>
                             </div>
-
+                            <div className="sharethis-inline-share-buttons"></div>
                             {/* Delivery Info */}
                             <div className="border-t pt-6">
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
@@ -456,7 +445,7 @@ const ProductViewPage: React.FC = () => {
                     <div className="mt-16">
                         <div className="border-b border-gray-200">
                             <nav className="flex space-x-8">
-                                {['description', 'features', 'specifications', 'reviews', 'tutorial'].map((tab) => (
+                                {['description', 'tutorial', 'features', 'condition', 'brock', 'warranty', 'delivery'].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
@@ -499,7 +488,7 @@ const ProductViewPage: React.FC = () => {
                                 </motion.div>
                             )}
 
-                            {activeTab === 'specifications' && (
+                            {activeTab === 'condition' && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -528,6 +517,9 @@ const ProductViewPage: React.FC = () => {
                                     </div>
                                 </motion.div>
                             )}
+                            {activeTab == "brock" && "Umukamezi"}
+                            {activeTab == "warranty" && "2 month"}
+                            {activeTab == "delivery" && "1 day"}
                         </div>
                     </div>
                 </div>

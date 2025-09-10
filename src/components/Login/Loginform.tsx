@@ -34,7 +34,7 @@ interface LoginProps {
 const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsVerified, formData, setFormData, handleLogin, handleGoogleLogin, setShowSignupModal, isLoading }: LoginProps) => {
     const [showPassword, setShowPassword] = useState(false);
 
-    const [whichMethod, setwhichMethod] = useState("drag");
+    const [whichMethod, setwhichMethod] = useState("pattern");
     const [resetCaptcha, setResetCaptcha] = useState(false);
     const handelGoogleLogin = (msg?: string, userInfo?: any) => {
         handleGoogleLogin({ "type": "GOOGLE", "provider": null, "email": userInfo?.email, "msg": msg })
@@ -65,7 +65,7 @@ const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsV
                                 </h2>
 
                                 <div className="bg-blue-50 rounded-xl p-4 flex gap-4 justify-center mb-4">
-                                    <button
+                                    {/* <button
                                         onClick={() => setwhichMethod("drag")}
                                         className="bg-white px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-100 hover:scale-105 transition-all duration-200"
                                     >
@@ -76,7 +76,7 @@ const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsV
                                         className="bg-white px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-100 hover:scale-105 transition-all duration-200"
                                     >
                                         Smart
-                                    </button>
+                                    </button> */}
                                     <button
                                         onClick={() => setwhichMethod("pattern")}
                                         className="bg-white px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-100 hover:scale-105 transition-all duration-200"

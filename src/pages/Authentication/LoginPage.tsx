@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import mainAxios from '../Instance/mainAxios';
-import type { FormData, SignupFormData, ValidationErrors } from '../types/auth/auth';
-import { clothVariant, handVariant } from '../constants/auth/authVariants';
-import Loginform from '../components/Login/Loginform';
-import RegisterForm from '../components/Register/RegisterForm';
-import { handleApiError } from '../app/utils/HandelHttpError';
-import { validateForm, validateSignupForm } from '../app/utils/AuthValidation';
+import mainAxios from '../../Instance/mainAxios';
+import type { FormData, SignupFormData, ValidationErrors } from '../../types/auth/auth';
+import { clothVariant, handVariant } from '../../constants/auth/authVariants';
+import Loginform from '../../components/Login/Loginform';
+import RegisterForm from '../../components/Register/RegisterForm';
+import { handleApiError } from '../../app/utils/HandelHttpError';
+import { validateForm, validateSignupForm } from '../../app/utils/AuthValidation';
 import { AlertCircle, CheckCircle2, X } from 'lucide-react';
-import OTPVerification from '../components/SharedComp/auth/OTPCleint';
-import PasswordReset from '../components/SharedComp/auth/Password';
+import OTPVerification from '../../components/SharedComp/auth/OTPCleint';
+import PasswordReset from '../../components/SharedComp/auth/Password';
 
 
 

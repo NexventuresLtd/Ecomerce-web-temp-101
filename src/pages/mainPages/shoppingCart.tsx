@@ -1,12 +1,12 @@
 import React, { useState, useReducer } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Plus, Minus, Star, CheckCircle, ArrowLeft, ShoppingBag } from 'lucide-react';
-import Footer from '../components/SharedComp/footer';
-import Navbar from '../components/SharedComp/navabaritems/NavBar';
-import type { Product, ProductColor } from '../types/Product/ProductType';
-import { ownerData, productsData } from '../constants/ProductsData/ProductData';
-import { RWF } from '../app/priceConver';
-import { useNavigation } from '../hooks/product/useNavigation';
+import Footer from '../../components/SharedComp/footer';
+import Navbar from '../../components/SharedComp/navabaritems/NavBar';
+import type { Product, ProductColor } from '../../types/Product/ProductType';
+import { ownerData, productsData } from '../../constants/ProductsData/ProductData';
+import { RWF } from '../../app/priceConver';
+import { useNavigation } from '../../hooks/product/useNavigation';
 
 
 

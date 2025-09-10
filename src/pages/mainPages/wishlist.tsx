@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Heart, Star, ShoppingCart, X, Verified, Package, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navbar from '../components/SharedComp/navabaritems/NavBar';
-import Footer from '../components/SharedComp/footer';
-import type { Owner, Product } from '../types/Product/ProductType';
-import { ownerData, productsData } from '../constants/ProductsData/ProductData';
-import { useNavigation } from '../hooks/product/useNavigation';
+import Navbar from '../../components/SharedComp/navabaritems/NavBar';
+import Footer from '../../components/SharedComp/footer';
+import type { Owner, Product } from '../../types/Product/ProductType';
+import { ownerData, productsData } from '../../constants/ProductsData/ProductData';
+import { useNavigation } from '../../hooks/product/useNavigation';
 
 
 

@@ -1,10 +1,10 @@
-import CategorySection from "../components/HomePage/body/categories"
+import CategorySection from "../../components/HomePage/body/categories"
 
-import Offers from "../components/HomePage/body/Offers/OurOffers"
-import Hero from "../components/HomePage/Header/Hero/Hero"
-import Footer from "../components/SharedComp/footer"
-import Navbar from "../components/SharedComp/navabaritems/NavBar"
-import { productsData } from "../constants/ProductsData/ProductData"
+import Offers from "../../components/HomePage/body/Offers/OurOffers"
+import Hero from "../../components/HomePage/Header/Hero/Hero"
+import Footer from "../../components/SharedComp/footer"
+import Navbar from "../../components/SharedComp/navabaritems/NavBar"
+import { productsData } from "../../constants/ProductsData/ProductData"
 
 
 

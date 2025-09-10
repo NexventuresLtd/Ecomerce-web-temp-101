@@ -55,10 +55,10 @@ const Hero: React.FC = () => {
       <div className="absolute inset-0">
         <img
           src={currentSlideData.imageUrl}   // use leading / if in public folder     // for mobile browsers
-          className="absolute top-0 left-0 w-full h-full object-cover"
+          className="absolute top-0 left-0 w-full h-full object-cover object-top opacity-40"
         />
-        <div className="absolute inset-0 bg-secondary/30 opacity-100"></div> {/* Overlay */}
-        <div className="absolute inset-0 bg-black/40 opacity-100"></div> {/* Overlay */}
+        <div className="absolute inset-0 bg-secondary/40 opacity-100"></div> {/* Overlay */}
+        <div className="absolute inset-0 bg-black/50 opacity-100"></div> {/* Overlay */}
       </div>
 
       <div className="w-full mx-auto px-6 py-12 relative z-10">

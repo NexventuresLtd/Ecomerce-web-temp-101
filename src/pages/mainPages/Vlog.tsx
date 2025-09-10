@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Filter, Play, Eye, Calendar, Heart, Bookmark, ArrowLeft, ExternalLink, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Footer from '../components/SharedComp/footer';
-import Navbar from '../components/SharedComp/navabaritems/NavBar';
+import Footer from '../../components/SharedComp/footer';
+import Navbar from '../../components/SharedComp/navabaritems/NavBar';
 
 // Type Definitions
 export interface Vlog {

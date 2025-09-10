@@ -8,15 +8,15 @@ import {
     X,
     ShoppingCartIcon
 } from 'lucide-react';
-import Navbar from '../components/SharedComp/navabaritems/NavBar';
-import Footer from '../components/SharedComp/footer';
-import { productsData } from '../constants/ProductsData/ProductData';
-import { RWF } from '../app/priceConver';
-import Offers from '../components/HomePage/body/Offers/OurOffers';
-import { useNavigation } from '../hooks/product/useNavigation';
-import type { Product } from '../types/Product/ProductType';
-import { handleClickWhatsapp } from '../app/ProductWhasapp';
-import SkeletonLoader from '../components/Skeltons/Product';
+import Navbar from '../../components/SharedComp/navabaritems/NavBar';
+import Footer from '../../components/SharedComp/footer';
+import { productsData } from '../../constants/ProductsData/ProductData';
+import { RWF } from '../../app/priceConver';
+import Offers from '../../components/HomePage/body/Offers/OurOffers';
+import { useNavigation } from '../../hooks/product/useNavigation';
+import type { Product } from '../../types/Product/ProductType';
+import { handleClickWhatsapp } from '../../app/ProductWhasapp';
+import SkeletonLoader from '../../components/Skeltons/Product';
 
 const products: Product[] = productsData;
 
