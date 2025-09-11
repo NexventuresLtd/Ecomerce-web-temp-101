@@ -1,7 +1,7 @@
 import { ChevronDown } from 'lucide-react';
 import { useRef } from 'react';
 import { mainNavItems } from '../../../constants/NabarMain/navLinks';
-import { generateDropdownContent } from '../../../hooks/NavbarHooks/NavMenu';
+import { GenerateDropdownContent } from '../../../hooks/NavbarHooks/NavMenu';
 import UserInfo from './UserInfo';
 interface ThirdMenuNavProps {
     activeDropdown: string | null;
@@ -46,7 +46,7 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
                                 >
                                     <button
                                         onClick={() => handleMobileClick(item)}
-                                        className="flex items-center py-3 cursor-pointer text-white hover:bg-slate-700 transition-colors duration-200 text-sm "
+                                        className="flex items-center py-3 px-2 cursor-pointer text-white hover:bg-slate-700 transition-colors duration-200 text-sm "
                                     >
                                         {item.name}
                                         {item.hasDropdown && <ChevronDown className="ml-0 w-4 h-4" />}
@@ -62,7 +62,7 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
                             className={`absolute left-0 top-full w-full bg-gray-100 rounded-b-2xl z-20 transition-opacity duration-200 ${activeDropdown ? 'opacity-100 visible' : 'opacity-10 invisible'
                                 }`}
                         >
-                            {activeDropdown && generateDropdownContent(activeDropdown)}
+                            {activeDropdown && <GenerateDropdownContent itemName={activeDropdown} />}
                         </div>
                     </div>
 
@@ -86,7 +86,7 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
                                                 </button>
                                                 {activeDropdown === item.name && (
                                                     <div className="px-3 py-2 bg-gray-50">
-                                                        {generateDropdownContent(item.name)}
+                                                        <GenerateDropdownContent itemName={item.name} />
                                                     </div>
                                                 )}
                                             </>

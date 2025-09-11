@@ -8,10 +8,10 @@ export const topNavItems = [
 
 export const mainNavItems: NavItem[] = [
     { name: 'Home', href: '/', hasDropdown: false },
-    { name: 'Cameras', href: '#', hasDropdown: true },
-    { name: 'Computers', href: '#', hasDropdown: true },
-    { name: 'Pro Audio', href: '#', hasDropdown: true },
-    { name: 'Pro Games', href: '#', hasDropdown: true },
+    { name: 'All Products', href: '/products', hasDropdown: false },
+    { name: 'Photograph', href: '#', hasDropdown: true },
+    { name: 'Videography', href: '#', hasDropdown: true },
+    { name: 'Computer', href: '#', hasDropdown: true },
     { name: 'Tablet', href: '#', hasDropdown: true },
     { name: 'Lighting', href: '#', hasDropdown: true },
     { name: 'Phone', href: '#', hasDropdown: true },
