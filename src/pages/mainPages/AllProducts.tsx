@@ -10,15 +10,14 @@ import {
 } from 'lucide-react';
 import Navbar from '../../components/SharedComp/navabaritems/NavBar';
 import Footer from '../../components/SharedComp/footer';
-import { productsData } from '../../constants/ProductsData/ProductData';
 import { RWF } from '../../app/priceConver';
 import Offers from '../../components/HomePage/body/Offers/OurOffers';
 import { useNavigation } from '../../hooks/product/useNavigation';
-import type { Product } from '../../types/Product/ProductType';
 import { handleClickWhatsapp } from '../../app/ProductWhasapp';
 import SkeletonLoader from '../../components/Skeltons/Product';
+import type { Product } from '../../types/Product/producttypeAdmin';
+import { productApi } from '../../app/products/allProductgeter';
 
-const products: Product[] = productsData;
 
 // Filter Types
 interface FilterState {
@@ -40,7 +39,7 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
     const [showDescription, setShowDescription] = useState(false);
-    const primaryImage = product.images.find(img => img.isprimary)?.image || product.images[0]?.image;
+    const primaryImage = product.images?.find(img => img.is_primary)?.url || product.images?.[0]?.url || '';
     const { navigateToProduct } = useNavigation();
 
     return (
@@ -51,7 +50,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
             className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-all duration-300 group cursor-pointer"
             onMouseEnter={() => setShowDescription(true)}
             onMouseLeave={() => setShowDescription(false)}
-            onClick={() => navigateToProduct(product.id)}
+            onClick={() => navigateToProduct(product.id.toString())}
         >
             <div className="relative overflow-hidden">
                 <img
@@ -59,12 +58,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
                     alt={product.title}
                     className="w-full h-48 object-contain group-hover:scale-105 transition-transform duration-300"
                 />
-                {product.discount && (
+                {product.discount !== 0 && (
                     <div className="absolute hidden top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
                         -{product.discount}%
                     </div>
                 )}
-                {product.isNew && (
+                {product.is_new && (
                     <div className="absolute hidden top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                         NEW
                     </div>
@@ -98,23 +97,23 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
                 <div className="flex items-center justify-between mb-4 w-full">
                     <div className="flex items-center space-x-2">
                         <span className="text-xl font-bold text-gray-900">
-                            {RWF.format(product.price)}
+                            {product.price ? RWF.format(product.price) : 'Price not available'}
                         </span>
-                        {product.originalPrice && (
+                        {product.original_price && (
                             <span className="text-sm text-gray-500 line-through">
-                                {RWF.format(product.originalPrice)}
+                                {RWF.format(product.original_price)}
                             </span>
                         )}
                     </div>
                 </div>
-                <div className={`${product.instock < 1 ? 'bg-red-500' : 'bg-primary'} text-white px-3 py-1 rounded-full text-sm w-fit ml-auto mb-2 font-semibold`}>
-                    {product.instock < 1 ? 'Out of Stock' : `${product.instock} in Stock`}
+                <div className={`${(product.instock || 0) < 1 ? 'bg-red-500' : 'bg-primary'} text-white px-3 py-1 rounded-full text-sm w-fit ml-auto mb-2 font-semibold`}>
+                    {(product.instock || 0) < 1 ? 'Out of Stock' : `${product.instock} in Stock`}
                 </div>
                 <div className="flex gap-2">
                     <button
-                        disabled={product.instock < 1}
-                        onClick={() => navigateToProduct(product.id)}
-                        className={`${product.instock < 1 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} w-full bg-primary text-xs text-white font-semibold rounded-2xl px-3 py-3 transition-colors duration-300 flex items-center justify-center gap-2`}>
+                        disabled={(product.instock || 0) < 1}
+                        onClick={() => navigateToProduct(product.id.toString())}
+                        className={`${(product.instock || 0) < 1 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} w-full bg-primary text-xs text-white font-semibold rounded-2xl px-3 py-3 transition-colors duration-300 flex items-center justify-center gap-2`}>
                         <ShoppingCartIcon size={18} />
                         Shop Now
                     </button>
@@ -199,12 +198,12 @@ interface FilterSidebarProps {
     onFiltersChange: (filters: FilterState) => void;
     isOpen: boolean;
     onClose: () => void;
+    products: Product[];
 }
 
-const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, onFiltersChange, isOpen, onClose }) => {
-    const categories = Array.from(new Set(products.map(p => p.category)));
-    const brands = Array.from(new Set(products.map(p => p.brand)));
-    const maxPrice = Math.max(...products.map(p => p.price));
+const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, onFiltersChange, isOpen, onClose, products }) => {
+    const categories = Array.from(new Set(products.map(p => p.category?.name || '').filter(Boolean)));
+    const maxPrice = Math.max(...products.map(p => p.price || 0), 100000);
 
     const updateFilters = (key: keyof FilterState, value: any) => {
         onFiltersChange({ ...filters, [key]: value });
@@ -217,12 +216,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, onFiltersChange,
         updateFilters('categories', updated);
     };
 
-    const toggleBrand = (brand: string) => {
-        const updated = filters.brands.includes(brand)
-            ? filters.brands.filter(b => b !== brand)
-            : [...filters.brands, brand];
-        updateFilters('brands', updated);
-    };
+
 
     const sidebarContent = (
         <div className=" space-y-6">
@@ -270,24 +264,6 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, onFiltersChange,
                         <span>Rwf 0</span>
                         <span>Rwf {RWF.format(filters.priceRange[1])}</span>
                     </div>
-                </div>
-            </div>
-
-            {/* Brands */}
-            <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Brands</h3>
-                <div className="space-y-2">
-                    {brands.map((brand) => (
-                        <label key={brand} className="flex items-center">
-                            <input
-                                type="checkbox"
-                                checked={filters.brands.includes(brand)}
-                                onChange={() => toggleBrand(brand)}
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">{brand}</span>
-                        </label>
-                    ))}
                 </div>
             </div>
 
@@ -406,10 +382,17 @@ const LoadMoreButton: React.FC<LoadMoreButtonProps> = ({ isLoading, hasMore, onC
 
 // Main All Products Page Component
 const AllProductsPage: React.FC = () => {
+    const [allProducts, setAllProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const [hasMoreProducts, setHasMoreProducts] = useState<boolean>(true);
+    const [skip, setSkip] = useState<number>(0);
+    const limit: number = 20;
+
     const [filters, setFilters] = useState<FilterState>({
         categories: [],
         brands: [],
-        priceRange: [0, Math.max(...products.map(p => p.price))],
+        priceRange: [0, 100000],
         minRating: 0,
         inStockOnly: false
     });
@@ -418,12 +401,49 @@ const AllProductsPage: React.FC = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [displayCount, setDisplayCount] = useState(12);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [autoLoadEnabled, setAutoLoadEnabled] = useState(true);
+
+    // Load products from API
+    const loadProducts = useCallback(async (): Promise<void> => {
+        try {
+            setLoading(true);
+            const response = await productApi.getProducts(skip, limit);
+            const newProducts: Product[] = response.products || response;
+            
+            setAllProducts(prev => [...prev, ...newProducts]);
+            setSkip(prev => prev + limit);
+            
+            // If we get fewer products than requested, we've reached the end
+            if (newProducts.length < limit) {
+                setHasMoreProducts(false);
+            }
+        } catch (err: any) {
+            setError(err.message || "Failed to fetch products");
+        } finally {
+            setLoading(false);
+        }
+    }, [skip, limit]);
+
+    // Initial data load
+    useEffect(() => {
+        loadProducts();
+    }, []);
+
+    // Update max price when products are loaded
+    useEffect(() => {
+        if (allProducts.length > 0) {
+            const maxPrice = Math.max(...allProducts.map(p => p.price || 0), 100000);
+            setFilters(prev => ({
+                ...prev,
+                priceRange: [0, maxPrice]
+            }));
+        }
+    }, [allProducts]);
 
     // Filter and sort products
     const filteredAndSortedProducts = useMemo(() => {
-        let filtered = products.filter(product => {
+        let filtered = allProducts.filter(product => {
             // Search filter
             if (searchQuery && !product.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
                 !product.description.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -431,27 +451,25 @@ const AllProductsPage: React.FC = () => {
             }
 
             // Category filter
-            if (filters.categories.length > 0 && !filters.categories.includes(product.category)) {
-                return false;
-            }
-
-            // Brand filter
-            if (filters.brands.length > 0 && !filters.brands.includes(product.brand)) {
+            if (filters.categories.length > 0 && !filters.categories.includes(product.category?.name || '')) {
                 return false;
             }
 
             // Price filter
-            if (product.price < filters.priceRange[0] || product.price > filters.priceRange[1]) {
+            const productPrice = product.price || 0;
+            if (productPrice < filters.priceRange[0] || productPrice > filters.priceRange[1]) {
                 return false;
             }
 
             // Rating filter
-            if (product.rating < filters.minRating) {
+            const productRating = product.rating || 0;
+            if (productRating < filters.minRating) {
                 return false;
             }
 
             // Stock filter
-            if (filters.inStockOnly && product.instock <= 0) {
+            const productStock = product.instock || 0;
+            if (filters.inStockOnly && productStock <= 0) {
                 return false;
             }
 
@@ -461,50 +479,59 @@ const AllProductsPage: React.FC = () => {
         // Sort products
         switch (currentSort) {
             case 'price-asc':
-                filtered.sort((a, b) => a.price - b.price);
+                filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
                 break;
             case 'price-desc':
-                filtered.sort((a, b) => b.price - a.price);
+                filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
                 break;
             case 'newest':
-                filtered.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
+                filtered.sort((a, b) => (b.is_new ? 1 : 0) - (a.is_new ? 1 : 0));
                 break;
             case 'rating':
-                filtered.sort((a, b) => b.rating - a.rating);
+                filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
                 break;
             case 'featured':
             default:
                 filtered.sort((a, b) => {
-                    if (a.isFeatured !== b.isFeatured) {
-                        return b.isFeatured ? 1 : -1;
+                    if (a.is_featured !== b.is_featured) {
+                        return b.is_featured ? 1 : -1;
                     }
-                    return b.rating - a.rating;
+                    return (b.rating || 0) - (a.rating || 0);
                 });
                 break;
         }
 
         return filtered;
-    }, [filters, currentSort, searchQuery]);
+    }, [allProducts, filters, currentSort, searchQuery]);
 
     // Reset display count when filters change
-    React.useEffect(() => {
+    useEffect(() => {
         setDisplayCount(12);
     }, [filters, currentSort, searchQuery]);
 
     // Displayed products based on display count
     const displayedProducts = filteredAndSortedProducts.slice(0, displayCount);
-    const hasMoreProducts = displayCount < filteredAndSortedProducts.length;
+    const hasMoreFilteredProducts = displayCount < filteredAndSortedProducts.length;
 
     // Load more products function
     const loadMoreProducts = useCallback(async () => {
-        if (isLoading || !hasMoreProducts) return;
+        if (isLoadingMore || !hasMoreFilteredProducts) return;
 
-        setIsLoading(true);
+        setIsLoadingMore(true);
         // Simulate loading time
         await new Promise(resolve => setTimeout(resolve, 1000));
         setDisplayCount(prev => prev + 12);
-        setIsLoading(false);
-    }, [isLoading, hasMoreProducts]);
+        setIsLoadingMore(false);
+    }, [isLoadingMore, hasMoreFilteredProducts]);
+
+    // Load more products from API when needed
+    const loadMoreApiProducts = useCallback(async () => {
+        if (isLoadingMore || !hasMoreProducts) return;
+
+        setIsLoadingMore(true);
+        await loadProducts();
+        setIsLoadingMore(false);
+    }, [isLoadingMore, hasMoreProducts, loadProducts]);
 
     useEffect(() => {
         if (!autoLoadEnabled) return;
@@ -519,13 +546,17 @@ const AllProductsPage: React.FC = () => {
 
             // Load more when within 20% of bottom
             if (scrollTop + clientHeight >= scrollHeight - clientHeight * 0.1) {
-                loadMoreProducts();
+                if (hasMoreFilteredProducts) {
+                    loadMoreProducts();
+                } else if (hasMoreProducts) {
+                    loadMoreApiProducts();
+                }
             }
         };
 
         container.addEventListener('scroll', handleScroll);
         return () => container.removeEventListener('scroll', handleScroll);
-    }, [autoLoadEnabled, loadMoreProducts]);
+    }, [autoLoadEnabled, loadMoreProducts, loadMoreApiProducts, hasMoreFilteredProducts, hasMoreProducts]);
 
     return (
         <>
@@ -539,6 +570,7 @@ const AllProductsPage: React.FC = () => {
                             onFiltersChange={setFilters}
                             isOpen={isFilterOpen}
                             onClose={() => setIsFilterOpen(false)}
+                            products={allProducts}
                         />
                     </div>
 
@@ -590,7 +622,7 @@ const AllProductsPage: React.FC = () => {
                                                 setFilters({
                                                     categories: [],
                                                     brands: [],
-                                                    priceRange: [0, Math.max(...products.map(p => p.price))],
+                                                    priceRange: [0, Math.max(...allProducts.map(p => p.price || 0), 100000)],
                                                     minRating: 0,
                                                     inStockOnly: false
                                                 });
@@ -623,7 +655,13 @@ const AllProductsPage: React.FC = () => {
                         {/* Product Grid */}
                         <div className="px-4 lg:px-8 py-8">
                             <div className="max-w-full mx-auto">
-                                {displayedProducts.length > 0 ? (
+                                {loading && allProducts.length === 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
+                                        {[...Array(12)].map((_, index) => (
+                                            <SkeletonLoader key={index} />
+                                        ))}
+                                    </div>
+                                ) : displayedProducts.length > 0 ? (
                                     <motion.div
                                         className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8"
                                         initial={{ opacity: 0 }}
@@ -638,9 +676,9 @@ const AllProductsPage: React.FC = () => {
                                             />
                                         ))}
                                         {/* Skeleton Loaders */}
-                                        {isLoading && <>
-                                            {[...Array(12)].map((_,) => (
-                                                <SkeletonLoader />
+                                        {isLoadingMore && <>
+                                            {[...Array(12)].map((_, index) => (
+                                                <SkeletonLoader key={index} />
                                             ))}
                                         </>}
 
@@ -666,7 +704,7 @@ const AllProductsPage: React.FC = () => {
                                                     setFilters({
                                                         categories: [],
                                                         brands: [],
-                                                        priceRange: [0, Math.max(...products.map(p => p.price))],
+                                                        priceRange: [0, Math.max(...allProducts.map(p => p.price || 0), 100000)],
                                                         minRating: 0,
                                                         inStockOnly: false
                                                     });
@@ -680,20 +718,23 @@ const AllProductsPage: React.FC = () => {
                                     </motion.div>
                                 )}
 
-
-
-
                                 {/* Load More Button - Only show if auto-load is disabled */}
                                 {!autoLoadEnabled && (
                                     <LoadMoreButton
-                                        isLoading={isLoading}
-                                        hasMore={hasMoreProducts}
-                                        onClick={loadMoreProducts}
+                                        isLoading={isLoadingMore}
+                                        hasMore={hasMoreFilteredProducts || hasMoreProducts}
+                                        onClick={() => {
+                                            if (hasMoreFilteredProducts) {
+                                                loadMoreProducts();
+                                            } else if (hasMoreProducts) {
+                                                loadMoreApiProducts();
+                                            }
+                                        }}
                                     />
                                 )}
 
                                 {/* End of results message */}
-                                {!hasMoreProducts && displayedProducts.length > 0 && (
+                                {!hasMoreFilteredProducts && !hasMoreProducts && displayedProducts.length > 0 && (
                                     <div className="text-center mt-12 py-8 border-t border-gray-200">
                                         <p className="text-gray-600">You've reached the end of the products list.</p>
                                     </div>

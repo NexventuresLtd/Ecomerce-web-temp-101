@@ -12,7 +12,10 @@ export interface Product {
     is_active: boolean;
     reviews_count?: number;
     instock?: number;
-    delivery_fee?: number;
+    delivery_fee?: string;
+    brock?:string;
+    returnDay?:string;
+    warranty?:string;
     hover_image?: string;
     tutorial_video?: string;
     tags?: string[];

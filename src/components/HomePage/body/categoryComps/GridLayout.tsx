@@ -32,19 +32,25 @@ const GridLayout: React.FC<GridLayoutProps> = ({
       whileInView="visible"
       viewport={{ once: true, margin: "-100px" }}
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 lg:gap-26 2xl:gap-0 mx-auto max-w-5xl 2xl:max-w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 lg:gap-8 mx-auto max-w-5xl 2xl:max-w-full">
         {categories.map((category, index) => (
-          <div key={category.id} className="h-full pb-5">
+          <div
+            key={category.id}
+            className="h-full pb-5 transform scale-90 sm:scale-90 md:scale-95 lg:scale-95 xl:scale-90 2xl:scale-90"
+          >
             <CategoryCard
               category={category}
               index={index}
               showStats={showStats}
               onClick={onCategoryClick}
             />
-            <div className='text-center font-bold text-2xl uppercase p-2 text-primary'>{category.name}</div>
+            <div className='text-center font-bold text-lg uppercase p-1 text-primary'>
+              {category.name}
+            </div>
           </div>
         ))}
       </div>
+
     </motion.div>
   );
 };

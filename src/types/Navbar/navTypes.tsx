@@ -1,5 +1,6 @@
 
 export interface NavItem {
+  title: string;
   name: string;
   href: string;
   hasDropdown?: boolean;

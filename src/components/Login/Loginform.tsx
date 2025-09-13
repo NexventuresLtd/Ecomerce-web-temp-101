@@ -6,7 +6,7 @@ import {
     Eye,
     EyeOff,
     Loader2,
-    User,
+    // User,
     AlertCircle,
 } from 'lucide-react';
 import { formVariant } from '../../constants/auth/authVariants';
@@ -34,7 +34,7 @@ interface LoginProps {
 const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsVerified, formData, setFormData, handleLogin, handleGoogleLogin, setShowSignupModal, isLoading }: LoginProps) => {
     const [showPassword, setShowPassword] = useState(false);
 
-    const [whichMethod, setwhichMethod] = useState("pattern");
+    const [whichMethod, setwhichMethod] = useState("drag");
     const [resetCaptcha, setResetCaptcha] = useState(false);
     const handelGoogleLogin = (msg?: string, userInfo?: any) => {
         handleGoogleLogin({ "type": "GOOGLE", "provider": null, "email": userInfo?.email, "msg": msg })
@@ -65,13 +65,13 @@ const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsV
                                 </h2>
 
                                 <div className="bg-blue-50 rounded-xl p-4 flex gap-4 justify-center mb-4">
-                                    {/* <button
+                                    <button
                                         onClick={() => setwhichMethod("drag")}
                                         className="bg-white px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-100 hover:scale-105 transition-all duration-200"
                                     >
                                         Drag
                                     </button>
-                                    <button
+                                    {/* <button
                                         onClick={() => setwhichMethod("smart")}
                                         className="bg-white px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-100 hover:scale-105 transition-all duration-200"
                                     >
@@ -107,14 +107,14 @@ const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsV
                         <>
                             {/* Header */}
                             <div className="text-center mb-8">
-                                <motion.div
+                                {/* <motion.div
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{ delay: 1, duration: 0.5, type: "spring" }}
                                     className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4"
                                 >
                                     <User className="w-8 h-8 text-white" />
-                                </motion.div>
+                                </motion.div> */}
                                 <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
                                 <p className="text-gray-600">Sign in to your account</p>
                             </div>

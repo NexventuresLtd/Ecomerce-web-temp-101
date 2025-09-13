@@ -12,7 +12,10 @@ import {
     Eye,
     Star,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Mail,
+    RefreshCw,
+    Ruler
 } from 'lucide-react';
 import Navbar from '../../components/SharedComp/navabaritems/NavBar';
 import Footer from '../../components/SharedComp/footer';
@@ -345,6 +348,98 @@ const USPSection: React.FC = () => {
 };
 
 const TeamSection: React.FC = () => {
+    const [activeTab, setActiveTab] = useState<string>('story');
+
+    const tabs = [
+        { id: 'story', label: 'Our Story' },
+        { id: 'info', label: 'Basic Info' },
+        { id: 'support', label: 'Customer Support' },
+        { id: 'shipping', label: 'Shipping & Returns' },
+    ];
+
+
+    const tabContent: any = {
+        story: (
+            <div className="space-y-6">
+                <p className="text-lg text-gray-700 leading-relaxed">
+                    Umukamezi was founded by Khadafi with a vision to revolutionize the way people
+                    connect and do business. Our journey began with a simple idea: to create a platform
+                    that empowers both buyers and sellers in a seamless marketplace experience.
+                </p>
+                <p className="text-lg text-gray-700 leading-relaxed">
+                    From humble beginnings, we've grown into a trusted platform serving thousands of
+                    users across multiple countries. Our commitment to quality, security, and customer
+                    satisfaction has been the driving force behind our success.
+                </p>
+                <p className="text-lg text-gray-700 leading-relaxed">
+                    Watch our Instagram Reel to learn more about our story and the passion that fuels
+                    our mission to connect people through commerce.
+                </p>
+            </div>
+        ),
+        info: (
+            <div className="space-y-4">
+                <div className="flex items-start">
+                    <CheckCircle className="w-6 h-6 text-green-600 mt-1 mr-3 flex-shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-gray-900">Low Price Guarantee</h4>
+                        <p className="text-gray-700">We guarantee the lowest prices on all our products.</p>
+                    </div>
+                </div>
+                <div className="flex items-start">
+                    <Shield className="w-6 h-6 text-blue-600 mt-1 mr-3 flex-shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-gray-900">Secure Shopping</h4>
+                        <p className="text-gray-700">Your transactions are always safe and protected.</p>
+                    </div>
+                </div>
+            </div>
+        ),
+        support: (
+            <div className="space-y-4">
+                <div className="flex items-start">
+                    <Users className="w-6 h-6 text-purple-600 mt-1 mr-3 flex-shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-gray-900">24/7 Customer Support</h4>
+                        <p className="text-gray-700">We are here for you 24/7 online and via phone.</p>
+                    </div>
+                </div>
+                <div className="flex items-start">
+                    <Mail className="w-6 h-6 text-orange-600 mt-1 mr-3 flex-shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-gray-900">Multiple Contact Options</h4>
+                        <p className="text-gray-700">E-Mail - Text - Call - We're always available.</p>
+                    </div>
+                </div>
+            </div>
+        ),
+        shipping: (
+            <div className="space-y-4">
+                <div className="flex items-start">
+                    <Truck className="w-6 h-6 text-teal-600 mt-1 mr-3 flex-shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-gray-900">Worldwide Shipping</h4>
+                        <p className="text-gray-700">We'd love to expand our business Internationally soon.</p>
+                    </div>
+                </div>
+                <div className="flex items-start">
+                    <RefreshCw className="w-6 h-6 text-red-600 mt-1 mr-3 flex-shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-gray-900">Easy Returns</h4>
+                        <p className="text-gray-700">Not satisfied? We offer hassle-free returns.</p>
+                    </div>
+                </div>
+                <div className="flex items-start">
+                    <Ruler className="w-6 h-6 text-pink-600 mt-1 mr-3 flex-shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-gray-900">Sizing & Color</h4>
+                        <p className="text-gray-700">Comprehensive sizing guides and color accuracy.</p>
+                    </div>
+                </div>
+            </div>
+        ),
+    };
+
     return (
         <section className="py-20 px-4 bg-white">
             <div className="max-w-full md:max-w-11/12 mx-auto">
@@ -352,39 +447,75 @@ const TeamSection: React.FC = () => {
                     className="text-center mb-16"
                     {...fadeInUp}
                 >
-                    <h2 className="text-4xl font-bold text-gray-900 mb-4">Meet Our Team</h2>
+                    <h2 className="text-4xl font-bold text-gray-900 mb-4">Story of Umukamezi</h2>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                        The passionate individuals behind Umukamezi's success
+                        Discover our journey and services
                     </p>
                 </motion.div>
 
-                <motion.div
-                    className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 "
-                    variants={stagger}
-                    initial="initial"
-                    whileInView="animate"
-                    viewport={{ once: true }}
-                >
-                    {aboutData.team.map((member) => (
-                        <motion.div
-                            key={member.id}
-                            className="text-center group"
-                            variants={fadeInUp}
-                            whileHover={{ y: -10 }}
+                <div className="grid md:grid-cols-2 gap-12 items-start">
+                    {/* Left side - Tabs */}
+
+                    <motion.div
+                        className="relative group"
+                        initial={{ opacity: 0, x: 50 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                    >
+                        <img
+                            src="kad.jpeg"
+                            alt="Khadafi"
+                            className="w-full h-[500px] aspect-video object-cover rounded-2xl shadow-lg group-hover:opacity-90 transition-opacity duration-300"
+                        />
+                        {/* Video icon overlay */}
+                        <a
+                            href="https://www.instagram.com/reel/Burya_uzakire/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                         >
-                            <div className="relative mb-6">
-                                <img
-                                    src={member.image}
-                                    alt={member.name}
-                                    className="w-48 h-48 rounded-full mx-auto object-cover group-hover:scale-105 transition-transform duration-300"
-                                />
+                            <div className="bg-primary bg-opacity-80 rounded-full p-4">
+                                <svg className="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">{member.name}</h3>
-                            <p className="text-primary font-medium mb-3">{member.role}</p>
-                            <p className="text-gray-600 text-sm">{member.bio}</p>
+                        </a>
+                    </motion.div>
+                    {/* Right side - Image with video icon */}
+                    <motion.div
+                        className="bg-gray-50 p-6 rounded-2xl"
+                        initial={{ opacity: 0, x: -50 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                    >
+                        <div className="flex flex-wrap gap-2 mb-6">
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === tab.id
+                                        ? 'bg-primary text-white'
+                                        : 'bg-white text-gray-700 hover:bg-gray-100'
+                                        }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        <motion.div
+                            key={activeTab}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="min-h-[200px]"
+                        >
+                            {tabContent[activeTab]}
                         </motion.div>
-                    ))}
-                </motion.div>
+                    </motion.div>
+                </div>
             </div>
         </section>
     );

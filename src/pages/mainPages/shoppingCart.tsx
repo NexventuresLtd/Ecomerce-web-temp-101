@@ -1,43 +1,32 @@
 import React, { useState, useReducer } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Plus, Minus, Star, CheckCircle, ArrowLeft, ShoppingBag } from 'lucide-react';
+import { Trash2, Plus, Minus, Star, ArrowLeft, ShoppingBag } from 'lucide-react';
 import Footer from '../../components/SharedComp/footer';
 import Navbar from '../../components/SharedComp/navabaritems/NavBar';
-import type { Product, ProductColor } from '../../types/Product/ProductType';
-import { ownerData, productsData } from '../../constants/ProductsData/ProductData';
+
+import { productsData } from '../../constants/ProductsData/ProductData';
 import { RWF } from '../../app/priceConver';
 import { useNavigation } from '../../hooks/product/useNavigation';
-
-
-
-export interface Owner {
-    name: string;
-    isverified: boolean;
-    email: string;
-    image: string;
-    JoinedAt: string;
-}
+import type { Product } from '../../types/Product/producttypeAdmin';
 
 // Cart Item Interface
 interface CartItem extends Product {
     quantity: number;
-    selectedColor: ProductColor;
+    deliveryFee: number; // Added deliveryFee to the interface
 }
 
 // Mock Cart Data
 const cartData: CartItem[] = productsData.slice(0, 3).map(product => ({
     ...product,
     quantity: 1,
-    selectedColor: product.colors[0],
+    selectedColor: product.colors?.[0] || { name: 'Default', hex: '#000000', stock: 0 },
     deliveryFee: 5.99 // Example delivery fee
 }));
 
-
 // Cart Actions
 type CartAction =
-    | { type: 'UPDATE_QUANTITY'; id: string; quantity: number }
-    | { type: 'REMOVE_ITEM'; id: string }
-    | { type: 'UPDATE_COLOR'; id: string; color: ProductColor };
+    | { type: 'UPDATE_QUANTITY'; id: number; quantity: number } // Changed to number
+    | { type: 'REMOVE_ITEM'; id: number } // Changed to number
 
 const cartReducer = (state: CartItem[], action: CartAction): CartItem[] => {
     switch (action.type) {
@@ -49,11 +38,6 @@ const cartReducer = (state: CartItem[], action: CartAction): CartItem[] => {
         case 'REMOVE_ITEM':
             return state.filter(item => item.id !== action.id);
 
-        case 'UPDATE_COLOR':
-            return state.map(item =>
-                item.id === action.id ? { ...item, selectedColor: action.color } : item
-            );
-
         default:
             return state;
     }
@@ -62,16 +46,15 @@ const cartReducer = (state: CartItem[], action: CartAction): CartItem[] => {
 // CartItem Component
 const CartItem: React.FC<{
     item: CartItem;
-    onUpdateQuantity: (id: string, quantity: number) => void;
-    onRemove: (id: string) => void;
-    onUpdateColor: (id: string, color: ProductColor) => void;
-}> = ({ item, onUpdateQuantity, onRemove, onUpdateColor }) => {
+    onUpdateQuantity: (id: number, quantity: number) => void;
+    onRemove: (id: number) => void;
+}> = ({ item, onUpdateQuantity, onRemove }) => {
     const [isHovered, setIsHovered] = useState(false);
-    const [showOwnerTooltip, setShowOwnerTooltip] = useState(false);
 
-    const primaryImage = item.images.find(img => img.isprimary)?.image || item.images[0]?.image;
-    const displayImage = isHovered && item.hoverImage ? item.hoverImage : primaryImage;
+    const primaryImage = item.images?.find(img => img.is_primary)?.url || item.images?.[0]?.url || '';
+    const displayImage = isHovered && item.hover_image ? item.hover_image : primaryImage;
     const { navigateToProduct } = useNavigation();
+
     return (
         <motion.div
             layout
@@ -83,7 +66,7 @@ const CartItem: React.FC<{
             <div className="flex flex-col md:flex-row gap-4 cursor-pointer" >
                 {/* Product Image */}
                 <div
-                    onClick={() => navigateToProduct(item.id)}
+                    onClick={() => navigateToProduct(item.id.toString())}
                     className="relative w-full md:w-32 h-32 bg-gray-100 rounded-lg overflow-hidden cursor-pointer"
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
@@ -93,7 +76,7 @@ const CartItem: React.FC<{
                         alt={item.title}
                         className="w-full h-full object-cover transition-all duration-300"
                     />
-                    {item.isNew && (
+                    {item.is_new && (
                         <span className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
                             New
                         </span>
@@ -111,74 +94,53 @@ const CartItem: React.FC<{
                             <div className="flex items-center gap-2 mb-2">
                                 <div className="flex items-center">
                                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                    <span className="text-sm text-gray-700 ml-1">{item.rating}</span>
+                                    <span className="text-sm text-gray-700 ml-1">{item.rating || 0}</span>
                                 </div>
                                 <span className="text-gray-400">•</span>
-                                <span className="text-sm text-gray-600">{item.reviewsCount} reviews</span>
-                            </div>
-
-                            {/* Owner Info with Tooltip */}
-                            <div className="relative">
-                                <div
-                                    className="flex items-center gap-2 mb-3 cursor-pointer"
-                                    onMouseEnter={() => setShowOwnerTooltip(true)}
-                                    onMouseLeave={() => setShowOwnerTooltip(false)}
-                                >
-                                    <img
-                                        src={ownerData[0].image}
-                                        alt={ownerData[0].name}
-                                        className="w-6 h-6 rounded-full"
-                                    />
-                                    <span className="text-sm text-gray-600">{ownerData[0].name}</span>
-                                    {ownerData[0].isverified && (
-                                        <CheckCircle className="w-4 h-4 text-blue-500" />
-                                    )}
-                                </div>
-
-                                {showOwnerTooltip && (
-                                    <div className="absolute z-10 bg-black text-white text-xs rounded py-2 px-3 bottom-full mb-1">
-                                        <p>Verified Seller</p>
-                                        <p>Joined {new Date(ownerData[0].JoinedAt).getFullYear()}</p>
-                                    </div>
-                                )}
+                                <span className="text-sm text-gray-600">{item.reviews_count || 0} reviews</span>
                             </div>
                         </div>
 
                         {/* Price */}
                         <div className="text-right">
                             <div className="flex items-center gap-2 justify-end mb-2">
-                                <span className="text-xl font-bold text-gray-900">{RWF.format(item.price)}</span>
-                                {item.originalPrice && (
-                                    <span className="text-sm text-gray-500 line-through">{RWF.format(item.originalPrice)}</span>
+                                <span className="text-xl font-bold text-gray-900">
+                                    {item.price ? RWF.format(item.price) : 'Price not available'}
+                                </span>
+                                {item.original_price && (
+                                    <span className="text-sm text-gray-500 line-through">
+                                        {RWF.format(item.original_price)}
+                                    </span>
                                 )}
                                 {item.discount && (
                                     <span className="text-sm text-green-600">-{item.discount}%</span>
                                 )}
                             </div>
                             <p className="text-sm text-gray-600">
-                                Stock: <span className={item.instock > 10 ? "text-green-600" : "text-orange-600"}>
-                                    {item.instock} available
+                                Stock: <span className={(item.instock || 0) > 10 ? "text-green-600" : "text-orange-600"}>
+                                    {item.instock || 0} available
                                 </span>
                             </p>
                         </div>
                     </div>
 
                     {/* Color Selection */}
-                    <div className="mb-4">
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">Color:</label>
-                        <div className="flex gap-2">
-                            {item.colors.map((color) => (
-                                <button
-                                    key={color.name}
-                                    onClick={() => onUpdateColor(item.id, color)}
-                                    className={`w-8 h-8 rounded-full border-2 ${item.selectedColor.name === color.name ? 'border-gray-800' : 'border-gray-300'
-                                        }`}
-                                    style={{ backgroundColor: color.value }}
-                                    title={color.name}
-                                />
-                            ))}
+                    {item.colors && item.colors.length > 0 && (
+                        <div className="mb-4">
+                            <label className="text-sm font-medium text-gray-700 mb-2 block">Color:</label>
+                            <div className="flex gap-2">
+                                {item.colors.map((color) => (
+                                    <button
+                                        key={color.name}
+                                        className={`w-8 h-8 rounded-full border-2 border-gray-800
+                                            }`}
+                                        style={{ backgroundColor: color.hex }}
+                                        title={color.name}
+                                    />
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Quantity and Actions */}
                     <div className="flex items-center justify-between">
@@ -196,7 +158,7 @@ const CartItem: React.FC<{
                                 <button
                                     onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
                                     className="p-2 hover:bg-gray-100 transition-colors"
-                                    disabled={item.quantity >= item.instock}
+                                    disabled={item.quantity >= (item.instock || 0)}
                                 >
                                     <Plus className="w-4 h-4" />
                                 </button>
@@ -219,10 +181,10 @@ const CartItem: React.FC<{
 
 // CartSummary Component
 const CartSummary: React.FC<{ items: CartItem[] }> = ({ items }) => {
-    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const subtotal = items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
     const totalDiscount = items.reduce((sum, item) => {
-        if (item.originalPrice && item.discount) {
-            return sum + ((item.originalPrice - item.price) * item.quantity);
+        if (item.original_price && item.discount) {
+            return sum + ((item.original_price - (item.price || 0)) * item.quantity);
         }
         return sum;
     }, 0);
@@ -277,17 +239,14 @@ const CartSummary: React.FC<{ items: CartItem[] }> = ({ items }) => {
 const ShoppingCartPage: React.FC = () => {
     const [cartItems, dispatch] = useReducer(cartReducer, cartData);
 
-    const handleUpdateQuantity = (id: string, quantity: number) => {
+    const handleUpdateQuantity = (id: number, quantity: number) => {
         dispatch({ type: 'UPDATE_QUANTITY', id, quantity });
     };
 
-    const handleRemoveItem = (id: string) => {
+    const handleRemoveItem = (id: number) => {
         dispatch({ type: 'REMOVE_ITEM', id });
     };
 
-    const handleUpdateColor = (id: string, color: ProductColor) => {
-        dispatch({ type: 'UPDATE_COLOR', id, color });
-    };
 
     // Empty State
     if (cartItems.length === 0) {
@@ -338,7 +297,7 @@ const ShoppingCartPage: React.FC = () => {
                                     item={item}
                                     onUpdateQuantity={handleUpdateQuantity}
                                     onRemove={handleRemoveItem}
-                                    onUpdateColor={handleUpdateColor}
+
                                 />
                             ))}
                         </AnimatePresence>

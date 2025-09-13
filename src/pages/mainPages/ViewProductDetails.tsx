@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Heart,
-    
     ShoppingCart,
     Star,
     Plus,
@@ -48,7 +47,7 @@ const ProductViewPage: React.FC = () => {
     const updateQuantity = (action: 'increase' | 'decrease') => {
         if (!product) return;
 
-        if (action === 'increase' && quantity < product.instock) {
+        if (action === 'increase' && quantity < (product.instock || 0)) {
             setQuantity(prev => prev + 1);
         } else if (action === 'decrease' && quantity > 1) {
             setQuantity(prev => prev - 1);
@@ -57,15 +56,15 @@ const ProductViewPage: React.FC = () => {
 
     // Handle image navigation
     const navigateImage = (direction: 'next' | 'prev') => {
-        if (!product) return;
+        if (!product || !product.images) return;
 
         if (direction === 'next') {
             setSelectedImageIndex(prev =>
-                prev === product.images.length - 1 ? 0 : prev + 1
+                prev === product.images!.length - 1 ? 0 : prev + 1
             );
         } else {
             setSelectedImageIndex(prev =>
-                prev === 0 ? product.images.length - 1 : prev - 1
+                prev === 0 ? product.images!.length - 1 : prev - 1
             );
         }
     };
@@ -83,7 +82,7 @@ const ProductViewPage: React.FC = () => {
     }, []);
 
     // Generate star rating
-    const renderStars = (rating: number) => {
+    const renderStars = (rating: number = 0) => {
         return Array.from({ length: 5 }, (_, i) => (
             <Star
                 key={i}
@@ -130,7 +129,7 @@ const ProductViewPage: React.FC = () => {
     }
 
     // Get the selected color object
-    const selectedColorObj = product.colors.find(color => color.name === selectedColor) || product.colors[0];
+    const selectedColorObj = product.colors?.find(color => color.name === selectedColor) || product.colors?.[0];
 
     return (
         <>
@@ -143,7 +142,7 @@ const ProductViewPage: React.FC = () => {
                             <a href="/" className="hover:text-blue-600">Home</a>
                             <span className="mx-2">/</span>
                             <a className="hover:text-blue-600">
-                                {product.category}
+                                {product.category?.name}
                             </a>
                             <span className="mx-2">/</span>
                             <span className="text-gray-900">{product.title}</span>
@@ -166,17 +165,17 @@ const ProductViewPage: React.FC = () => {
                             >
                                 <div className="relative w-full h-full">
                                     <img
-                                        src={product.images[selectedImageIndex].image}
+                                        src={product.images?.[selectedImageIndex]?.url || ''}
                                         alt={product.title}
                                         className="w-full h-full object-cover transition-opacity duration-300"
                                     />
 
                                     {/* Hover Image Overlay */}
                                     <AnimatePresence>
-                                        {isHovering && product.hoverImage && (
+                                        {isHovering && product.hover_image && (
                                             <motion.img
                                                 key="hover-image"
-                                                src={product.hoverImage}
+                                                src={product.hover_image}
                                                 alt={`${product.title} hover view`}
                                                 className="absolute inset-0 w-full h-full object-cover"
                                                 initial={{ opacity: 0 }}
@@ -189,22 +188,26 @@ const ProductViewPage: React.FC = () => {
                                 </div>
 
                                 {/* Navigation Arrows */}
-                                <button
-                                    onClick={() => navigateImage('prev')}
-                                    className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full shadow-lg hover:bg-white transition-colors"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() => navigateImage('next')}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full shadow-lg hover:bg-white transition-colors"
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
+                                {product.images && product.images.length > 1 && (
+                                    <>
+                                        <button
+                                            onClick={() => navigateImage('prev')}
+                                            className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full shadow-lg hover:bg-white transition-colors"
+                                        >
+                                            <ChevronLeft className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => navigateImage('next')}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full shadow-lg hover:bg-white transition-colors"
+                                        >
+                                            <ChevronRight className="w-5 h-5" />
+                                        </button>
+                                    </>
+                                )}
 
                                 {/* Badges */}
                                 <div className="absolute top-4 left-4 flex flex-col gap-2">
-                                    {product.isNew && (
+                                    {product.is_new && (
                                         <span className="px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
                                             NEW
                                         </span>
@@ -212,7 +215,7 @@ const ProductViewPage: React.FC = () => {
                                 </div>
 
                                 {/* Video Play Button */}
-                                {product.tutorialVideo && (
+                                {product.tutorial_video && (
                                     <button
                                         onClick={() => setShowVideoModal(true)}
                                         className="absolute bottom-4 right-4 p-3 bg-black/60 text-white rounded-full hover:bg-black/80 transition-colors"
@@ -223,27 +226,29 @@ const ProductViewPage: React.FC = () => {
                             </motion.div>
 
                             {/* Thumbnail Images */}
-                            <div className="flex gap-3 overflow-x-auto pb-2">
-                                {product.images.map((image, index) => (
-                                    <button
-                                        key={index}
-                                        onClick={() => setSelectedImageIndex(index)}
-                                        className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-300 ${selectedImageIndex === index
-                                            ? 'border-blue-500 scale-105'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                            }`}
-                                    >
-                                        <img
-                                            src={image.image}
-                                            alt={`${product.title} view ${index + 1}`}
-                                            className="w-full h-full object-cover"
-                                        />
+                            {product.images && product.images.length > 0 && (
+                                <div className="flex gap-3 overflow-x-auto pb-2">
+                                    {product.images.map((image, index) => (
+                                        <button
+                                            key={image.id}
+                                            onClick={() => setSelectedImageIndex(index)}
+                                            className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-300 ${selectedImageIndex === index
+                                                ? 'border-blue-500 scale-105'
+                                                : 'border-gray-200 hover:border-gray-300'
+                                                }`}
+                                        >
+                                            <img
+                                                src={image.url}
+                                                alt={`${product.title} view ${index + 1}`}
+                                                className="w-full h-full object-cover"
+                                            />
 
-                                        {/* Hover indicator */}
-                                        <div className="absolute inset-0 bg-black/20 opacity-0 transition-opacity hover:opacity-100"></div>
-                                    </button>
-                                ))}
-                            </div>
+                                            {/* Hover indicator */}
+                                            <div className="absolute inset-0 bg-black/20 opacity-0 transition-opacity hover:opacity-100"></div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Product Details */}
@@ -251,7 +256,7 @@ const ProductViewPage: React.FC = () => {
                             {/* Brand & Title */}
                             <div>
                                 <p className="text-blue-600 font-medium text-sm uppercase tracking-wide">
-                                    {product.brand}
+                                    {product.category?.name}
                                 </p>
                                 <h1 className="text-3xl font-bold text-gray-900 mt-1">
                                     {product.title}
@@ -267,29 +272,29 @@ const ProductViewPage: React.FC = () => {
                                     </span>
                                 </div>
                                 <span className="text-sm text-gray-500">
-                                    ({product.reviewsCount} reviews)
+                                    ({product.reviews_count} reviews)
                                 </span>
                             </div>
 
                             {/* Price */}
                             <div className="flex items-center gap-3">
                                 <span className="text-3xl font-bold text-gray-900">
-                                    {RWF.format(product.price)}
+                                    {product.price ? RWF.format(product.price) : 'Price not available'}
                                 </span>
-                                {product.originalPrice && (
+                                {product.original_price && (
                                     <span className="text-xl text-gray-500 line-through">
-                                        {RWF.format(product.originalPrice)}
+                                        {RWF.format(product.original_price)}
                                     </span>
                                 )}
                             </div>
 
                             {/* Stock Status */}
                             <div className="flex items-center gap-2">
-                                <div className={`w-3 h-3 rounded-full ${product.instock > 0 ? 'bg-green-500' : 'bg-red-500'
+                                <div className={`w-3 h-3 rounded-full ${(product.instock || 0) > 0 ? 'bg-green-500' : 'bg-red-500'
                                     }`} />
-                                <span className={`text-sm font-medium ${product.instock > 0 ? 'text-green-700' : 'text-red-700'
+                                <span className={`text-sm font-medium ${(product.instock || 0) > 0 ? 'text-green-700' : 'text-red-700'
                                     }`}>
-                                    {product.instock > 0
+                                    {(product.instock || 0) > 0
                                         ? `${product.instock} in stock`
                                         : 'Out of stock'
                                     }
@@ -297,10 +302,10 @@ const ProductViewPage: React.FC = () => {
                             </div>
 
                             {/* Color Selection */}
-                            {product.colors.length > 0 && (
+                            {product.colors && product.colors.length > 0 && (
                                 <div>
                                     <h3 className="text-sm font-medium text-gray-900 mb-3">
-                                        Color: {selectedColorObj.name}
+                                        Color: {selectedColorObj?.name}
                                     </h3>
                                     <div className="flex gap-2">
                                         {product.colors.map((color) => (
@@ -311,7 +316,7 @@ const ProductViewPage: React.FC = () => {
                                                     ? 'border-gray-800 scale-110'
                                                     : 'border-gray-300 hover:border-gray-400'
                                                     }`}
-                                                style={{ backgroundColor: color.value }}
+                                                style={{ backgroundColor: color.hex }}
                                                 title={color.name}
                                             />
                                         ))}
@@ -336,7 +341,7 @@ const ProductViewPage: React.FC = () => {
                                         </span>
                                         <button
                                             onClick={() => updateQuantity('increase')}
-                                            disabled={quantity >= product.instock}
+                                            disabled={quantity >= (product.instock || 0)}
                                             className="p-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
                                             <Plus className="w-4 h-4" />
@@ -351,7 +356,7 @@ const ProductViewPage: React.FC = () => {
                             {/* Action Buttons */}
                             <div className="flex gap-3">
                                 <button
-                                    disabled={product.instock === 0}
+                                    disabled={(product.instock || 0) === 0}
                                     className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                                 >
                                     <ShoppingCart className="w-5 h-5" />
@@ -371,7 +376,7 @@ const ProductViewPage: React.FC = () => {
                                 <div className="relative" ref={shareRef}>
                                     <button
                                         onClick={() => {
-                                            const imageUrl = product.images[0].image ?? ''; // get the image URL with fallback
+                                            const imageUrl = product.images?.[0]?.url || ''; // get the image URL with fallback
                                             const link = document.createElement("a");
                                             link.href = imageUrl;
                                             link.download = "Umukamezi-product-image.jpg"; // you can customize the filename
@@ -384,16 +389,15 @@ const ProductViewPage: React.FC = () => {
                                         <Download size={20} />
                                     </button>
 
-
                                     <AnimatePresence>
                                         {showShareMenu && (
                                             <motion.div
-                                                // initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                                                // animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                // exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                                                initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.9, y: -10 }}
                                                 className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg border p-2 min-w-[200px] z-10"
                                             >
-
+                                                {/* Share menu content */}
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
@@ -407,37 +411,39 @@ const ProductViewPage: React.FC = () => {
                                         <Truck className="w-5 h-5 text-blue-600" />
                                         <div>
                                             <p className="font-medium">Delivery</p>
-                                            <p className="text-gray-600">RWF{product.deliveryFee.toLocaleString()}</p>
+                                            <p className="text-gray-600">RWF{product.delivery_fee || '0'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <Shield className="w-5 h-5 text-green-600" />
                                         <div>
                                             <p className="font-medium">Warranty</p>
-                                            <p className="text-gray-600">1 Year</p>
+                                            <p className="text-gray-600">{product.warranty || '1 Year'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <RefreshCw className="w-5 h-5 text-orange-600" />
                                         <div>
                                             <p className="font-medium">Returns</p>
-                                            <p className="text-gray-600">30 Days</p>
+                                            <p className="text-gray-600">{product.returnDay || '30 Days'}</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Tags */}
-                            <div className="flex flex-wrap gap-2">
-                                {product.tags.map((tag, index) => (
-                                    <span
-                                        key={index}
-                                        className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full transition-colors hover:bg-gray-200"
-                                    >
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
+                            {product.tags && product.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                    {product.tags.map((tag, index) => (
+                                        <span
+                                            key={index}
+                                            className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full transition-colors hover:bg-gray-200"
+                                        >
+                                            {tag}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -473,7 +479,7 @@ const ProductViewPage: React.FC = () => {
                                 </motion.div>
                             )}
 
-                            {activeTab === 'features' && (
+                            {activeTab === 'features' && product.features && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -495,11 +501,11 @@ const ProductViewPage: React.FC = () => {
                                     className="text-center py-12"
                                 >
                                     <Award className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                                    <p className="text-gray-600">{product.isNew ? 'New Condition' : 'Used Condition'}</p>
+                                    <p className="text-gray-600">{product.is_new ? 'New Condition' : 'Used Condition'}</p>
                                 </motion.div>
                             )}
 
-                            {activeTab === 'tutorial' && product.tutorialVideo && (
+                            {activeTab === 'tutorial' && product.tutorial_video && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -507,7 +513,7 @@ const ProductViewPage: React.FC = () => {
                                 >
                                     <div className="w-full h-full bg-gray-100 rounded-lg overflow-hidden">
                                         <iframe
-                                            src={product.tutorialVideo}
+                                            src={product.tutorial_video}
                                             className="w-full h-full"
                                             frameBorder="0"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -517,9 +523,9 @@ const ProductViewPage: React.FC = () => {
                                     </div>
                                 </motion.div>
                             )}
-                            {activeTab == "brock" && "Umukamezi"}
-                            {activeTab == "warranty" && "2 month"}
-                            {activeTab == "delivery" && "1 day"}
+                            {activeTab === "brock" && (product.brock || "Umukamezi")}
+                            {activeTab === "warranty" && (product.warranty || "2 month")}
+                            {activeTab === "delivery" && (product.delivery_fee ? `RWF ${product.delivery_fee}` : "1 day")}
                         </div>
                     </div>
                 </div>
@@ -549,7 +555,7 @@ const ProductViewPage: React.FC = () => {
                                 </button>
                                 <div className="w-full h-full bg-gray-100 rounded-lg overflow-hidden">
                                     <iframe
-                                        src={product.tutorialVideo}
+                                        src={product.tutorial_video}
                                         className="w-full h-full"
                                         frameBorder="0"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

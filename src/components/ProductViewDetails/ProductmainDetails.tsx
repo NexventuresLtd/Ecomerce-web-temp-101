@@ -12,7 +12,7 @@ import TutorialVideo from './TutorialVideo';
 import OwnerProfile from './OwnerProfile';
 import { useProduct } from '../../hooks/product/useProduct';
 import NotFound from './NotFound';
-import { ownerData, productsData } from '../../constants/ProductsData/ProductData';
+import { productsData } from '../../constants/ProductsData/ProductData';
 
 
 const ProductDetails: React.FC = () => {

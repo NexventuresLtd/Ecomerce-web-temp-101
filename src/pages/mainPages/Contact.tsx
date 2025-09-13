@@ -193,7 +193,9 @@ const ContactPage: React.FC = () => {
                                         />
                                     </div>
                                 </div>
-
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    
+</div>
                                 <div>
                                     <label htmlFor="subject" className="block text-sm font-semibold text-gray-900 mb-3">
                                         Subject
@@ -265,7 +267,7 @@ const ContactPage: React.FC = () => {
                                 </motion.a>
 
                                 <motion.a
-                                    href="mailto:hello@yourcompany.com"
+                                    href="mailto:info@umukamezi.com"
                                     whileHover={{ x: 4 }}
                                     className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all group"
                                 >
@@ -274,7 +276,7 @@ const ContactPage: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="font-semibold text-gray-900">Email</p>
-                                        <p className="text-gray-600">hello@yourcompany.com</p>
+                                        <p className="text-gray-600">info@umukamezi.com</p>
                                     </div>
                                 </motion.a>
 
@@ -287,7 +289,7 @@ const ContactPage: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="font-semibold text-gray-900">Address</p>
-                                        <p className="text-gray-600">123 Business Ave<br />Suite 100<br />New York, NY 10001</p>
+                                        <p className="text-gray-600">KN 70 St, Kigali<br />Rwanda<br />TCB Building</p>
                                     </div>
                                 </motion.div>
                             </div>

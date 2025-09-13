@@ -32,22 +32,22 @@ const CarouselControls: React.FC<CarouselControlsProps> = ({
           />
         ))}
       </div>
-      <div className="flex gap-2 hidden">
+      <div className="flex gap-2 justify-between absolute w-full h-[400px]">
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={onPrev}
-          className="w-10 h-10 bg-slate-700 hover:bg-slate-600 rounded-full flex items-center justify-center text-white transition-colors duration-200"
+          className="w-14 h-14 bg-slate-900/40 cursor-pointer hover:bg-slate-700 rounded-full flex items-center justify-center text-white transition-colors duration-200"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-10 h-10" />
         </motion.button>
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={onNext}
-          className="w-10 h-10 bg-slate-700 hover:bg-slate-600 rounded-full flex items-center justify-center text-white transition-colors duration-200"
+          className="w-14 h-14 bg-slate-900/40 cursor-pointer hover:bg-slate-700 rounded-full flex items-center justify-center text-white transition-colors duration-200"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-10 h-10" />
         </motion.button>
       </div>
     </div>

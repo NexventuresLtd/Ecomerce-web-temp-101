@@ -44,6 +44,9 @@ export const ProductForm = ({
         reviews_count: product?.reviews_count,
         instock: product?.instock,
         delivery_fee: product?.delivery_fee,
+        brock: product?.brock || '',
+        returnDay: product?.returnDay || '',
+        warranty: product?.warranty || '',
         hover_image: product?.hover_image || '',
         tutorial_video: product?.tutorial_video || '',
         tags: product?.tags || [],
@@ -316,16 +319,13 @@ export const ProductForm = ({
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Fee</label>
-                    <input
-                        type="number"
-                        name="delivery_fee"
-                        value={formData.delivery_fee}
-                        onChange={handleChange}
-                        step="0.01"
-                        min="0"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        disabled={loading}
-                    />
+                    <select onChange={handleChange} name="delivery_fee" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={loading}>
+                        <option >City Center → Free</option>
+                        <option >In Kigali → 2,000 RFW</option>
+                        <option >Out of Kigali → 5,000 RFW</option>
+                        <option >Outside Rwanda → Negotiable</option>
+                    </select>
                 </div>
 
                 <div>
@@ -341,15 +341,56 @@ export const ProductForm = ({
                         disabled={loading}
                     />
                 </div>
-    
+
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Brock </label>
                     <input
                         type="text"
+                        name="brock"
+                        value={formData.brock}
+                        onChange={handleChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        // disabled={loading}
+                        disabled={loading}
                     />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Warranty </label>
+                    <select
+                        name="warranty"
+                        value={formData.warranty}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={loading}
+                    >
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].map((data) => (
+                            <option key={data}>{data} Month</option>
+                        ))}
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].map((data) => (
+                            <option key={data}>{data} Year</option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Return Days </label>
+                    <select
+                        name="returnDay"
+                        value={formData.returnDay}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={loading}
+                    >
+                        <option>Not Applied</option>
+                        {[1, 2, 3, 4, 5, 6, 7].map((data) => (
+                            <option key={data}>{data} {data == 1 ? "day" : "days"}</option>
+                        ))}
+                        {[1, 2, 3, 4].map((data) => (
+                            <option key={data}>{data} {data == 1 ? " week" : "weeks"}</option>
+                        ))}
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].map((data) => (
+                            <option key={data}>{data} Month</option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="md:col-span-2">

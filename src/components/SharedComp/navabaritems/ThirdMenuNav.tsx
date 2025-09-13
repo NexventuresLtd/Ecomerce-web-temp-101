@@ -16,7 +16,7 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
     const dropdownContainerRef = useRef<HTMLDivElement>(null);
 
     const handleItemHover = (itemName: string) => {
-        if (!isMobile && mainNavItems.find(item => item.name === itemName)?.hasDropdown) {
+        if (!isMobile && mainNavItems.find(item => item.title === itemName)?.hasDropdown) {
             setActiveDropdown(itemName);
         }
     };
@@ -27,7 +27,7 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
             return
         }
         if (isMobile) {
-            setActiveDropdown(activeDropdown === item.name ? null : item.name);
+            setActiveDropdown(activeDropdown === item.title ? null : item.title);
         }
     };
 
@@ -40,9 +40,9 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
                         <div className="flex w-full xl:justify-between 2xl:justify-center 2xl:gap-10 ">
                             {mainNavItems.map((item) => (
                                 <div
-                                    key={item.name}
+                                    key={item.title}
                                     className="relative"
-                                    onMouseEnter={() => handleItemHover(item.name)}
+                                    onMouseEnter={() => handleItemHover(item.title)}
                                 >
                                     <button
                                         onClick={() => handleMobileClick(item)}
@@ -59,7 +59,7 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
                         <div
                             onMouseLeave={(e) => handleClickOutside?.(e)}
                             ref={dropdownContainerRef}
-                            className={`absolute left-0 top-full w-full bg-gray-100 rounded-b-2xl z-20 transition-opacity duration-200 ${activeDropdown ? 'opacity-100 visible' : 'opacity-10 invisible'
+                            className={`absolute left-0 top-full w-full bg-white rounded-b-2xl z-20 transition-opacity duration-200 ${activeDropdown ? 'opacity-100 visible' : 'opacity-10 invisible'
                                 }`}
                         >
                             {activeDropdown && <GenerateDropdownContent itemName={activeDropdown} />}
@@ -72,21 +72,21 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
 
                             <div className="px-4 py-2 space-y-1">
                                 {mainNavItems.map((item) => (
-                                    <div key={item.name} className="border-b border-gray-100">
+                                    <div key={item.title} className="border-b border-gray-100">
                                         {item.hasDropdown ? (
                                             <>
                                                 <button
-                                                    onClick={() => handleMobileClick(item.name)}
+                                                    onClick={() => handleMobileClick(item.title)}
                                                     className="flex items-center justify-between w-full px-3 py-3 text-gray-700 hover:text-green-600"
                                                 >
-                                                    <span>{item.name}</span>
+                                                    <span>{item.title}</span>
                                                     <ChevronDown
-                                                        className={`w-4 h-4 transition-transform ${activeDropdown === item.name ? 'transform rotate-180' : ''}`}
+                                                        className={`w-4 h-4 transition-transform ${activeDropdown === item.title ? 'transform rotate-180' : ''}`}
                                                     />
                                                 </button>
-                                                {activeDropdown === item.name && (
+                                                {activeDropdown === item.title && (
                                                     <div className="px-3 py-2 bg-gray-50">
-                                                        <GenerateDropdownContent itemName={item.name} />
+                                                        <GenerateDropdownContent itemName={item.title} />
                                                     </div>
                                                 )}
                                             </>
@@ -95,7 +95,7 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
                                                 href={item.href}
                                                 className="block px-3 py-3 text-gray-700 hover:text-green-600"
                                             >
-                                                {item.name}
+                                                {item.title}
                                             </a>
                                         )}
                                     </div>

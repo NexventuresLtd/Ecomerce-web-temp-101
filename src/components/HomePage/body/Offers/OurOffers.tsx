@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Product } from '../../../../types/Product/ProductType';
-import { productsData } from '../../../../constants/ProductsData/ProductData';
+import { ShoppingCartIcon } from 'lucide-react';
 import { useNavigation } from '../../../../hooks/product/useNavigation';
 import SkeletonLoader from '../../../Skeltons/Product';
-import { ShoppingCartIcon } from 'lucide-react';
 import { handleClickWhatsapp } from '../../../../app/ProductWhasapp';
 import { RWF } from '../../../../app/priceConver';
+import type { Product } from '../../../../types/Product/producttypeAdmin';
 
 // Props interface
 interface OffersProps {
@@ -15,17 +14,20 @@ interface OffersProps {
     showLoadMore?: boolean;
     products?: Product[];
     initialDisplayCount?: number;
+    hasMore?: boolean;
+    onLoadMore?: () => void;
+    isLoadingMore?: boolean;
 }
 
 // Offer Card Component
 interface OfferCardProps {
     product: Product;
     index: number;
-    onProductClick: (productId: string) => void;
+    onProductClick: (productId: number) => void;
 }
 
 const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick }) => {
-    const primaryImage = product.images.find(img => img.isprimary)?.image || product.images[0]?.image;
+    const primaryImage = product.images?.find(img => img.is_primary)?.url || product.images?.[0]?.url || '';
     const [showDescription, setShowDescription] = useState(false);
 
     return (
@@ -45,12 +47,12 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
                     alt={product.title}
                     className="w-full h-48 object-contain group-hover:scale-105 transition-transform duration-300"
                 />
-                {product.discount && (
+                {product.discount !=0 && (
                     <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
                         -{product.discount}%
                     </div>
                 )}
-                {product.isNew && (
+                {product.is_new && (
                     <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                         NEW
                     </div>
@@ -84,24 +86,24 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
                 <div className="flex items-center justify-between mb-4 w-full">
                     <div className="flex items-center space-x-2">
                         <span className="text-xl font-bold text-gray-900">
-                            Rwf {RWF.format(product.price)}
+                            {product.price ? RWF.format(product.price) : 'Price not available'}
                         </span>
-                        {product.originalPrice && (
+                        {product.original_price && (
                             <span className="text-sm text-gray-500 line-through">
-                                Rwf {RWF.format(product.originalPrice)}
+                                {RWF.format(product.original_price)}
                             </span>
                         )}
                     </div>
                 </div>
-                <div className={`${product.instock < 1 ? 'bg-red-500' : 'bg-primary'} text-white px-3 py-1 rounded-full text-sm w-fit ml-auto mb-2 font-semibold`}>
-                    {product.instock < 1 ? 'Out of Stock' : `${product.instock} in Stock`}
+                <div className={`${(product.instock || 0) < 1 ? 'bg-red-500' : 'bg-primary'} text-white px-3 py-1 rounded-full text-sm w-fit ml-auto mb-2 font-semibold`}>
+                    {(product.instock || 0) < 1 ? 'Out of Stock' : `${product.instock} in Stock`}
                 </div>
 
                 <div className="flex gap-2">
                     <button
-                        disabled={product.instock < 1}
+                        disabled={(product.instock || 0) < 1}
                         onClick={() => onProductClick(product.id)}
-                        className={`${product.instock < 1 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} w-full bg-primary text-xs text-white font-semibold rounded-2xl px-3 py-3 transition-colors duration-300 flex items-center justify-center gap-2`}>
+                        className={`${(product.instock || 0) < 1 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} w-full bg-primary text-xs text-white font-semibold rounded-2xl px-3 py-3 transition-colors duration-300 flex items-center justify-center gap-2`}>
                         <ShoppingCartIcon size={18} />
                         Shop Now
                     </button>
@@ -128,33 +130,44 @@ const Offers: React.FC<OffersProps> = ({
     title = "Suggestions For You",
     subtitle = "Grab them before they're gone! Limited time deals on your favorite products.",
     showLoadMore = true,
-    products = productsData,
-    initialDisplayCount = 6
+    products = [],
+    initialDisplayCount = 6,
+    hasMore = false,
+    onLoadMore,
+    isLoadingMore = false
 }) => {
-    const [displayedProducts, setDisplayedProducts] = useState<Product[]>(products.slice(0, initialDisplayCount));
-    const [isLoading, setIsLoading] = useState(false);
+    const [displayedProducts, setDisplayedProducts] = useState<Product[]>(
+        products.slice(0, initialDisplayCount)
+    );
     const [currentIndex, setCurrentIndex] = useState(initialDisplayCount);
     const { navigateToProduct, navigateToProducts } = useNavigation();
 
+    // Update displayed products when products prop changes
+    React.useEffect(() => {
+        setDisplayedProducts(products.slice(0, initialDisplayCount));
+        setCurrentIndex(initialDisplayCount);
+    }, [products, initialDisplayCount]);
+
     const loadMoreProducts = async () => {
-        if (currentIndex >= products.length) return;
+        if (currentIndex >= products.length || !onLoadMore) return;
 
-        setIsLoading(true);
-
-        // Simulate loading time
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        const nextProducts = products.slice(currentIndex, currentIndex + 6);
-        setDisplayedProducts(prev => [...prev, ...nextProducts]);
-        setCurrentIndex(prev => prev + 6);
-        setIsLoading(false);
+        // If we have more products in the current list, show them
+        if (currentIndex < products.length) {
+            const nextProducts = products.slice(currentIndex, currentIndex + 6);
+            setDisplayedProducts(prev => [...prev, ...nextProducts]);
+            setCurrentIndex(prev => prev + 6);
+        } 
+        // If we need to fetch more products from the server
+        else if (hasMore && onLoadMore) {
+            onLoadMore();
+        }
     };
 
-    const handleProductClick = (productId: string) => {
-        navigateToProduct(productId);
+    const handleProductClick = (productId: number) => {
+        navigateToProduct(productId.toString());
     };
 
-    const hasMoreProducts = currentIndex < products.length;
+    const hasMoreProducts = currentIndex < products.length || hasMore;
 
     return (
         <section className="py-6 bg-gray-50">
@@ -175,58 +188,64 @@ const Offers: React.FC<OffersProps> = ({
                 </motion.div>
 
                 {/* Products Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 mb-12">
-                    {displayedProducts.map((product, index) => (
-                        <OfferCard
-                            key={product.id}
-                            product={product}
-                            index={index}
-                            onProductClick={handleProductClick}
-                        />
-                    ))}
+                {products.length === 0 ? (
+                    <div className="text-center py-12">
+                        <p className="text-gray-500">No products available</p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 mb-12">
+                            {displayedProducts.map((product, index) => (
+                                <OfferCard
+                                    key={product.id}
+                                    product={product}
+                                    index={index}
+                                    onProductClick={handleProductClick}
+                                />
+                            ))}
 
-                    {/* Skeleton Loaders */}
-                    <AnimatePresence>
-                        {isLoading && (
-                            <>
-                                <SkeletonLoader />
-                                <SkeletonLoader />
-                                <SkeletonLoader />
-                                <SkeletonLoader />
-                            </>
+                            {/* Skeleton Loaders for initial loading */}
+                            {isLoadingMore && displayedProducts.length === 0 && (
+                                <>
+                                    <SkeletonLoader />
+                                    <SkeletonLoader />
+                                    <SkeletonLoader />
+                                    <SkeletonLoader />
+                                </>
+                            )}
+                        </div>
+
+                        {/* Load More Button */}
+                        {showLoadMore && hasMoreProducts && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-center"
+                            >
+                                <button
+                                    onClick={loadMoreProducts}
+                                    disabled={isLoadingMore}
+                                    className="bg-primary hover:bg-primary/80 disabled:bg-primary/20 text-white font-semibold rounded-2xl px-8 py-3 transition-colors duration-300 disabled:cursor-not-allowed"
+                                >
+                                    {isLoadingMore ? 'Loading...' : 'Load More Offers'}
+                                </button>
+                            </motion.div>
                         )}
-                    </AnimatePresence>
-                </div>
 
-                {/* Load More Button */}
-                {showLoadMore && (hasMoreProducts || isLoading) && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-center"
-                    >
-                        <button
-                            onClick={loadMoreProducts}
-                            disabled={isLoading}
-                            className="bg-primary hover:bg-primary/80 disabled:bg-primary/20 text-white font-semibold rounded-2xl px-8 py-3 transition-colors duration-300 disabled:cursor-not-allowed"
-                        >
-                            {isLoading ? 'Loading...' : 'Load More Offers'}
-                        </button>
-                    </motion.div>
-                )}
-
-                {/* View All Products Button */}
-                {!showLoadMore && (
-                    <motion.div
-                        onClick={() => navigateToProducts()}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-center"
-                    >
-                        <button className="bg-primary cursor-pointer hover:bg-primary/80 text-white font-semibold rounded-2xl px-8 py-3 transition-colors duration-300">
-                            View All Products
-                        </button>
-                    </motion.div>
+                        {/* View All Products Button */}
+                        {!showLoadMore && (
+                            <motion.div
+                                onClick={() => navigateToProducts()}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-center"
+                            >
+                                <button className="bg-primary cursor-pointer hover:bg-primary/80 text-white font-semibold rounded-2xl px-8 py-3 transition-colors duration-300">
+                                    View All Products
+                                </button>
+                            </motion.div>
+                        )}
+                    </>
                 )}
             </div>
         </section>

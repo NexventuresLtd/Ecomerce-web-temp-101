@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { categoryApi } from '../../app/dashcategory/category';
 
 interface ProductCategory {
   id: number;
@@ -43,17 +44,12 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://127.0.0.1:8000/categories/hierarchy', {
-          headers: {
-            'Accept': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
+        const response = await categoryApi.getFullHierarchy()
+        if (!response) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data = response
         setCategories(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred while fetching categories');
@@ -94,7 +90,7 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
   }
 
   // Find the main category that matches the itemName
-  const currentCategory = categories.find(cat => 
+  const currentCategory = categories.find(cat =>
     cat.name.toLowerCase() === itemName.toLowerCase()
   );
 
@@ -111,8 +107,8 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
             >
               <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">
                 {subCategory.image ? (
-                  <img 
-                    src={subCategory.image} 
+                  <img
+                    src={subCategory.image}
                     alt={subCategory.name}
                     className="w-12 h-12 object-cover rounded-lg"
                   />
@@ -142,7 +138,7 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
         <div>
           <h3 className="font-bold text-lg mb-4">Also in {currentCategory.name}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 text-sm">
-            {currentCategory.sub_categories.flatMap(subCat => 
+            {currentCategory.sub_categories.flatMap(subCat =>
               subCat.product_categories.map(productCat => (
                 <a
                   key={productCat.id}

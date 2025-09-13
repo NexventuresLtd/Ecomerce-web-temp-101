@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search,  } from 'lucide-react';
-import { productsData as products } from '../../../constants/ProductsData/ProductData';
-import type { Product } from '../../../types/Product/ProductType';
+import { Search } from 'lucide-react';
+import type { Product } from '../../../types/Product/producttypeAdmin';
+import { RWF } from '../../../app/priceConver';
 
 
 // Fuzzy Search Hook
-export const useSearchProducts = (query: string) => {
+export const useSearchProducts = (query: string, products: Product[]) => {
     const [results, setResults] = useState<Product[]>([]);
     const [suggestion, setSuggestion] = useState<string>('');
 
@@ -23,20 +23,21 @@ export const useSearchProducts = (query: string) => {
         // Create searchable text for each product
         const searchableProducts = products.map(product => ({
             ...product,
-            searchableText: `${product.title} ${product.brand} ${product.category} ${product.tags.join(' ')} ${product.features.join(' ')}`.toLowerCase()
+            searchableText: `${product.title} ${product.features || ''} ${product.category?.name || ''} ${product.tags?.join(' ') || ''} ${product.features?.join(' ') || ''}`.toLowerCase()
         }));
 
         // Scoring function
         const scoreProduct = (product: typeof searchableProducts[0]) => {
             let score = 0;
-            const { title, brand, category, tags, searchableText } = product;
-            const titleLower = title.toLowerCase();
-            const brandLower = brand.toLowerCase();
-            const categoryLower = category.toLowerCase();
+            const titleLower = product.title.toLowerCase();
+            const brandLower = (product.features || []).map(f => f.toLowerCase()); // array
+            const categoryLower = (product.category?.name || '').toLowerCase();
+            const tags = (product.tags || []).map(t => t.toLowerCase());
+            const features = (product.features || []).map(f => f.toLowerCase());
 
             // Exact matches (highest priority)
             if (titleLower === searchQuery) score += 100;
-            if (brandLower === searchQuery) score += 90;
+            if (brandLower.includes(searchQuery)) score += 90;
             if (categoryLower === searchQuery) score += 80;
 
             // Multi-term exact matches
@@ -45,35 +46,37 @@ export const useSearchProducts = (query: string) => {
 
             // Prefix matches
             if (titleLower.startsWith(searchQuery)) score += 85;
-            if (brandLower.startsWith(searchQuery)) score += 75;
+            if (brandLower.some(b => b.startsWith(searchQuery))) score += 75;
 
             // Word boundary matches
             searchTerms.forEach(term => {
                 const wordBoundaryRegex = new RegExp(`\\b${term}`, 'i');
                 if (wordBoundaryRegex.test(titleLower)) score += 70;
-                if (wordBoundaryRegex.test(brandLower)) score += 60;
-                if (tags.some(tag => tag.toLowerCase().includes(term))) score += 50;
+                if (brandLower.some(b => wordBoundaryRegex.test(b))) score += 60;
+                if (tags.some(tag => tag.includes(term))) score += 50;
+                if (features.some(feature => feature.includes(term))) score += 40;
             });
 
             // Fuzzy matches with edit distance
             searchTerms.forEach(term => {
-                if (searchableText.includes(term)) {
+                if (product.searchableText.includes(term)) {
                     score += 40;
                 } else {
                     // Simple fuzzy matching for typos
-                    const fuzzyMatches = findFuzzyMatches(term, searchableText);
+                    const fuzzyMatches = findFuzzyMatches(term, product.searchableText);
                     score += fuzzyMatches * 20;
                 }
             });
 
             // Brand priority boost for multi-term queries
             if (searchTerms.length > 1) {
-                const brandMatch = searchTerms.find(term => brandLower.includes(term));
+                const brandMatch = searchTerms.find(term => brandLower.some(b => b.includes(term)));
                 if (brandMatch) score += 30;
             }
 
             return score;
         };
+
 
         // Find fuzzy matches for typo correction
         const findFuzzyMatches = (term: string, text: string): number => {
@@ -137,7 +140,7 @@ export const useSearchProducts = (query: string) => {
         const queryTerms = query.toLowerCase().split(/\s+/);
 
         products.forEach(product => {
-            const allWords = `${product.title} ${product.brand} ${product.category} ${product.tags.join(' ')}`
+            const allWords = `${product.title} ${product.features || ''} ${product.category?.name || ''} ${product.tags?.join(' ') || ''}`
                 .toLowerCase()
                 .split(/\s+/)
                 .filter(word => word.length > 2);
@@ -212,10 +215,11 @@ export interface SearchResultsProps {
     query: string;
     products: Product[];
     onSelect: (product: Product) => void;
+    isLoading?: boolean;
 }
 
-export const SearchResults: React.FC<SearchResultsProps> = ({ query, onSelect }) => {
-    const { results, suggestion } = useSearchProducts( query);
+export const SearchResults: React.FC<SearchResultsProps> = ({ query, products, onSelect, isLoading = false }) => {
+    const { results, suggestion } = useSearchProducts(query, products);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -253,11 +257,30 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ query, onSelect })
     }, [query, results, selectedIndex, onSelect]);
 
     const getPrimaryImage = (product: Product): string => {
-        const primaryImage = product.images.find(img => img.isprimary);
-        return primaryImage?.image || product.images[0]?.image || '';
+        const primaryImage = product.images?.find(img => img.is_primary);
+        return primaryImage?.url || product.images?.[0]?.url || '';
     };
 
     if (!query.trim()) return null;
+
+    if (isLoading) {
+        return (
+            <AnimatePresence>
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
+                >
+                    <div className="px-4 py-8 text-center text-gray-500">
+                        <Search className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                        <p>Loading products...</p>
+                    </div>
+                </motion.div>
+            </AnimatePresence>
+        );
+    }
 
     return (
         <AnimatePresence>
@@ -314,18 +337,18 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ query, onSelect })
                                         <HighlightedText text={product.title} query={query} />
                                     </div>
                                     <div className="text-sm text-gray-500 truncate">
-                                        <HighlightedText text={`${product.brand} • ${product.category}`} query={query} />
+                                        <HighlightedText text={`${product.features?.join(', ') || ''} • ${product.category?.name || ''}`} query={query} />
                                     </div>
                                 </div>
 
                                 {/* Price */}
                                 <div className="flex-shrink-0 text-right">
                                     <div className="font-semibold text-gray-900">
-                                        Rwf {product.price.toFixed(2)}
+                                        {RWF.format(product.price ?? 0) }
                                     </div>
-                                    {product.originalPrice && (
+                                    {product.original_price && (
                                         <div className="text-sm text-gray-500 line-through">
-                                            Rwf {product.originalPrice.toFixed(2)}
+                                            {RWF.format(product.original_price ?? 0)}
                                         </div>
                                     )}
                                 </div>
@@ -346,5 +369,3 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ query, onSelect })
         </AnimatePresence>
     );
 };
-
-

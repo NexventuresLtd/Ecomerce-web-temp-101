@@ -7,6 +7,7 @@ import {
     ShoppingBag,
     FileQuestion,
     Sliders,
+    Video,
 } from 'lucide-react';
 import type { ViewType } from '../../../types/dashboard/mainDashbaord';
 import { useAppContext } from '../../../contexts/dashbaord/context';
@@ -20,11 +21,11 @@ export const Sidebar: React.FC = () => {
         { id: 'products' as ViewType, label: 'Products', icon: Package },
         { id: 'categories' as ViewType, label: 'Categories', icon: Tag },
         // { id: 'users' as ViewType, label: 'Users', icon: Users },
-        // { id: 'orders' as ViewType, label: 'Orders', icon: ShoppingCart },
         { id: 'wishlists' as ViewType, label: 'Wishlists', icon: Heart },
         { id: 'carts' as ViewType, label: 'Carts', icon: ShoppingBag },
         { id: 'FAQ' as ViewType, label: 'FAQ', icon: FileQuestion },
         { id: 'hero' as ViewType, label: 'Image Section', icon: Sliders },
+        { id: 'Vlog' as ViewType, label: 'Vlog', icon: Video },
     ];
 
     const handleItemClick = (viewId: ViewType) => {

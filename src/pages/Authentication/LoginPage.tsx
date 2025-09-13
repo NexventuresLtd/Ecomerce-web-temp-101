@@ -279,7 +279,7 @@ const AnimatedLoginPage: React.FC = () => {
             </AnimatePresence>
 
             {/* Animated Cloth */}
-            <motion.div
+            {/* <motion.div
                 className="absolute inset-0 bg-gradient-to-br from-slate-900 to-purple-gray z-20 flex justify-center p-30 md:rounded-b-full"
                 variants={clothVariant}
                 initial="initial"
@@ -287,10 +287,10 @@ const AnimatedLoginPage: React.FC = () => {
                 transition={{ duration: 2.0, ease: "easeInOut" }}
             >
                 <img src="https://media3.giphy.com/media/gk3qooQQqkSvSQLsOt/giphy.gif" className='max-w-3xl object-contain p-36 m-auto' />
-            </motion.div>
+            </motion.div> */}
 
             {/* Cartoon Hand */}
-            <motion.div
+            {/* <motion.div
                 className="absolute top-10 left-1/2 transform -translate-x-1/2 z-30 text-6xl "
                 variants={handVariant}
                 initial="initial"
@@ -300,7 +300,7 @@ const AnimatedLoginPage: React.FC = () => {
                 <div className="animate-bounce">
                     {emoji === "error" ? <>😭</> : emoji === "success" ? <> 🤗 </> : <>👋</>}
                 </div>
-            </motion.div>
+            </motion.div> */}
 
             {/* Main Content */}
             <div

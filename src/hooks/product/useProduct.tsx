@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import type { Product } from '../../types/Product/ProductType';
+
 import { productsData } from '../../constants/ProductsData/ProductData';
+import type { Product } from '../../types/Product/producttypeAdmin';
 
 
 export const useProduct = () => {
@@ -14,7 +15,7 @@ export const useProduct = () => {
     const fetchProduct = () => {
       try {
         setLoading(true);
-        const foundProduct = productsData.find(p => p.id === productId);
+        const foundProduct = productsData.find(p => p.id === Number(productId));
         
         if (foundProduct) {
           setProduct(foundProduct);

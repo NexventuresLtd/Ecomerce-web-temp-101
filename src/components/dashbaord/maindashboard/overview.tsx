@@ -29,6 +29,7 @@ import {
   Legend, 
   Pie
 } from 'recharts';
+import { RWF } from '../../../app/priceConver';
 
 // Define color type for type safety
 type ColorType = 'blue' | 'green' | 'orange' | 'purple' | 'pink';
@@ -63,8 +64,8 @@ const UmukzameziDashboard = () => {
   ];
 
   const monthlyData = [
-    { month: 'Jan', revenue: 65000, users: 120, products: 45 },
-    { month: 'Feb', revenue: 75000, users: 135, products: 52 },
+    { month: 'Jan', revenue: 65000, users: 7820, products: 45 },
+    { month: 'Feb', revenue: 75000, users: 135, products: 5902 },
     { month: 'Mar', revenue: 85000, users: 148, products: 58 },
     { month: 'Apr', revenue: 92000, users: 162, products: 63 },
     { month: 'May', revenue: 88000, users: 156, products: 61 },
@@ -134,7 +135,7 @@ const UmukzameziDashboard = () => {
     },
     { 
       label: 'Revenue', 
-      value: `$${animatedValues.revenue.toLocaleString()}`, 
+      value: `${RWF.format(animatedValues.revenue).toLocaleString()}`, 
       icon: DollarSign,
       change: '+15%',
       changeType: 'increase',

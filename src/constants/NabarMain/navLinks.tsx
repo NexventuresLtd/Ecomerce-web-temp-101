@@ -1,4 +1,4 @@
-import type { CategoryItem, NavItem } from "../../types/Navbar/navTypes";
+import type {  NavItem } from "../../types/Navbar/navTypes";
 
 export const topNavItems = [
     { name: 'B2B, Gov, Students & More', href: '#' },
@@ -7,49 +7,16 @@ export const topNavItems = [
 ];
 
 export const mainNavItems: NavItem[] = [
-    { name: 'Home', href: '/', hasDropdown: false },
-    { name: 'All Products', href: '/products', hasDropdown: false },
-    { name: 'Photograph', href: '#', hasDropdown: true },
-    { name: 'Videography', href: '#', hasDropdown: true },
-    { name: 'Computer', href: '#', hasDropdown: true },
-    { name: 'Tablet', href: '#', hasDropdown: true },
-    { name: 'Lighting', href: '#', hasDropdown: true },
-    { name: 'Phone', href: '#', hasDropdown: true },
-    { name: 'Other Accessories', href: '#', hasDropdown: true },
-    { name: 'About Us', href: '/about', hasDropdown: false },
-    { name: 'Vlog', href: '/vlog', hasDropdown: false },
-    { name: 'Contact US', href: '/contact', hasDropdown: false }
-];
-
-export const proVideoCategories: CategoryItem[] = [
-    { name: 'Camcorders', image: '📹', href: '/products' },
-    { name: 'Digital Cinema Cameras', image: '🎥', href: '/products' },
-    { name: 'Studio & EFP Cameras', image: '📷', href: '/products' },
-    { name: 'PTZ Cameras & Solutions', image: '🔄', href: '/products' }
-];
-
-export const proVideoSubCategories = [
-    'Industrial & Multi-Purpose Cameras',
-    'Production Switchers & Controllers',
-    'Lighting',
-    'Camera Drones & Aerial Imaging',
-    'Studio & EFP Equipment',
-    'Tapes & Digital Media',
-    'Lenses & Lens Accessories',
-    'Monitors',
-    'Cables',
-    'Audio for Video',
-    'Recorders & Duplication',
-    'Underwater Equipment',
-    'Video Tripods, Supports & Rigs',
-    'Pro Video Streaming',
-    'Racks & Furniture',
-    'Batteries & Power',
-    'Podcasting',
-    'Tutorials',
-    'Professional Video Cases',
-    'Signal Processing & Distribution',
-    'Installation',
-    'Camcorder & Camera Peripherals',
-    'Post Production'
+    { title: 'Home', name: 'Home', href: '/', hasDropdown: false },
+    { title: 'All Products', name: 'All Products', href: '/products', hasDropdown: false },
+    { title: 'Photograph', name: 'Camera', href: '#', hasDropdown: true },
+    { title: 'Videography', name: 'Lenses', href: '#', hasDropdown: true },
+    { title: 'Computer', name: 'Computer', href: '#', hasDropdown: true },
+    { title: 'Pro Audio', name: 'Pro Audio', href: '#', hasDropdown: true },
+    { title: 'Lighting', name: 'Lighting', href: '#', hasDropdown: true },
+    { title: 'Phone', name: 'Phone', href: '#', hasDropdown: true },
+    { title: 'Other Accessories', name: 'Other Accessories', href: '#', hasDropdown: true },
+    { title: 'About Us', name: 'About Us', href: '/about', hasDropdown: false },
+    { title: 'Vlog', name: 'Vlog', href: '/vlog', hasDropdown: false },
+    { title: 'Contact US', name: 'Contact US', href: '/contact', hasDropdown: false }
 ];

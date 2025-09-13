@@ -1,27 +1,49 @@
 import { Search, User, X } from 'lucide-react';
 import UserInfo from './UserInfo';
-import { useState } from 'react';
-import type { Product } from '../../../types/Product/ProductType';
+import { useState, useEffect } from 'react';
+
 import { SearchResults } from './search';
-import { productsData } from '../../../constants/ProductsData/ProductData';
 import { useNavigation } from '../../../hooks/product/useNavigation';
+import type { Product } from '../../../types/Product/producttypeAdmin';
+import { productApi } from '../../../app/products/allProductgeter';
+
 
 interface SecondNavProps {
     isMenuOpen: boolean
     setIsMenuOpen: React.Dispatch<React.SetStateAction<boolean>>
     setActiveDropdown: React.Dispatch<React.SetStateAction<string | null>>
-
 }
+
 export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown }: SecondNavProps) {
     const [query, setQuery] = useState('');
+    const [allProducts, setAllProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     const { navigateToProduct } = useNavigation();
+
+    // Load products from API
+    useEffect(() => {
+        const loadProducts = async () => {
+            try {
+                setLoading(true);
+                const response = await productApi.getProducts(0, 100); // Load first 100 products for search
+                const products: Product[] = response.products || response;
+                setAllProducts(products);
+            } catch (err: any) {
+                setError(err.message || "Failed to fetch products");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadProducts();
+    }, []);
 
     const handleProductSelect = (product: Product) => {
         setQuery(product.title);
         setActiveDropdown(null);
-        navigateToProduct(product.id);
-        // Navigate to product page
+        navigateToProduct(product.id.toString());
     };
 
     const clearSearch = () => {
@@ -52,7 +74,6 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                         </div>
 
                         {/* Search Bar */}
-
                         <div className={`${isMenuOpen ? 'max-xl:hidden' : ''} flex-1 max-w-4xl mx-4`}>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -74,27 +95,23 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                             </div>
                         </div>
 
-
                         {/* User Account */}
                         <UserInfo showMenu={true} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} setActiveDropdown={setActiveDropdown} />
                     </div>
                 </div>
             </div>
-            <div className="max-w-11/12  mx-auto">
-                {/* Search Input Container */}
+            <div className="max-w-11/12 mx-auto">
                 <div className="relative">
-
                     {/* Search Results Dropdown */}
-                    <SearchResults
-                        query={query}
-                        products={productsData}
-                        onSelect={handleProductSelect}
-                    />
+                    {!loading && (
+                        <SearchResults
+                            query={query}
+                            products={allProducts}
+                            onSelect={handleProductSelect}
+                            isLoading={loading}
+                        />
+                    )}
                 </div>
-
-
-
-
             </div>
         </>
     )

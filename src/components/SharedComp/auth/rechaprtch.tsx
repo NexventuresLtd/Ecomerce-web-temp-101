@@ -78,7 +78,7 @@ export const InteractivePatternCaptcha: React.FC<CaptchaProps> = ({
                     setShowPattern(false);
                     setCurrentStep(0);
                 }
-            }, 800);
+            }, 1000);
 
             return () => clearTimeout(timer);
         }
@@ -124,7 +124,7 @@ export const InteractivePatternCaptcha: React.FC<CaptchaProps> = ({
 
     return (
         <div className={`${className} ${bgColor} ${textColor} rounded-xl w-full max-w-md mx-auto overflow-hidden`}>
-            <div className="p-6">
+            <div className="p-3">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
@@ -175,7 +175,7 @@ export const InteractivePatternCaptcha: React.FC<CaptchaProps> = ({
 
                 {/* Pattern Grid */}
                 <div className={`${cardBg} rounded-xl p-4 mb-6`}>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-2">
                         {Array.from({ length: 9 }).map((_, index) => {
                             const isHighlighted = showPattern && targetPattern[currentStep - 1] === index;
                             const isUserSelected = userPattern.includes(index);
@@ -187,7 +187,7 @@ export const InteractivePatternCaptcha: React.FC<CaptchaProps> = ({
                                     onClick={() => handleCellClick(index)}
                                     disabled={showPattern || status !== 'idle'}
                                     className={`
-                    aspect-square rounded-xl transition-all duration-300 relative overflow-hidden
+                    aspect-square h-22 m-auto rounded-xl transition-all duration-300 relative overflow-hidden
                     ${isHighlighted ?
                                             ' bg-primary text-white' :
                                             isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-slate-200'
