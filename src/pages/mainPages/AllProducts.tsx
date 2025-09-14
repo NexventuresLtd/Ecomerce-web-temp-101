@@ -410,10 +410,15 @@ const AllProductsPage: React.FC = () => {
             setLoading(true);
             const response = await productApi.getProducts(skip, limit);
             const newProducts: Product[] = response.products || response;
-            
-            setAllProducts(prev => [...prev, ...newProducts]);
+
+            setAllProducts(prev => {
+                const existingIds = new Set(prev.map(p => p.id));
+                const filteredNew = newProducts.filter(p => !existingIds.has(p.id));
+                return [...prev, ...filteredNew];
+            });
+
             setSkip(prev => prev + limit);
-            
+
             // If we get fewer products than requested, we've reached the end
             if (newProducts.length < limit) {
                 setHasMoreProducts(false);

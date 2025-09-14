@@ -1,24 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, RefreshCw, ChevronLeft, ChevronRight, PhoneCall } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
+import { RWF } from '../../../app/priceConver';
+import { handleClickWhatsapp } from '../../../app/ProductWhasapp';
 
 interface CartItem {
   id: number;
   product_id: number;
+  product_name: string;
+  product_price: number;
   quantity: number;
-  price: number;
-  title?: string;
-  image?: string;
+  price_at_time: number;
+  created_at: string;
+  total_item_price: number;
 }
 
 interface Cart {
   id: number;
   user_id: number;
-  items_count: number;
-  total_value: number;
+  fname: string;
+  lname: string;
+  phone?: string;
+  email: string;
   is_active: boolean;
   created_at: string;
-  items?: CartItem[];
+  items: CartItem[];
+  total_items: number;
+  total_price: number;
 }
 
 const CartAdmin: React.FC = () => {
@@ -35,7 +43,7 @@ const CartAdmin: React.FC = () => {
   const fetchCarts = async () => {
     try {
       setLoading(true);
-      const response = await mainAxios.get('/api/cart/all');
+      const response = await mainAxios.get('/cart/all');
       setCarts(response.data.carts || []);
     } catch (error) {
       console.error('Error fetching carts:', error);
@@ -46,10 +54,10 @@ const CartAdmin: React.FC = () => {
 
   const toggleCartStatus = async (cartId: number, currentStatus: boolean) => {
     try {
-      await mainAxios.put(`/api/cart/toggle/${cartId}`, {
+      await mainAxios.put(`/cart/toggle/${cartId}`, {
         is_active: !currentStatus
       });
-      setCarts(carts.map(cart => 
+      setCarts(carts.map(cart =>
         cart.id === cartId ? { ...cart, is_active: !currentStatus } : cart
       ));
     } catch (error) {
@@ -60,9 +68,9 @@ const CartAdmin: React.FC = () => {
   const viewCartItems = async (cart: Cart) => {
     try {
       // If items are not already loaded, fetch them
-      if (!cart.items) {
-        const response = await mainAxios.get(`/api/cart/${cart.id}/items`);
-        setSelectedCart({ ...cart, items: response.data.items });
+      if (!cart.items || cart.items.length === 0) {
+        const response = await mainAxios.get(`/cart/${cart.id}`);
+        setSelectedCart(response.data);
       } else {
         setSelectedCart(cart);
       }
@@ -117,10 +125,13 @@ const CartAdmin: React.FC = () => {
                 User ID
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Customer
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Items
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total Value
+                Total Price
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -138,17 +149,32 @@ const CartAdmin: React.FC = () => {
               <tr key={cart.id} className="hover:bg-gray-50">
                 <td className="px-4 py-4 text-sm text-gray-900">{cart.id}</td>
                 <td className="px-4 py-4 text-sm text-gray-900">{cart.user_id}</td>
-                <td className="px-4 py-4 text-sm text-gray-900">{cart.items_count}</td>
                 <td className="px-4 py-4 text-sm text-gray-900">
-                  ${cart.total_value.toFixed(2)}
+                  {cart.fname} {cart.lname}
+                  <div className="text-xs text-gray-500">{cart.email}</div>
+                  <div onClick={() => {
+                    const message = `🛒 Hello ${cart.fname}, here is your cart summary:
+
+                      Total items: ${cart.total_items}
+                      Total price: ${RWF.format(cart.total_price)}
+
+                      Thank you for shopping with us!`;
+
+                    handleClickWhatsapp("Cart Information", cart.phone || "250781691713", message);
+
+                  }} className="text-xs text-gray-500 flex py-2 items-center gap-2 hover:underline underline-offset-4 cursor-pointer"><PhoneCall size={10} /> {cart.phone}</div>
+
+                </td>
+                <td className="px-4 py-4 text-sm text-gray-900">{cart.total_items}</td>
+                <td className="px-4 py-4 text-sm text-gray-900">
+                  {RWF.format(cart.total_price)}
                 </td>
                 <td className="px-4 py-4">
                   <span
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      cart.is_active
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
+                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${cart.is_active
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                      }`}
                   >
                     {cart.is_active ? 'Active' : 'Inactive'}
                   </span>
@@ -166,11 +192,10 @@ const CartAdmin: React.FC = () => {
                     </button>
                     <button
                       onClick={() => toggleCartStatus(cart.id, cart.is_active)}
-                      className={`px-3 py-1 rounded text-xs ${
-                        cart.is_active
-                          ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                          : 'bg-green-100 text-green-700 hover:bg-green-200'
-                      }`}
+                      className={`px-3 py-1 rounded text-xs ${cart.is_active
+                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                        : 'bg-green-100 text-green-700 hover:bg-green-200'
+                        }`}
                     >
                       {cart.is_active ? 'Deactivate' : 'Activate'}
                     </button>
@@ -209,12 +234,27 @@ const CartAdmin: React.FC = () => {
 
       {/* Modal for cart items */}
       {selectedCart && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-800">
                 Cart Items - Cart #{selectedCart.id}
               </h3>
+              <p className="text-sm text-gray-600">
+                Customer: {selectedCart.fname} {selectedCart.lname} ({selectedCart.email})
+              </p>
+              <div onClick={() => {
+                const message = `🛒 Hello ${selectedCart.fname}, here is your cart summary:
+
+                      Total items: ${selectedCart.total_items}
+                      Total price: ${RWF.format(selectedCart.total_price)}
+
+                      Thank you for shopping with us!`;
+
+                handleClickWhatsapp("Cart Information", selectedCart.phone || "250781691713", message);
+
+              }} className="text-xs text-gray-500 flex py-2 items-center gap-2 hover:underline underline-offset-4 cursor-pointer"><PhoneCall size={10} /> {selectedCart.phone}</div>
+
             </div>
             <div className="p-6">
               {selectedCart.items?.length ? (
@@ -222,28 +262,27 @@ const CartAdmin: React.FC = () => {
                   {selectedCart.items.map((item) => (
                     <div key={item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-center space-x-4">
-                        {item.image && (
-                          <img
-                            src={item.image}
-                            alt={item.title}
-                            className="w-16 h-16 object-cover rounded"
-                          />
-                        )}
                         <div>
-                          <h4 className="font-medium text-gray-800">{item.title || `Product ${item.product_id}`}</h4>
+                          <h4 className="font-medium text-gray-800">{item.product_name}</h4>
+                          <p className="text-sm text-gray-600">Product ID: {item.product_id}</p>
                           <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                          <p className="text-sm text-gray-600">Price at time: {RWF.format(item.price_at_time)}</p>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-gray-800">
-                          ${item.price.toFixed(2)}
+                          Total: {RWF.format(item.total_item_price)}
                         </p>
                         <p className="text-sm text-gray-600">
-                          Total: ${(item.price * item.quantity).toFixed(2)}
+                          Added: {formatDate(item.created_at)}
                         </p>
                       </div>
                     </div>
                   ))}
+                  <div className="flex justify-between items-center p-4 border-t border-gray-200 mt-4">
+                    <p className="font-semibold">Cart Total:</p>
+                    <p className="font-bold text-lg">{RWF.format(selectedCart.total_price)}</p>
+                  </div>
                 </div>
               ) : (
                 <p className="text-gray-500">No items in this cart.</p>

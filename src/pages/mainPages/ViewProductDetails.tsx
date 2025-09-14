@@ -22,6 +22,7 @@ import Offers from '../../components/HomePage/body/Offers/OurOffers';
 import Footer from '../../components/SharedComp/footer';
 import { RWF } from '../../app/priceConver';
 import { useProduct } from '../../hooks/product/useProduct';
+import { cartApi } from '../../app/products/cart';
 
 const ProductViewPage: React.FC = () => {
     const { product, loading, error } = useProduct();
@@ -33,6 +34,21 @@ const ProductViewPage: React.FC = () => {
     const [showVideoModal, setShowVideoModal] = useState(false);
     const [activeTab, setActiveTab] = useState('description');
     const [isHovering, setIsHovering] = useState(false);
+    const [load, setLoading] = useState(false);
+    const [erroring, seterroring] = useState(null);
+
+    const handleAddToCart = async (id: any, quantity: any) => {
+        try {
+            setLoading(true);
+            await cartApi.addToCart(id, quantity);
+            // you can also add toast/notification here
+        } catch (error: any) {
+            seterroring(error?.response?.data?.detail)
+            console.error("Error adding to cart:", error?.response?.data?.detail);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const shareRef = useRef<HTMLDivElement>(null);
 
@@ -119,7 +135,7 @@ const ProductViewPage: React.FC = () => {
                 <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                     <div className="text-center">
                         <p className="text-red-600 text-lg">{error || 'Product not found'}</p>
-                        <a href="/" className="text-blue-600 hover:underline mt-4 inline-block">
+                        <a href="/" className="text-primary hover:underline mt-4 inline-block">
                             Return to home
                         </a>
                     </div>
@@ -134,6 +150,11 @@ const ProductViewPage: React.FC = () => {
     return (
         <>
             <Navbar />
+            {erroring && <div onClick={()=>seterroring(null)} className="fixed flex gap-3 cursor-pointer top-60 right-20 shadow-xl bg-red-100 text-red-500 p-3 rounded-lg">
+                {erroring}
+                <X />
+            </div>
+            }
             <div className="min-h-screen bg-gray-50">
                 {/* Breadcrumb */}
                 <div className="bg-white border-b border-gray-100">
@@ -255,7 +276,7 @@ const ProductViewPage: React.FC = () => {
                         <div className="space-y-6">
                             {/* Brand & Title */}
                             <div>
-                                <p className="text-blue-600 font-medium text-sm uppercase tracking-wide">
+                                <p className="text-primary font-medium text-sm uppercase tracking-wide">
                                     {product.category?.name}
                                 </p>
                                 <h1 className="text-3xl font-bold text-gray-900 mt-1">
@@ -356,11 +377,14 @@ const ProductViewPage: React.FC = () => {
                             {/* Action Buttons */}
                             <div className="flex gap-3">
                                 <button
-                                    disabled={(product.instock || 0) === 0}
-                                    className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                                    onClick={() => {
+                                        handleAddToCart(product.id, quantity)
+                                    }}
+                                    disabled={load || (product.instock || 0) === 0}
+                                    className="flex-1 bg-primary text-white px-6 py-3 rounded-lg font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                                 >
                                     <ShoppingCart className="w-5 h-5" />
-                                    Add to Cart
+                                    {load ? "Loading" : "Add to Cart"}
                                 </button>
 
                                 <button
@@ -411,14 +435,14 @@ const ProductViewPage: React.FC = () => {
                                         <Truck className="w-5 h-5 text-blue-600" />
                                         <div>
                                             <p className="font-medium">Delivery</p>
-                                            <p className="text-gray-600">RWF{product.delivery_fee || '0'}</p>
+                                            <p className="text-gray-600">{RWF.format(parseInt(product.delivery_fee ?? '0'))}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <Shield className="w-5 h-5 text-green-600" />
                                         <div>
                                             <p className="font-medium">Warranty</p>
-                                            <p className="text-gray-600">{product.warranty || '1 Year'}</p>
+                                            <p className="text-gray-600">{product.warranty || '2 month'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
@@ -485,12 +509,15 @@ const ProductViewPage: React.FC = () => {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="space-y-3"
                                 >
-                                    {product.features.map((feature, index) => (
-                                        <div key={index} className="flex items-start gap-3">
-                                            <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                                            <span className="text-gray-700">{feature}</span>
-                                        </div>
-                                    ))}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                        {product.features.map((feature, index) => (
+                                            <div key={index} className="flex items-start gap-3 bg-white w-fit px-3 cursor-pointer hover:bg-secondary/10 rounded-2xl">
+                                                <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                                                <span className="hover:text-gray-500">{feature}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
                                 </motion.div>
                             )}
 
@@ -525,7 +552,7 @@ const ProductViewPage: React.FC = () => {
                             )}
                             {activeTab === "brock" && (product.brock || "Umukamezi")}
                             {activeTab === "warranty" && (product.warranty || "2 month")}
-                            {activeTab === "delivery" && (product.delivery_fee ? `RWF ${product.delivery_fee}` : "1 day")}
+                            {activeTab === "delivery" && (product.delivery_fee ? `${product.delivery_fee}` : "1 day")}
                         </div>
                     </div>
                 </div>
@@ -567,7 +594,7 @@ const ProductViewPage: React.FC = () => {
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </div>
+            </div >
             <Offers />
             <Footer />
         </>
