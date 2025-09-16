@@ -27,7 +27,8 @@ import { cartApi } from '../../app/products/cart';
 const ProductViewPage: React.FC = () => {
     const { product, loading, error } = useProduct();
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-    const [selectedColor, setSelectedColor] = useState<string | null>(null);
+    const [selectedColor, setSelectedColor] = useState<any | null>(null);
+    const [selecteddelivery, setselectedDelivery] = useState<any | null>("City Center → Free");
     const [quantity, setQuantity] = useState(1);
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [showShareMenu, setShowShareMenu] = useState(false);
@@ -36,11 +37,16 @@ const ProductViewPage: React.FC = () => {
     const [isHovering, setIsHovering] = useState(false);
     const [load, setLoading] = useState(false);
     const [erroring, seterroring] = useState(null);
+    const [success, setesucess] = useState<string | null>(null);
 
-    const handleAddToCart = async (id: any, quantity: any) => {
+    const handleAddToCart = async (id: any, quantity: any, color: any, delivery: any) => {
+        console.log(color, delivery)
         try {
             setLoading(true);
-            await cartApi.addToCart(id, quantity);
+            const response = await cartApi.addToCart(id, quantity, color, delivery);
+            if (response.status == 200) {
+                setesucess("cart created sucessfull")
+            }
             // you can also add toast/notification here
         } catch (error: any) {
             seterroring(error?.response?.data?.detail)
@@ -55,7 +61,7 @@ const ProductViewPage: React.FC = () => {
     // Set default color once product is loaded
     useEffect(() => {
         if (product && product.colors && product.colors.length > 0) {
-            setSelectedColor(product.colors[0].name);
+            setSelectedColor(product.colors[0]);
         }
     }, [product]);
 
@@ -150,8 +156,13 @@ const ProductViewPage: React.FC = () => {
     return (
         <>
             <Navbar />
-            {erroring && <div onClick={()=>seterroring(null)} className="fixed flex gap-3 cursor-pointer top-60 right-20 shadow-xl bg-red-100 text-red-500 p-3 rounded-lg">
+            {erroring && <div onClick={() => seterroring(null)} className="fixed flex gap-3 cursor-pointer top-60 right-20 shadow-xl bg-red-100 text-red-500 p-3 rounded-lg">
                 {erroring}
+                <X />
+            </div>
+            }
+            {success && <div onClick={() => setesucess(null)} className="fixed flex gap-3 cursor-pointer top-60 right-20 shadow-xl bg-green-100 text-green-500 p-3 rounded-lg">
+                {success}
                 <X />
             </div>
             }
@@ -328,13 +339,13 @@ const ProductViewPage: React.FC = () => {
                                     <h3 className="text-sm font-medium text-gray-900 mb-3">
                                         Color: {selectedColorObj?.name}
                                     </h3>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-3">
                                         {product.colors.map((color) => (
                                             <button
                                                 key={color.name}
-                                                onClick={() => setSelectedColor(color.name)}
-                                                className={`w-10 h-10 rounded-full border-2 transition-all duration-200 ${selectedColor === color.name
-                                                    ? 'border-gray-800 scale-110'
+                                                onClick={() => setSelectedColor(color)}
+                                                className={`w-10 h-10 rounded-full border-4 transition-all duration-200 ${selectedColor?.name === color.name
+                                                    ? 'border-primary scale-130'
                                                     : 'border-gray-300 hover:border-gray-400'
                                                     }`}
                                                 style={{ backgroundColor: color.hex }}
@@ -378,7 +389,7 @@ const ProductViewPage: React.FC = () => {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => {
-                                        handleAddToCart(product.id, quantity)
+                                        handleAddToCart(product.id, quantity, selectedColor, selecteddelivery)
                                     }}
                                     disabled={load || (product.instock || 0) === 0}
                                     className="flex-1 bg-primary text-white px-6 py-3 rounded-lg font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
@@ -430,12 +441,17 @@ const ProductViewPage: React.FC = () => {
                             <div className="sharethis-inline-share-buttons"></div>
                             {/* Delivery Info */}
                             <div className="border-t pt-6">
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 text-sm">
                                     <div className="flex items-center gap-3">
                                         <Truck className="w-5 h-5 text-blue-600" />
                                         <div>
                                             <p className="font-medium">Delivery</p>
-                                            <p className="text-gray-600">{RWF.format(parseInt(product.delivery_fee ?? '0'))}</p>
+                                            <select onChange={(e) => setselectedDelivery(e.target.value)} className="text-gray-600 py-2 w-fit border-0 outline-0 cursor-pointer">
+                                                <option value={"free"}>City Center → Free</option>
+                                                <option value={2000}>In Kigali → 2,000 RFW</option>
+                                                <option value={5000}>Out of Kigali → 5,000 RFW</option>
+                                                <option value={0}>Outside Rwanda → Negotiable</option>
+                                            </select>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
