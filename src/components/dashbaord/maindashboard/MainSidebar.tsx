@@ -6,7 +6,7 @@ import {
     Heart,
     ShoppingBag,
     // FileQuestion,
-    Sliders,
+    // Sliders,
     Video,
 } from 'lucide-react';
 import type { ViewType } from '../../../types/dashboard/mainDashbaord';
