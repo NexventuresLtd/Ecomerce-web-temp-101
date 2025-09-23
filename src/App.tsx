@@ -15,6 +15,7 @@ import { AppContext } from "./contexts/dashbaord/context";
 import type { AppContextType, ViewType } from "./types/dashboard/mainDashbaord";
 import { useEffect, useState } from "react";
 import MainContent from "./pages/adminDashboard/MainDashboard";
+import UserDashboard from "./pages/Profile";
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
@@ -52,16 +53,18 @@ export default function App() {
     setSidebarOpen,
   };
   return (
-    <AppContext.Provider value={contextValue}>
+      <AppContext.Provider value={contextValue}>
       <BrowserRouter>
         <ScrollToHash />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/product/:productId" element={<ViewProductDetails />} />
-          <Route path="/products" element={<AllProducts />} />
+          <Route path="/products/:category" element={<AllProducts />} />
+          <Route path="/products/" element={<AllProducts />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/shopping-cart" element={<ShoppingCart />} />
           <Route path="/wish-list" element={<WishlistPage />} />
+          <Route path="/profile" element={<UserDashboard />} />
           <Route path="/vlog" element={<VlogPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/authentication" element={getUserInfo ? <HomePage /> : <AnimatedLoginPage />} />

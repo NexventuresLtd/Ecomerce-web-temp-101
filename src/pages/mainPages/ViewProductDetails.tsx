@@ -23,6 +23,7 @@ import Footer from '../../components/SharedComp/footer';
 import { RWF } from '../../app/priceConver';
 import { useProduct } from '../../hooks/product/useProduct';
 import { cartApi } from '../../app/products/cart';
+import { wishlistService } from '../../app/products/wishlistService';
 
 const ProductViewPage: React.FC = () => {
     const { product, loading, error } = useProduct();
@@ -46,6 +47,26 @@ const ProductViewPage: React.FC = () => {
             const response = await cartApi.addToCart(id, quantity, color, delivery);
             if (response.status == 200) {
                 setesucess("cart created sucessfull")
+                window.location.href ="/shopping-cart"
+            }
+            // you can also add toast/notification here
+        } catch (error: any) {
+            seterroring(error?.response?.data?.detail)
+            console.error("Error adding to cart:", error?.response?.data?.detail);
+        } finally {
+            setLoading(false);
+        }
+    };
+    const handleAddToWish = async (id: any, quantity?: any, color?: any, delivery?: any) => {
+        console.log(color, delivery)
+        try {
+            setLoading(true);
+            const response: any = await wishlistService.addToWishlist(id, quantity, color, delivery);
+            // console.log(response)
+            if (response.status == 200) {
+                setIsWishlisted(isWishlisted)
+                setesucess("wishList added sucessfull")
+                window.location.href ="/wish-list"
             }
             // you can also add toast/notification here
         } catch (error: any) {
@@ -399,7 +420,7 @@ const ProductViewPage: React.FC = () => {
                                 </button>
 
                                 <button
-                                    onClick={() => setIsWishlisted(!isWishlisted)}
+                                    onClick={() => handleAddToWish(product.id, quantity, selectedColor, selecteddelivery)}
                                     className={`p-3 rounded-lg border transition-all duration-200 ${isWishlisted
                                         ? 'border-red-300 bg-red-50 text-red-600'
                                         : 'border-gray-300 hover:border-gray-400 text-gray-600'

@@ -17,7 +17,8 @@ import { handleClickWhatsapp } from '../../app/ProductWhasapp';
 import SkeletonLoader from '../../components/Skeltons/Product';
 import type { Product } from '../../types/Product/producttypeAdmin';
 import { productApi } from '../../app/products/allProductgeter';
-
+import { useParams } from 'react-router-dom';
+import { decodeId } from '../../app/products/id_encrypter';
 
 // Filter Types
 interface FilterState {
@@ -215,8 +216,16 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, onFiltersChange,
             : [...filters.categories, category];
         updateFilters('categories', updated);
     };
-
-
+    let { category } = useParams<{ category: string }>();
+    const [newcategory, setNewCategory] = useState<any>("")
+    useEffect(() => {
+        if (category) {
+            const ds = decodeId(category)
+            setNewCategory(ds)
+            toggleCategory(newcategory)
+            console.log("no:", newcategory)
+        }
+    }, [newcategory]);
 
     const sidebarContent = (
         <div className=" space-y-6">
@@ -388,7 +397,7 @@ const AllProductsPage: React.FC = () => {
     const [hasMoreProducts, setHasMoreProducts] = useState<boolean>(true);
     const [skip, setSkip] = useState<number>(0);
     const limit: number = 20;
-
+    console.log(error)
     const [filters, setFilters] = useState<FilterState>({
         categories: [],
         brands: [],

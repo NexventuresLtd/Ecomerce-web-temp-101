@@ -103,14 +103,14 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
                     <button
                         disabled={(product.instock || 0) < 1}
                         onClick={() => onProductClick(product.id)}
-                        className={`${(product.instock || 0) < 1 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} w-full bg-primary text-xs text-white font-semibold rounded-2xl px-3 py-3 transition-colors duration-300 flex items-center justify-center gap-2`}>
+                        className={`${(product.instock || 0) < 1 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} w-full bg-primary text-xs text-white font-semibold rounded-lg px-3 py-3 transition-colors duration-300 flex items-center justify-center gap-2`}>
                         <ShoppingCartIcon size={18} />
                         Shop Now
                     </button>
                     <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className={`w-full py-3 px-3 rounded-xl text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2 bg-green-600 hover:bg-primary/90 cursor-pointer
+                        className={`w-full py-3 px-3 rounded-lg text-xs font-semibold text-green-500 transition-colors flex items-center justify-center gap-2 bg-green-100 hover:bg-primary/90 cursor-pointer
       `}
                         onClick={() => handleClickWhatsapp(product.title)}
                     >

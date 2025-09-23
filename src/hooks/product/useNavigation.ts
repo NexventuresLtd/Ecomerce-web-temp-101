@@ -8,12 +8,18 @@ export const useNavigation = () => {
     const newID = encodeId(parseInt(productId))
     window.location.href = (`/product/${newID}`);
   };
+  const navigateToProductCategory = (category: any) => {
+    const newID = encodeId(category)
+    // alert(newID)
+    window.location.href = (`/products/${newID}`);
+  };
 
   const navigateToProducts = () => {
     navigate('/products');
   };
 
   return {
+    navigateToProductCategory,
     navigateToProduct,
     navigateToProducts
   };

@@ -13,9 +13,9 @@ export interface Product {
     reviews_count?: number;
     instock?: number;
     delivery_fee?: string;
-    brock?:string;
-    returnDay?:string;
-    warranty?:string;
+    brock?: string;
+    returnDay?: string;
+    warranty?: string;
     hover_image?: string;
     tutorial_video?: string;
     tags?: string[];
@@ -31,6 +31,7 @@ export interface Product {
         url: string;
         is_primary: boolean;
     }>;
+    wishlist_id?: number;
 }
 
 export interface CategoryHierarchy {

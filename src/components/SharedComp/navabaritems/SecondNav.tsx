@@ -19,7 +19,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
     const [allProducts, setAllProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-
+    console.log(error)
     const { navigateToProduct } = useNavigation();
 
     // Load products from API

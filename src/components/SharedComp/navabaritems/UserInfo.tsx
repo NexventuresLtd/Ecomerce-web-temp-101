@@ -1,7 +1,7 @@
-import { Heart, LogOut, Menu, ShoppingCart, User, X } from "lucide-react";
+import { Heart,  Menu, ShoppingCart, User, X } from "lucide-react";
 // import LanguageDropdown from "./LanguageChanger";
 import { getUserInfo } from "../../../app/Localstorage";
-import { logout } from "../../../app/utils/HandelLogout";
+// import { logout } from "../../../app/utils/HandelLogout";
 
 interface SecondNavProps {
     isMenuOpen: boolean
@@ -22,7 +22,7 @@ export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown,
                         <ShoppingCart className="w-6 h-6 text-gray-600" />
                         <span className="hidden sm:inline text-xs">My Cart</span>
                     </div>
-                    <div onClick={()=> window.location.href = '/wish-list'} className="flex cursor-pointer flex-col items-start sm:items-center">
+                    <div onClick={() => window.location.href = '/wish-list'} className="flex cursor-pointer flex-col items-start sm:items-center">
                         <Heart className="w-6 h-6 text-gray-600" />
                         <span className="hidden sm:inline text-xs ">Wishlist</span>
                     </div>
@@ -35,10 +35,15 @@ export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown,
                             <div className="font-semibold">Account & Orders</div>
                         </div>
                     </> :
-                        <button className="p-2 text-xs font-bold text-red-600 cursor-pointer" onClick={() => logout()}>
-                            <LogOut />
-                            Logout
-                        </button>
+                        <>
+                            <div onClick={() => window.location.href = '/profile'} className="h-10 w-10 rounded-full bg-black cursor-pointer text-white overflow-hidden flex capitalize justify-center items-center font-bold">
+                                {getUserInfo.profile_pic ? <img src={getUserInfo.profile_pic} alt={getUserInfo.email.charAt(0)} className="h-full w-full" /> : <>{getUserInfo.fname.charAt(0).toUpperCase()} {getUserInfo.lname.charAt(0).toUpperCase()}</>}
+                            </div>
+                            <div className="text-xs cursor-pointer hover:underline" onClick={() => window.location.href = '/profile'}>
+                                <div className="text-gray-600">{getUserInfo.fname.slice(0, 7)} {getUserInfo.lname.slice(0, 7)}</div>
+                                <div className="font-semibold">{getUserInfo.email.slice(0, 12)}...</div>
+                            </div>
+                        </>
                     }
                 </div>
                 <div className={`${showMenu ? 'hidden xl:flex' : 'flex xl:hidden'} `}>

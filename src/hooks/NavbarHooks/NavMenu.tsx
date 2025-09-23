@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { categoryApi } from '../../app/dashcategory/category';
+import { useNavigation } from '../../hooks/product/useNavigation';
 
 interface ProductCategory {
   id: number;
@@ -38,6 +39,7 @@ interface MainCategory {
 export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
   const [categories, setCategories] = useState<MainCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const { navigateToProductCategory } = useNavigation()
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -142,7 +144,7 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
               subCat.product_categories.map(productCat => (
                 <a
                   key={productCat.id}
-                  href={`/category/${currentCategory.slug}/${subCat.slug}/${productCat.slug}`}
+                  onClick={() => navigateToProductCategory(productCat.name)}
                   className="text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50 transition-colors"
                 >
                   {productCat.name}

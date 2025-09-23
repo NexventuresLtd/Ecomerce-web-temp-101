@@ -1,105 +1,25 @@
-import React, { useState, useMemo } from 'react';
-import { Search, Filter, Play, Eye, Calendar, Heart, Bookmark, ArrowLeft, ExternalLink, Share2 } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, Filter, Play, Eye, Calendar, Heart, Bookmark, ArrowLeft, ExternalLink, Share2, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Footer from '../../components/SharedComp/footer';
 import Navbar from '../../components/SharedComp/navabaritems/NavBar';
+import { vlogService } from '../../app/vlog/vlog';
 
-// Type Definitions
+// Type Definitions - Updated to match your backend schema
 export interface Vlog {
     id: string;
     title: string;
     description: string;
-    youtubeId: string;
+    youtube_id: string; // Changed from youtubeId to match backend
     thumbnail: string;
     channel: string;
-    publishedAt: string;
+    published_at: string; // Changed from publishedAt to match backend
     views: number;
     tags: string[];
     category: string;
 }
 
-// Mock Data
-// Updated Mock Data
-const vlogData: Vlog[] = [
-    // --- existing vlogs (your original list) ---
-    {
-        id: '1',
-        title: 'Building a Startup from Zero: My Journey',
-        description: 'Join me as I share the complete journey of building a tech startup from scratch...',
-        youtubeId: 'TcpQ4OAKVpQ',
-        thumbnail: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=480&h=270&fit=crop',
-        channel: 'TechEntrepreneur',
-        publishedAt: '2024-08-15',
-        views: 245000,
-        tags: ['startup', 'entrepreneurship', 'business', 'tech'],
-        category: 'Business'
-    },
-
-    // --- new camera/tutorial/project setup vlogs ---
-    {
-        id: '9',
-        title: 'Camera Setup for Professional Projects',
-        description: 'Step-by-step guide on setting up DSLR and mirrorless cameras for professional filming. Covers lighting, angles, tripods, and audio gear for the best results in projects and vlogs.',
-        youtubeId: 'TcpQ4OAKVpQ',
-        thumbnail: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=480&h=270&fit=crop',
-        channel: 'ProCreator',
-        publishedAt: '2024-09-01',
-        views: 51000,
-        tags: ['camera', 'tutorial', 'projects', 'filmmaking'],
-        category: 'Tutorials'
-    },
-    {
-        id: '10',
-        title: 'Best Budget Camera Gear for Students & Startups',
-        description: 'Affordable yet powerful camera gear recommendations for students, entrepreneurs, and small creators who want professional results without breaking the bank.',
-        youtubeId: 'TcpQ4OAKVpQ',
-        thumbnail: 'https://images.unsplash.com/photo-1519183071298-a2962be90b8e?w=480&h=270&fit=crop',
-        channel: 'FilmOnBudget',
-        publishedAt: '2024-09-05',
-        views: 72000,
-        tags: ['gear', 'budget', 'students', 'camera'],
-        category: 'Tutorials'
-    },
-    {
-        id: '11',
-        title: 'Lighting Setup for High-Quality Videos',
-        description: 'Learn how to use softboxes, natural light, and LED panels to achieve the perfect lighting for YouTube videos, product shoots, and professional project presentations.',
-        youtubeId: 'TcpQ4OAKVpQ',
-        thumbnail: 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=480&h=270&fit=crop',
-        channel: 'LightMasters',
-        publishedAt: '2024-09-10',
-        views: 43000,
-        tags: ['lighting', 'camera', 'tutorial', 'setup'],
-        category: 'Tutorials'
-    },
-
-    // --- new Umukamezi-related content ---
-    {
-        id: '12',
-        title: 'Umukamezi: Modern Projects & Innovations',
-        description: 'Exploring how Umukamezi-inspired projects are shaping modern entrepreneurship, lifestyle, and community-driven innovations in Africa.',
-        youtubeId: 'TcpQ4OAKVpQ',
-        thumbnail: 'https://images.unsplash.com/photo-1590080876331-43e68d8a5d24?w=480&h=270&fit=crop',
-        channel: 'UmukameziVision',
-        publishedAt: '2024-09-12',
-        views: 86000,
-        tags: ['umukamezi', 'projects', 'innovation', 'africa'],
-        category: 'Lifestyle'
-    },
-    {
-        id: '13',
-        title: 'Umukamezi Story: Culture Meets Tech',
-        description: 'A deep dive into Umukamezi stories and how culture, technology, and creativity merge to create unique value for communities and businesses.',
-        youtubeId: 'p2q3g0uQHBo',
-        thumbnail: 'https://images.unsplash.com/photo-1581091870622-1c8c9b7bcf4e?w=480&h=270&fit=crop',
-        channel: 'CulturalTech',
-        publishedAt: '2024-09-15',
-        views: 99000,
-        tags: ['umukamezi', 'culture', 'tech', 'business'],
-        category: 'Business'
-    }
-];
-
+// Updated categories based on your mock data
 const categories = ['All', 'Tech', 'Business', 'Lifestyle', 'Tutorials'];
 
 // Utility Functions
@@ -241,11 +161,11 @@ const VlogCard: React.FC<VlogCardProps> = ({
             {/* Thumbnail */}
             <div className="relative aspect-video overflow-hidden bg-gray-100">
                 <img
-                    src={vlog.thumbnail}
+                    src={vlog.thumbnail || `https://img.youtube.com/vi/${vlog.youtube_id}/hqdefault.jpg`}
                     alt={vlog.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/10 bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                     <motion.div
                         initial={{ scale: 0 }}
                         whileHover={{ scale: 1 }}
@@ -310,7 +230,7 @@ const VlogCard: React.FC<VlogCardProps> = ({
                     </div>
                     <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        <span>{formatDate(vlog.publishedAt)}</span>
+                        <span>{formatDate(vlog.published_at)}</span>
                     </div>
                 </div>
 
@@ -379,7 +299,7 @@ const VlogDetail: React.FC<VlogDetailProps> = ({
                             <ArrowLeft className="w-4 h-4" />
                             Back to Vlogs
                         </button>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 hidden">
                             <button
                                 onClick={() => onLike(vlog.id)}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isLiked
@@ -413,13 +333,12 @@ const VlogDetail: React.FC<VlogDetailProps> = ({
                             {/* Video Player */}
                             <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden mb-6">
                                 <iframe
-                                    src={`https://www.youtube.com/embed/${vlog.youtubeId}`}
+                                    src={`https://www.youtube.com/embed/${vlog.youtube_id}`}
                                     title={vlog.title}
                                     className="w-full h-full"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
                                 />
-
                             </div>
 
                             {/* Video Info */}
@@ -427,13 +346,13 @@ const VlogDetail: React.FC<VlogDetailProps> = ({
                                 <h1 className="text-2xl font-bold text-gray-900 mb-2">{vlog.title}</h1>
                                 <div className="flex flex-wrap items-center gap-4 text-gray-600 mb-4">
                                     <span className="font-medium">{vlog.channel}</span>
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-1 hidden">
                                         <Eye className="w-4 h-4" />
                                         <span>{formatViews(vlog.views)} views</span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <Calendar className="w-4 h-4" />
-                                        <span>{formatDate(vlog.publishedAt)}</span>
+                                        <span>{formatDate(vlog.published_at)}</span>
                                     </div>
                                     <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                                         {vlog.category}
@@ -456,7 +375,7 @@ const VlogDetail: React.FC<VlogDetailProps> = ({
 
                             {/* External Link */}
                             <a
-                                href={`https://www.youtube.com/watch?v=${vlog.youtubeId}`}
+                                href={`https://www.youtube.com/watch?v=${vlog.youtube_id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
@@ -479,7 +398,7 @@ const VlogDetail: React.FC<VlogDetailProps> = ({
                                     >
                                         <div className="relative flex-shrink-0">
                                             <img
-                                                src={relatedVlog.thumbnail}
+                                                src={relatedVlog.thumbnail || `https://img.youtube.com/vi/${relatedVlog.youtube_id}/hqdefault.jpg`}
                                                 alt={relatedVlog.title}
                                                 className="w-24 h-16 object-cover rounded-lg"
                                             />
@@ -513,6 +432,7 @@ interface VlogListProps {
     savedVlogs: Set<string>;
     onLike: (vlogId: string) => void;
     onSave: (vlogId: string) => void;
+    loading?: boolean;
 }
 
 const VlogList: React.FC<VlogListProps> = ({
@@ -521,8 +441,22 @@ const VlogList: React.FC<VlogListProps> = ({
     likedVlogs,
     savedVlogs,
     onLike,
-    onSave
+    onSave,
+    loading = false
 }) => {
+    if (loading) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-16"
+            >
+                <RefreshCw className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+                <p className="text-gray-600">Loading vlogs...</p>
+            </motion.div>
+        );
+    }
+
     if (vlogs.length === 0) {
         return (
             <motion.div
@@ -563,9 +497,58 @@ const VlogPage: React.FC = () => {
     const [selectedVlog, setSelectedVlog] = useState<Vlog | null>(null);
     const [likedVlogs, setLikedVlogs] = useState<Set<string>>(new Set());
     const [savedVlogs, setSavedVlogs] = useState<Set<string>>(new Set());
+    const [vlogs, setVlogs] = useState<Vlog[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // Load vlogs from backend on component mount
+    useEffect(() => {
+        loadVlogs();
+    }, []);
+
+    const loadVlogs = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const vlogsData = await vlogService.getVlogs(0, 50); // Load first 50 vlogs
+            setVlogs(vlogsData);
+        } catch (err) {
+            console.error('Error loading vlogs:', err);
+            setError('Failed to load vlogs. Please try again later.');
+            // Fallback to mock data if API fails
+            setVlogs([
+                {
+                    id: '1',
+                    title: 'Building a Startup from Zero: My Journey',
+                    description: 'Join me as I share the complete journey of building a tech startup from scratch...',
+                    youtube_id: 'TcpQ4OAKVpQ',
+                    thumbnail: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=480&h=270&fit=crop',
+                    channel: 'TechEntrepreneur',
+                    published_at: '2024-08-15',
+                    views: 245000,
+                    tags: ['startup', 'entrepreneurship', 'business', 'tech'],
+                    category: 'Business'
+                },
+                {
+                    id: '9',
+                    title: 'Camera Setup for Professional Projects',
+                    description: 'Step-by-step guide on setting up DSLR and mirrorless cameras for professional filming.',
+                    youtube_id: 'TcpQ4OAKVpQ',
+                    thumbnail: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=480&h=270&fit=crop',
+                    channel: 'ProCreator',
+                    published_at: '2024-09-01',
+                    views: 51000,
+                    tags: ['camera', 'tutorial', 'projects', 'filmmaking'],
+                    category: 'Tutorials'
+                }
+            ]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const filteredVlogs = useMemo(() => {
-        let filtered = vlogData;
+        let filtered = vlogs;
 
         // Filter by category
         if (selectedCategory !== 'All') {
@@ -584,18 +567,18 @@ const VlogPage: React.FC = () => {
         }
 
         return filtered;
-    }, [searchTerm, selectedCategory]);
+    }, [searchTerm, selectedCategory, vlogs]);
 
     const relatedVlogs = useMemo(() => {
         if (!selectedVlog) return [];
-        return vlogData
+        return vlogs
             .filter(vlog =>
                 vlog.id !== selectedVlog.id &&
                 (vlog.category === selectedVlog.category ||
                     vlog.tags.some(tag => selectedVlog.tags.includes(tag)))
             )
             .slice(0, 5);
-    }, [selectedVlog]);
+    }, [selectedVlog, vlogs]);
 
     const handleVlogClick = (vlog: Vlog) => {
         setSelectedVlog(vlog);
@@ -629,9 +612,36 @@ const VlogPage: React.FC = () => {
         });
     };
 
+    const handleRetry = () => {
+        loadVlogs();
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar />
+            
+            {/* Error Banner */}
+            {error && (
+                <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <span className="text-red-400">⚠</span>
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-red-700">{error}</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleRetry}
+                            className="ml-3 text-sm text-red-700 hover:text-red-600 underline"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="bg-white border-b border-gray-200">
                 <div className="max-w-full md:max-w-11/12 mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -661,6 +671,7 @@ const VlogPage: React.FC = () => {
                     savedVlogs={savedVlogs}
                     onLike={handleLike}
                     onSave={handleSave}
+                    loading={loading}
                 />
             </div>
 

@@ -18,6 +18,7 @@ const ThirdMenuNav: React.FC<ThirdMenuNavProps> = ({ activeDropdown, isMobile, s
     const handleItemHover = (itemName: string) => {
         if (!isMobile && mainNavItems.find(item => item.title === itemName)?.hasDropdown) {
             setActiveDropdown(itemName);
+          
         }
     };
 

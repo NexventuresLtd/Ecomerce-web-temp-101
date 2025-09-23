@@ -1,16 +1,27 @@
 import Hashids from "hashids";
 
-const hashids = new Hashids("my-secret-salt", 8); // salt + min length
+const hashids = new Hashids("my-secret-salt", 8);
 
-// Encode numeric ID
-export function encodeId(id: number): string {
-    console.log(hashids.encode(id))
-  return hashids.encode(id);
+// Encode string or number
+export function encodeId(value: string | number): string {
+  if (typeof value === "number") {
+    return hashids.encode(value);
+  }
+
+  // Convert string to array of char codes
+  const charCodes = Array.from(value).map((c) => c.charCodeAt(0));
+  return hashids.encode(charCodes);
 }
 
-// Decode back
-export function decodeId(hash: string): number {
-  const [decoded] = hashids.decode(hash) as number[];
-  return decoded;
-}
+// Decode string or number
+export function decodeId(hash: string): string | number {
+  const decoded = hashids.decode(hash) as number[];
 
+  if (decoded.length === 1) {
+    // Single number
+    return decoded[0];
+  }
+
+  // Convert char codes back to string
+  return decoded.map((n) => String.fromCharCode(n)).join("");
+}

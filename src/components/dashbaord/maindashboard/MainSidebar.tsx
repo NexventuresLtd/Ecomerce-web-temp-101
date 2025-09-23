@@ -5,7 +5,7 @@ import {
     Tag,
     Heart,
     ShoppingBag,
-    FileQuestion,
+    // FileQuestion,
     Sliders,
     Video,
 } from 'lucide-react';
@@ -23,16 +23,20 @@ export const Sidebar: React.FC = () => {
         // { id: 'users' as ViewType, label: 'Users', icon: Users },
         { id: 'wishlists' as ViewType, label: 'Wishlists', icon: Heart },
         { id: 'carts' as ViewType, label: 'Carts', icon: ShoppingBag },
-        { id: 'FAQ' as ViewType, label: 'FAQ', icon: FileQuestion },
+        // { id: 'FAQ' as ViewType, label: 'FAQ', icon: FileQuestion },
         { id: 'hero' as ViewType, label: 'Image Section', icon: Sliders },
-        { id: 'Vlog' as ViewType, label: 'Vlog', icon: Video },
+        { id: 'vlog' as ViewType, label: 'Vlog', icon: Video },
     ];
 
     const handleItemClick = (viewId: ViewType) => {
-        setCurrentView(viewId);
+        if (setCurrentView) {
+            setCurrentView(viewId);
+        }
         // Close sidebar on mobile after selection
         if (window.innerWidth < 1024) {
-            setSidebarOpen(false);
+            if (setSidebarOpen) {
+                setSidebarOpen(false);
+            }
         }
     };
 
@@ -42,7 +46,7 @@ export const Sidebar: React.FC = () => {
             {isSidebarOpen && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-                    onClick={() => setSidebarOpen(false)}
+                    onClick={() => setSidebarOpen && setSidebarOpen(false)}
                 />
             )}
 

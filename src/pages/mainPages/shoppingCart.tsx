@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Plus, Minus, Star, ArrowLeft, ShoppingBag, X, MessageCircle, Loader } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, X, MessageCircle, Loader } from 'lucide-react';
 import Footer from '../../components/SharedComp/footer';
 import Navbar from '../../components/SharedComp/navabaritems/NavBar';
 import { RWF } from '../../app/priceConver';
@@ -88,7 +88,7 @@ const ConfirmationDialog: React.FC<{
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50 p-4">
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -126,7 +126,7 @@ const PaymentMethodModal: React.FC<{
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50 p-4">
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -485,7 +485,7 @@ const CartSummary: React.FC<{
 
                 <div className="flex justify-between text-lg font-semibold">
                     <span>Total</span>
-                    <span>{RWF.format(totalPrice)}</span>a
+                    <span>{RWF.format(totalPrice)}</span>
                 </div>
             </div>
 
