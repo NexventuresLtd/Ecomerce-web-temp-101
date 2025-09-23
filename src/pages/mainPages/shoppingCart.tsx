@@ -255,11 +255,12 @@ const CartItem: React.FC<{
     onRemove: (cartItemId: number) => void;
     isLoading: boolean;
     onConfirmRemove: (cartItemId: number) => void;
-}> = ({ item, onUpdateQuantity, onRemove, isLoading, onConfirmRemove }) => {
+}> = ({ item, onUpdateQuantity, isLoading, onConfirmRemove }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [selectedColor, setSelectedColor] = useState<Color | null>(
         item.cart_color?.[0]?.color || null
     );
+    console.log(isHovered)
     const [selectedDelivery, setSelectedDelivery] = useState(item.delivery || "free");
     const [isUpdatingColor, setIsUpdatingColor] = useState(false);
     const [isUpdatingDelivery, setIsUpdatingDelivery] = useState(false);
@@ -327,15 +328,7 @@ const CartItem: React.FC<{
         }
     };
 
-    const getDeliveryText = (deliveryValue: string) => {
-        switch (deliveryValue) {
-            case "free": return "City Center → Free";
-            case "2000": return "In Kigali → 2,000 RWF";
-            case "5000": return "Out of Kigali → 5,000 RWF";
-            case "0": return "Outside Rwanda → Negotiable";
-            default: return deliveryValue;
-        }
-    };
+
 
     return (
         <motion.div

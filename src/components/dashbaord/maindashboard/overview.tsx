@@ -4,15 +4,11 @@ import {
   Users,
   ShoppingCart,
   DollarSign,
-  TrendingUp,
   Heart,
   Download,
-  Calendar,
   ArrowUpRight,
   ArrowDownRight,
-  BarChart3,
   PieChart,
-  Activity,
   Shield,
   Layers,
   BarChart4,
@@ -20,8 +16,7 @@ import {
   Smartphone
 } from 'lucide-react';
 import {
-  AreaChart,
-  Area,
+
   BarChart,
   Bar,
   PieChart as RechartsPieChart,
@@ -31,10 +26,9 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
   Pie
 } from 'recharts';
-import { RWF } from '../../../app/priceConver';
+
 import mainAxios from '../../../Instance/mainAxios';
 
 // Define types based on your backend response
@@ -250,16 +244,6 @@ const UmukzameziDashboard = () => {
     }
   ] : [];
 
-  // Sample data for charts (you can replace with actual time-series data from your backend)
-  const salesData = [
-    { date: 'Mon', sales: 4200, orders: 28, users: 15 },
-    { date: 'Tue', sales: 5100, orders: 34, users: 22 },
-    { date: 'Wed', sales: 3800, orders: 25, users: 18 },
-    { date: 'Thu', sales: 6200, orders: 41, users: 28 },
-    { date: 'Fri', sales: 7800, orders: 52, users: 35 },
-    { date: 'Sat', sales: 9200, orders: 61, users: 42 },
-    { date: 'Sun', sales: 8500, orders: 56, users: 38 }
-  ];
 
   const categoryData = dashboardData ? [
     { name: 'Main Categories', value: dashboardData.categories.main, color: '#3B82F6' },

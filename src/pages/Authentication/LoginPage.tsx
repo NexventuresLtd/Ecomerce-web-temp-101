@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import mainAxios from '../../Instance/mainAxios';
 import type { FormData, SignupFormData, ValidationErrors } from '../../types/auth/auth';
-import { clothVariant, handVariant } from '../../constants/auth/authVariants';
 import Loginform from '../../components/Login/Loginform';
 import RegisterForm from '../../components/Register/RegisterForm';
 import { handleApiError } from '../../app/utils/HandelHttpError';
@@ -35,6 +34,7 @@ const AnimatedLoginPage: React.FC = () => {
     const [errors, setErrors] = useState<ValidationErrors>({});
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [emoji, setEmoji] = useState(String)
+    console.log(emoji)
     const [notification, setNotification] = useState<{
         type: 'success' | 'error' | null;
         message: string | null;

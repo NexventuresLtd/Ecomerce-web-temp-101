@@ -37,17 +37,9 @@ interface BillingFormData {
     country: string;
 }
 
-interface BillingHistory {
-    id: number;
-    date: string;
-    amount: string;
-    description: string;
-    status: string;
-}
 
 const UserDashboard = () => {
     const [currentStep, setCurrentStep] = useState(1);
-    const [showHistory, setShowHistory] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(true);
     const [billingData, setBillingData] = useState<BillingFormData>({
         fullName: '',
@@ -556,13 +548,6 @@ const UserDashboard = () => {
                 return null;
         }
     };
-
-    // Mock billing history data
-    const billingHistory: BillingHistory[] = [
-        { id: 1, date: "2025-09-15", amount: "$129.99", description: "Premium Plan", status: "Completed" },
-        { id: 2, date: "2025-08-15", amount: "$129.99", description: "Premium Plan", status: "Completed" },
-        { id: 3, date: "2025-07-15", amount: "$129.99", description: "Premium Plan", status: "Completed" },
-    ];
 
     if (!isLoggedIn) {
         return (

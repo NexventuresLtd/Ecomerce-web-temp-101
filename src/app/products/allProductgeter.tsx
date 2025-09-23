@@ -9,7 +9,7 @@ export const productApi = {
         return response.data;
     },
 
-    getProduct: async (id: number) => {
+    getProduct: async (id: any) => {
         const response = await mainAxios.get(`/products/${id}`);
         return response.data;
     },

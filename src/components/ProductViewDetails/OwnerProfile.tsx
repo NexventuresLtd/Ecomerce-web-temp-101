@@ -13,7 +13,7 @@ interface OwnerProfileProps {
 const OwnerProfile: React.FC<OwnerProfileProps> = ({ owner, products }) => {
     const { navigateToProduct } = useNavigation();
       const { product } = useProduct();
-    const relatedProducts = products.filter(p => p.id !== product?.id).slice(0, 4);
+    const relatedProducts = products.filter(p => p.id !== String(product?.id)).slice(0, 4);
     const joinDate = new Date(owner.JoinedAt).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long'

@@ -4,7 +4,6 @@ import {
   RefreshCw, 
   ChevronLeft, 
   ChevronRight, 
-  Image, 
   User, 
   Package, 
   CreditCard,

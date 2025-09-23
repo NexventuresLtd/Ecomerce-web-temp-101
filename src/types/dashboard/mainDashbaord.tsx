@@ -4,6 +4,7 @@ export type ViewType =
   | "products"
   | "categories"
   | "users"
+  | "orders"
   | "vlog"
   | "wishlists"
   | "carts";
