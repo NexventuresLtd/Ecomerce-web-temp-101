@@ -7,6 +7,7 @@ import SectionHeader from './categoryComps/SectionHeader';
 import GridLayout from './categoryComps/GridLayout';
 import CarouselLayout from './categoryComps/CarouselLayout';
 import { Grid, Sliders } from 'lucide-react';
+import { useNavigation } from '../../../hooks/product/useNavigation';
 
 const CategorySection: React.FC<CategorySectionProps> = ({
     title = "Shop by Category",
@@ -17,7 +18,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({
     const [currentIndex, setCurrentIndex] = useState(0);
     const [itemsPerView, setItemsPerView] = useState(4);
     const [viewMode, setViewmode] = useState('grid')
-
+    const { navigateToProductCategory } = useNavigation()
     // Responsive items per view
     useEffect(() => {
         const updateItemsPerView = () => {
@@ -52,9 +53,25 @@ const CategorySection: React.FC<CategorySectionProps> = ({
         }
     };
 
+
     const handleCategoryClick = (category: any) => {
-        console.log('Navigating to:', category.link);
-        // Here you would implement actual navigation
+        const categories = [
+            { title: 'Photograph', name: 'Camera' },
+            { title: 'Videography', name: 'Lenses' },
+            { title: 'Computer', name: 'Computer' },
+            { title: 'Pro Audio', name: 'Pro Audio' },
+            { title: 'Lighting', name: 'Lighting' },
+            { title: 'Phone', name: 'Phone' },
+            { title: 'Other Accessories', name: 'Other Accessories' },
+        ];
+        // Find category by name
+        const found = categories.find(c => c.title.toLowerCase() === category.toLowerCase());
+
+        if (found) {
+            navigateToProductCategory(found.name);
+        } else {
+            navigateToProductCategory(category);
+        }
     };
 
     return (
@@ -62,8 +79,8 @@ const CategorySection: React.FC<CategorySectionProps> = ({
             <div className="max-w-full md:max-w-7xl mx-auto">
                 <SectionHeader title={title} subtitle={subtitle} />
                 <div className="flex gap-2 p-2 py-3 w-full justify-end">
-                    <button title='View In Grid Mode' className='p-2 cursor-pointer' onClick={()=>setViewmode("grid")}><Grid className={`${viewMode == "grid"?  "text-secondary":"text-primary"}`}/></button>
-                    <button title='View In Sliding way' className='p-2 cursor-pointer' onClick={()=>setViewmode("cursor")}><Sliders className={`${viewMode != "grid"?  "text-secondary":"text-primary"}`}/></button>
+                    <button title='View In Grid Mode' className='p-2 cursor-pointer' onClick={() => setViewmode("grid")}><Grid className={`${viewMode == "grid" ? "text-secondary" : "text-primary"}`} /></button>
+                    <button title='View In Sliding way' className='p-2 cursor-pointer' onClick={() => setViewmode("cursor")}><Sliders className={`${viewMode != "grid" ? "text-secondary" : "text-primary"}`} /></button>
                 </div>
                 {viewMode === 'grid' ? (
                     <GridLayout

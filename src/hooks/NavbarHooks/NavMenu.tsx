@@ -126,7 +126,7 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
         </div>
 
         {/* Promotional banner */}
-        <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-blue-100">
+        <div className="mb-6 hidden p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-blue-100">
           <div className="flex items-center">
             <div className="text-2xl mr-3">🏷️</div>
             <div>

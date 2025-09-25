@@ -11,7 +11,7 @@ interface CategoryCardProps {
     category: Category;
     index: number;
     showStats: boolean;
-    onClick: (category: Category) => void;
+    onClick: (category: any) => void;
 }
 
 const CategoryCard: React.FC<CategoryCardProps> = ({
@@ -76,7 +76,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
             animate={isInView ? "visible" : "hidden"}
             whileHover="hover"
             className="relative group cursor-pointer h-[139px] w-fit m-auto"
-            onClick={() => onClick(category)}
+            onClick={() => onClick(category.name)}
         >
             <motion.div
                 onHoverStart={() => setClasessStyle('z-50 h-full w-full top-0 left-0 object-cover')}

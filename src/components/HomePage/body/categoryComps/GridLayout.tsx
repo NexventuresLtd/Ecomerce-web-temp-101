@@ -6,7 +6,7 @@ import type { Category } from '../../../../types/HomeCategories';
 interface GridLayoutProps {
   categories: Category[];
   showStats: boolean;
-  onCategoryClick: (category: Category) => void;
+  onCategoryClick: (category: any) => void;
 }
 
 const GridLayout: React.FC<GridLayoutProps> = ({
