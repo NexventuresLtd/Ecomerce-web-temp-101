@@ -59,7 +59,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({
 
     return (
         <section className={`py-16 px-4 bg-slate-50 ${className}`}>
-            <div className="max-w-full md:max-w-11/12 mx-auto">
+            <div className="max-w-full md:max-w-7xl mx-auto">
                 <SectionHeader title={title} subtitle={subtitle} />
                 <div className="flex gap-2 p-2 py-3 w-full justify-end">
                     <button title='View In Grid Mode' className='p-2 cursor-pointer' onClick={()=>setViewmode("grid")}><Grid className={`${viewMode == "grid"?  "text-secondary":"text-primary"}`}/></button>

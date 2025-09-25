@@ -75,7 +75,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
             whileHover="hover"
-            className="relative group cursor-pointer h-64"
+            className="relative group cursor-pointer h-[139px] w-fit m-auto"
             onClick={() => onClick(category)}
         >
             <motion.div
@@ -105,7 +105,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
                 <div className={`${classesStyle !== "" ? '' : 'text-transparent'} relative z-10 flex flex-col items-center text-center space-y-4 flex-grow`}>
                     <motion.div
                         variants={iconVariants}
-                        className="relative"
+                        className="relative hidden"
                     >
                         <div className={`w-16 h-16 rounded-full bg-white/20 flex items-center justify-center ${classesStyle !== "" ? 'backdrop-blur-sm' : 'text-transparent'} `}>
                             <Icon className="w-8 h-8" />
