@@ -16,6 +16,7 @@ import type { AppContextType, ViewType } from "./types/dashboard/mainDashbaord";
 import { useEffect, useState } from "react";
 import MainContent from "./pages/adminDashboard/MainDashboard";
 import UserDashboard from "./pages/Profile";
+import NotFound from "./components/ProductViewDetails/NotFound";
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
@@ -69,7 +70,7 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/authentication" element={getUserInfo ? <HomePage /> : <AnimatedLoginPage />} />
           <Route path="/admin-dashboard" element={getUserInfo ? <MainContent /> : <AnimatedLoginPage />} />
-          <Route path="*" element={<HomePage />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AppContext.Provider>

@@ -348,8 +348,8 @@ const UserDashboard = () => {
     };
 
     const handleBillingTypeChange = (type: BillingFormData['billingType']) => {
-        setBillingData(prev => ({ 
-            ...prev, 
+        setBillingData(prev => ({
+            ...prev,
             billingType: type,
             // Clear all payment-specific fields when changing type
             cardNumber: '',
@@ -556,12 +556,21 @@ const UserDashboard = () => {
                     <LogIn className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                     <h2 className="text-2xl font-semibold text-gray-800 mb-4">Access Required</h2>
                     <p className="text-gray-600 mb-6">Please log in to access your dashboard</p>
-                    <button
-                        onClick={() => window.location.href = '/authentication'}
-                        className="w-full bg-primary hover:bg-blue-700 text-white py-3 px-4 rounded-lg transition-colors font-medium"
-                    >
-                        Go to Login
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => handleLogout()}
+                            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg transition-colors font-medium"
+                        >
+                            Logout
+                        </button>
+                        <button
+                            onClick={() => window.location.href = '/authentication'}
+                            className="w-full bg-primary hover:bg-blue-700 text-white py-3 px-4 rounded-lg transition-colors font-medium"
+                        >
+                            Go to Login
+                        </button>
+                    </div>
+
                 </div>
             </div>
         );
@@ -576,9 +585,9 @@ const UserDashboard = () => {
                     <div className="bg-white p-6 rounded-lg mb-6">
                         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
                             <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200">
-                                {getUserInfo.profile_pic ? (
+                                {getUserInfo?.profile_pic ? (
                                     <img
-                                        src={getUserInfo.profile_pic}
+                                        src={getUserInfo?.profile_pic}
                                         alt="Profile"
                                         className="w-full h-full object-cover"
                                     />
@@ -590,10 +599,10 @@ const UserDashboard = () => {
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <h1 className="text-2xl font-semibold text-gray-800 mb-1">
-                                            {getUserInfo.fname} {getUserInfo.lname}
+                                            {getUserInfo?.fname} {getUserInfo?.lname}
                                         </h1>
-                                        <p className="text-gray-600 capitalize mb-2">{getUserInfo.role}</p>
-                                        <p className="text-gray-700">{getUserInfo.email}</p>
+                                        <p className="text-gray-600 capitalize mb-2">{getUserInfo?.role}</p>
+                                        <p className="text-gray-700">{getUserInfo?.email}</p>
                                     </div>
                                     <button
                                         onClick={() => setShowLogoutModal(true)}
@@ -617,21 +626,21 @@ const UserDashboard = () => {
                                         <Mail className="w-5 h-5 text-gray-500" />
                                         <div>
                                             <p className="text-sm text-gray-600">Email</p>
-                                            <p className="text-gray-800">{getUserInfo.email}</p>
+                                            <p className="text-gray-800">{getUserInfo?.email}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <Phone className="w-5 h-5 text-gray-500" />
                                         <div>
                                             <p className="text-sm text-gray-600">Phone</p>
-                                            <p className="text-gray-800">{getUserInfo.phone}</p>
+                                            <p className="text-gray-800">{getUserInfo?.phone}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <Calendar className="w-5 h-5 text-gray-500" />
                                         <div>
                                             <p className="text-sm text-gray-600">Member Since</p>
-                                            <p className="text-gray-800">{formatDate(getUserInfo.created_at)}</p>
+                                            <p className="text-gray-800">{formatDate(getUserInfo?.created_at)}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -903,7 +912,7 @@ const UserDashboard = () => {
                                 <h4 className="text-sm font-medium text-gray-500 mb-2">Billing Type</h4>
                                 <p className="text-gray-800 capitalize">{selectedBilling.billing_type}</p>
                             </div>
-                            
+
                             {selectedBilling.billing_type === 'card' && (
                                 <>
                                     <div>
@@ -924,14 +933,14 @@ const UserDashboard = () => {
                                     </div>
                                 </>
                             )}
-                            
+
                             {selectedBilling.billing_type === 'phone' && (
                                 <div>
                                     <h4 className="text-sm font-medium text-gray-500 mb-2">Phone Number</h4>
                                     <p className="text-gray-800">{selectedBilling.card_number || 'N/A'}</p>
                                 </div>
                             )}
-                            
+
                             {selectedBilling.billing_type === 'bank_transfer' && (
                                 <div>
                                     <h4 className="text-sm font-medium text-gray-500 mb-2">Account Number</h4>
@@ -940,19 +949,19 @@ const UserDashboard = () => {
                                     </p>
                                 </div>
                             )}
-                            
+
                             {selectedBilling.billing_type === 'paypal' && (
                                 <div>
                                     <h4 className="text-sm font-medium text-gray-500 mb-2">PayPal Email</h4>
                                     <p className="text-gray-800">{selectedBilling.card_number || 'N/A'}</p>
                                 </div>
                             )}
-                            
+
                             <div>
                                 <h4 className="text-sm font-medium text-gray-500 mb-2">Address</h4>
                                 <p className="text-gray-800">{selectedBilling.address || 'N/A'}</p>
                             </div>
-                            
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <h4 className="text-sm font-medium text-gray-500 mb-2">City</h4>
@@ -963,12 +972,12 @@ const UserDashboard = () => {
                                     <p className="text-gray-800">{selectedBilling.zip_code || 'N/A'}</p>
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <h4 className="text-sm font-medium text-gray-500 mb-2">Country</h4>
                                 <p className="text-gray-800">{selectedBilling.country || 'N/A'}</p>
                             </div>
-                            
+
                             <div>
                                 <h4 className="text-sm font-medium text-gray-500 mb-2">Created Date</h4>
                                 <p className="text-gray-800">{selectedBilling.created_at}</p>

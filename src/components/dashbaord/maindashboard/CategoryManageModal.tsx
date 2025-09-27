@@ -176,11 +176,11 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                         </div>
                     )}
 
-                    <div>
+                    <div className="hidden">
                         <p className="text-xs text-gray-500 mt-1">Max file size: 2MB. Supported formats: JPG, PNG, GIF</p>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
                         <div className="flex flex-col gap-3">
-                            <label className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-md cursor-pointer hover:bg-gray-200 text-sm">
+                            <label className="flex h items-center gap-2 bg-gray-100 px-4 py-2 rounded-md cursor-pointer hover:bg-gray-200 text-sm">
                                 <ImageIcon size={16} />
                                 {imageFile ? 'Change Image' : 'Choose Image'}
                                 <input

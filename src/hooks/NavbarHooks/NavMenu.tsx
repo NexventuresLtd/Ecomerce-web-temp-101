@@ -39,19 +39,18 @@ interface MainCategory {
 export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
   const [categories, setCategories] = useState<MainCategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const { navigateToProductCategory } = useNavigation()
+  const { navigateToProductCategory } = useNavigation();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await categoryApi.getFullHierarchy()
+        const response = await categoryApi.getFullHierarchy();
         if (!response) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        const data = response
+        const data = response;
         setCategories(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred while fetching categories');
@@ -66,14 +65,18 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-8 min-w-[800px]">
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-6"></div>
+          <div className="grid grid-cols-4 gap-8">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center">
-                <div className="w-12 h-12 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-16"></div>
+              <div key={i} className="space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="space-y-2">
+                  {Array.from({ length: 4 }).map((_, j) => (
+                    <div key={j} className="h-3 bg-gray-100 rounded w-4/5"></div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
@@ -84,73 +87,84 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
 
   if (error) {
     return (
-      <div className="p-6">
-        <div className="text-red-600 text-sm mb-2">Error loading categories</div>
+      <div className="p-8 min-w-[800px]">
+        <div className="text-red-600 text-sm mb-2 font-medium">Error loading categories</div>
         <div className="text-gray-500 text-xs">{error}</div>
       </div>
     );
   }
 
-  // Find the main category that matches the itemName
   const currentCategory = categories.find(cat =>
     cat.name.toLowerCase() === itemName.toLowerCase()
   );
 
   if (currentCategory) {
     return (
-      <div className="p-6">
-        {/* Main sub-categories grid */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 mb-6 pb-6 border-b">
+      <div className="p-8 min-w-[800px] bg-white border border-gray-100 shadow-lg rounded-lg">
+        {/* Header */}
+        <div className="mb-8 pb-4 border-b border-gray-100">
+          <h2 className="text-2xl font-light text-gray-900 tracking-tight">
+            {currentCategory.name}
+          </h2>
+          {currentCategory.description && (
+            <p className="text-gray-600 text-sm mt-2 max-w-2xl">
+              {currentCategory.description}
+            </p>
+          )}
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-4 2xl:grid-cols-5 gap-8">
           {currentCategory.sub_categories.map((subCategory) => (
-            <a
-              key={subCategory.id}
-              href={`/category/${currentCategory.slug}/${subCategory.slug}`}
-              className="flex flex-col items-center text-center group hover:text-blue-600 transition-colors"
-            >
-              <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">
-                {subCategory.image ? (
-                  <img
-                    src={subCategory.image}
-                    alt={subCategory.name}
-                    className="w-12 h-12 object-cover rounded-lg"
-                  />
-                ) : (
-                  <span className="w-12 h-12 flex items-center justify-center bg-gray-100 rounded-lg">
-                    📷
-                  </span>
-                )}
+            <div key={subCategory.id} className="space-y-4">
+              {/* Sub Category Header */}
+              <div className="pb-2 border-b border-gray-50">
+                <a
+                  href={`/category/${currentCategory.slug}/${subCategory.slug}`}
+                  className="group block"
+                >
+                  <h3 className="font-semibold text-gray-900 text-lg group-hover:text-blue-600 transition-colors duration-200">
+                    {subCategory.name}
+                  </h3>
+                  {subCategory.description && (
+                    <p className="text-gray-500 text-xs mt-1 line-clamp-2">
+                      {subCategory.description}
+                    </p>
+                  )}
+                </a>
               </div>
-              <span className="text-sm font-medium">{subCategory.name}</span>
-            </a>
+
+              {/* Product Categories List */}
+              <div className="space-y-2">
+                {subCategory.product_categories.map((productCat) => (
+                  <a
+                    key={productCat.id}
+                    onClick={() => navigateToProductCategory(productCat.name)}
+                    className="block text-sm text-gray-700 hover:text-blue-600 py-1 px-1 rounded-md hover:bg-blue-50 transition-all duration-150 cursor-pointer font-normal"
+                  >
+                    {productCat.name}
+                  </a>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
 
-        {/* Promotional banner */}
-        <div className="mb-6 hidden p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-blue-100">
-          <div className="flex items-center">
-            <div className="text-2xl mr-3">🏷️</div>
+        {/* Footer */}
+        <div className="mt-8 pt-6 border-t border-gray-100">
+          <div className="flex justify-between items-center">
             <div>
-              <h3 className="font-bold text-blue-800">Shop Specials</h3>
-              <p className="text-sm text-blue-600">In {currentCategory.name}</p>
+              <span className="text-xs text-gray-500">
+                {currentCategory.sub_categories.length} sub-categories •{' '}
+                {currentCategory.sub_categories.reduce((total, sub) => total + sub.product_categories.length, 0)} product categories
+              </span>
             </div>
-          </div>
-        </div>
-
-        {/* Product categories list */}
-        <div>
-          <h3 className="font-bold text-lg mb-4">Also in {currentCategory.name}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 text-sm">
-            {currentCategory.sub_categories.flatMap(subCat =>
-              subCat.product_categories.map(productCat => (
-                <a
-                  key={productCat.id}
-                  onClick={() => navigateToProductCategory(productCat.name)}
-                  className="text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50 transition-colors"
-                >
-                  {productCat.name}
-                </a>
-              ))
-            )}
+            <a
+              href={`/products`}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
+            >
+              View all {currentCategory.name} products →
+            </a>
           </div>
         </div>
       </div>
@@ -159,23 +173,27 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
 
   // Fallback for categories not found in API
   return (
-    <div className="p-6">
-      <h3 className="font-bold text-lg mb-4">{itemName} Categories</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <a
-            key={i}
-            href="#"
-            className="text-gray-700 hover:text-blue-600 py-1 text-sm"
-          >
-            {itemName} Subcategory {i + 1}
-          </a>
+    <div className="p-8 min-w-[800px] bg-white border border-gray-100 shadow-lg rounded-lg">
+      <h2 className="text-2xl font-light text-gray-900 mb-6">{itemName} Categories</h2>
+      <div className="grid grid-cols-4 gap-8">
+        {Array.from({ length: 4 }).map((_, colIndex) => (
+          <div key={colIndex} className="space-y-4">
+            <div className="pb-2 border-b border-gray-50">
+              <h3 className="font-semibold text-gray-900 text-lg">{itemName} Group {colIndex + 1}</h3>
+            </div>
+            <div className="space-y-2">
+              {Array.from({ length: 6 }).map((_, itemIndex) => (
+                <a
+                  key={itemIndex}
+                  href="#"
+                  className="block text-sm text-gray-700 hover:text-blue-600 py-1 transition-colors duration-150"
+                >
+                  {itemName} Item {itemIndex + 1}
+                </a>
+              ))}
+            </div>
+          </div>
         ))}
-      </div>
-
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <h4 className="font-semibold mb-2">Featured in {itemName}</h4>
-        <p className="text-sm text-gray-600">Explore our top products in this category</p>
       </div>
     </div>
   );
