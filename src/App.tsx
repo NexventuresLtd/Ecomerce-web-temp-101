@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import MainContent from "./pages/adminDashboard/MainDashboard";
 import UserDashboard from "./pages/Profile";
 import NotFound from "./components/ProductViewDetails/NotFound";
+import { categoryApi } from "./app/dashcategory/category";
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
@@ -28,6 +29,7 @@ export default function App() {
     if (savedView) {
       setCurrentView(savedView);
     }
+    categoryApi.getFullHierarchy();
   }, []);
 
   // Save current view to memory whenever it changes
