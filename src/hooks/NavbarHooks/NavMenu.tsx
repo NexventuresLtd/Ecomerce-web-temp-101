@@ -36,6 +36,8 @@ interface MainCategory {
   sub_categories: SubCategory[];
 }
 
+const CACHE_KEY = "categories_cache_hierarchy";
+
 export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
   const [categories, setCategories] = useState<MainCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,15 +48,30 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await categoryApi.getFullHierarchy();
-        if (!response) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+
+        // 1️⃣ Load from cache immediately if exists
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            setCategories(parsed);
+            setLoading(false); // show UI quickly
+          } catch {
+            console.warn("Invalid cache format");
+          }
         }
-        const data = response;
-        setCategories(data);
+
+        // 2️⃣ Always fetch new data in background
+        const response = await categoryApi.getFullHierarchy();
+        if (response) {
+          setCategories(response);
+          localStorage.setItem(CACHE_KEY, JSON.stringify(response));
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred while fetching categories');
-        console.error('Fetch error:', err);
+        setError(
+          err instanceof Error ? err.message : "An error occurred while fetching categories"
+        );
+        console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -63,7 +80,8 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
     fetchCategories();
   }, []);
 
-  if (loading) {
+  if (loading && categories.length === 0) {
+    // only show skeleton if no cached data
     return (
       <div className="p-8 min-w-[800px]">
         <div className="animate-pulse">
@@ -85,7 +103,7 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
     );
   }
 
-  if (error) {
+  if (error && categories.length === 0) {
     return (
       <div className="p-8 min-w-[800px]">
         <div className="text-red-600 text-sm mb-2 font-medium">Error loading categories</div>
@@ -94,8 +112,8 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
     );
   }
 
-  const currentCategory = categories.find(cat =>
-    cat.name.toLowerCase() === itemName.toLowerCase()
+  const currentCategory = categories.find(
+    (cat) => cat.name.toLowerCase() === itemName.toLowerCase()
   );
 
   if (currentCategory) {
@@ -103,8 +121,8 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
       <div className="p-8 min-w-[800px] bg-white border border-gray-100 shadow-lg rounded-lg">
         {/* Header */}
         <div className="mb-8 pb-4 border-b border-gray-100">
-          <h2 className="text-2xl font-light text-gray-900 tracking-tight">
-            {currentCategory.name}
+          <h2 className="text-2xl hidden font-light text-gray-900 tracking-tight">
+            {currentCategory.name}as
           </h2>
           {currentCategory.description && (
             <p className="text-gray-600 text-sm mt-2 max-w-2xl">
@@ -155,8 +173,12 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
           <div className="flex justify-between items-center">
             <div>
               <span className="text-xs text-gray-500">
-                {currentCategory.sub_categories.length} sub-categories •{' '}
-                {currentCategory.sub_categories.reduce((total, sub) => total + sub.product_categories.length, 0)} product categories
+                {currentCategory.sub_categories.length} sub-categories •{" "}
+                {currentCategory.sub_categories.reduce(
+                  (total, sub) => total + sub.product_categories.length,
+                  0
+                )}{" "}
+                product categories
               </span>
             </div>
             <a
@@ -171,7 +193,7 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
     );
   }
 
-  // Fallback for categories not found in API
+  // Fallback
   return (
     <div className="p-8 min-w-[800px] bg-white border border-gray-100 shadow-lg rounded-lg">
       <h2 className="text-2xl font-light text-gray-900 mb-6">{itemName} Categories</h2>
@@ -179,7 +201,9 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
         {Array.from({ length: 4 }).map((_, colIndex) => (
           <div key={colIndex} className="space-y-4">
             <div className="pb-2 border-b border-gray-50">
-              <h3 className="font-semibold text-gray-900 text-lg">{itemName} Group {colIndex + 1}</h3>
+              <h3 className="font-semibold text-gray-900 text-lg">
+                {itemName} Group {colIndex + 1}
+              </h3>
             </div>
             <div className="space-y-2">
               {Array.from({ length: 6 }).map((_, itemIndex) => (
