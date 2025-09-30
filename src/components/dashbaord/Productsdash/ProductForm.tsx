@@ -193,7 +193,7 @@ export const ProductForm = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit(formData);
+        (formData.discount) && (formData.discount > 0) && (formData.discount < 100) ? onSubmit(formData) : alert("Invalid discount");
     };
 
     const nextStep = () => {
