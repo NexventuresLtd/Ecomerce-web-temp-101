@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Image as ImageIcon } from 'lucide-react';
 import { categoryApi } from '../../../app/dashcategory/category';
 import { productApi } from '../../../app/products/allProductgeter';
@@ -90,7 +90,7 @@ const ProductList = () => {
                     is_primary: img.is_primary
                 }))
             };
-
+            console.log(formattedData)
             if (editingProduct) {
                 await productApi.updateProduct(editingProduct.id, formattedData);
             } else {
@@ -212,14 +212,17 @@ const ProductList = () => {
                                 key={product.id}
                                 className="grid grid-cols-5 items-center hover:bg-gray-50"
                             >
+
                                 {/* Product */}
                                 <div className="px-6 py-4 flex items-center">
                                     {product.images?.find(img => img.is_primary) ? (
-                                        <img
-                                            src={product.images.find(img => img.is_primary)?.url}
-                                            alt={product.title}
-                                            className="h-26 w-26 object-cover rounded"
-                                        />
+                                        <>
+                                            <img
+                                                src={`${import.meta.env.VITE_API_BASE_URL}/${product.images.find(img => img.is_primary)?.url}`}
+                                                alt={product.title}
+                                                className="h-26 w-26 object-cover rounded"
+                                            />
+                                        </>
                                     ) : (
                                         <div className="h-26 w-26 bg-gray-200 rounded flex items-center justify-center">
                                             <ImageIcon size={16} className="text-gray-400" />
@@ -254,8 +257,8 @@ const ProductList = () => {
                                 <div className="px-6 py-4">
                                     <span
                                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${product.is_active
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-red-100 text-red-800'
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-red-100 text-red-800'
                                             }`}
                                     >
                                         {product.is_active ? 'Active' : 'Inactive'}

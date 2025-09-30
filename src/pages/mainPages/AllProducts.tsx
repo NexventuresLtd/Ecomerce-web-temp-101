@@ -55,7 +55,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
         >
             <div className="relative overflow-hidden">
                 <img
-                    src={primaryImage}
+                    src={`${import.meta.env.VITE_API_BASE_URL}/${primaryImage}`}
                     alt={product.title}
                     className="w-full h-48 object-contain group-hover:scale-105 transition-transform duration-300"
                 />
@@ -397,7 +397,7 @@ const AllProductsPage: React.FC = () => {
     const [hasMoreProducts, setHasMoreProducts] = useState<boolean>(true);
     const [skip, setSkip] = useState<number>(0);
     const limit: number = 20;
-    console.log(error)
+    // console.log(error)
     const [filters, setFilters] = useState<FilterState>({
         categories: [],
         brands: [],

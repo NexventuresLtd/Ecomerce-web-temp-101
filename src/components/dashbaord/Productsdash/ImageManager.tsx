@@ -133,7 +133,7 @@ export const ImageManager = ({ productId, onClose }: {
                     <div key={image.id} className="relative group">
                         {/* {image.url ? "yes":"no"} */}
                         <img
-                            src={image.url}
+                            src={`${import.meta.env.VITE_API_BASE_URL}/${image.url}`}
                             alt="Product"
                             className="w-full h-32 object-cover rounded-md"
                         />
@@ -154,7 +154,7 @@ export const ImageManager = ({ productId, onClose }: {
                             )}
                             <button
                                 onClick={() => handleDeleteImage(image.id)}
-                                className="p-2 bg-white rounded-md text-red-600 hover:text-red-800"
+                                className="p-2 hidden bg-white rounded-md text-red-600 hover:text-red-800"
                                 title="Delete image"
                             >
                                 <Trash2 size={16} />

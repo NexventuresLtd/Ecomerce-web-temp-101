@@ -42,8 +42,9 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
             <div className="relative overflow-hidden"
                 onClick={() => onProductClick(product.id)}
             >
+                
                 <img
-                    src={primaryImage}
+                    src={`${import.meta.env.VITE_API_BASE_URL}/${primaryImage}`}
                     alt={product.title}
                     className="w-full h-48 object-contain group-hover:scale-105 transition-transform duration-300"
                 />

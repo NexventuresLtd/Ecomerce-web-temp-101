@@ -112,17 +112,17 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
     );
   }
 
-  const currentCategory = categories.find(
+  const currentCategory = categories?.find(
     (cat) => cat.name.toLowerCase() === itemName.toLowerCase()
   );
 
   if (currentCategory) {
     return (
-      <div className="p-8 min-w-[800px] bg-white border border-gray-100 shadow-lg rounded-lg">
+      <div className="p-8 pt-3 min-w-[800px] bg-white border border-gray-100 shadow-lg rounded-lg">
         {/* Header */}
-        <div className="mb-8 pb-4 border-b border-gray-100">
+        <div className="mb-8 hidden border-b border-gray-100">
           <h2 className="text-2xl hidden font-light text-gray-900 tracking-tight">
-            {currentCategory.name}as
+            {currentCategory.name}
           </h2>
           {currentCategory.description && (
             <p className="text-gray-600 text-sm mt-2 max-w-2xl">
@@ -132,7 +132,7 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-4 2xl:grid-cols-5 gap-8">
+        <div className="grid grid-cols-4 2xl:grid-cols-5 gap-4">
           {currentCategory.sub_categories.map((subCategory) => (
             <div key={subCategory.id} className="space-y-4">
               {/* Sub Category Header */}

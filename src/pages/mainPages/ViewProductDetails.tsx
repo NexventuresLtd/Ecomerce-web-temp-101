@@ -218,7 +218,7 @@ const ProductViewPage: React.FC = () => {
                             >
                                 <div className="relative w-full h-full">
                                     <img
-                                        src={product.images?.[selectedImageIndex]?.url || ''}
+                                        src={`${import.meta.env.VITE_API_BASE_URL}/${product.images?.[selectedImageIndex]?.url || ''}`}
                                         alt={product.title}
                                         className="w-full h-full object-cover transition-opacity duration-300"
                                     />
@@ -228,7 +228,7 @@ const ProductViewPage: React.FC = () => {
                                         {isHovering && product.hover_image && (
                                             <motion.img
                                                 key="hover-image"
-                                                src={product.hover_image}
+                                                src={`${import.meta.env.VITE_API_BASE_URL}/${product.hover_image}`}
                                                 alt={`${product.title} hover view`}
                                                 className="absolute inset-0 w-full h-full object-cover"
                                                 initial={{ opacity: 0 }}
@@ -291,7 +291,7 @@ const ProductViewPage: React.FC = () => {
                                                 }`}
                                         >
                                             <img
-                                                src={image.url}
+                                                src={`${import.meta.env.VITE_API_BASE_URL}/${image.url}`}
                                                 alt={`${product.title} view ${index + 1}`}
                                                 className="w-full h-full object-cover"
                                             />

@@ -22,15 +22,15 @@ const HomePage = () => {
       setLoading(true);
       const response = await productApi.getProducts(skip, limit);
       const newProducts = response.products || response;
-
       setAllProducts(prev => [...prev, ...newProducts]);
       setSkip(prev => prev + limit);
-
+      
       // If we get fewer products than requested, we've reached the end
       if (newProducts.length < limit) {
         setHasMore(false);
       }
     } catch (err: any) {
+      console.log(err);
       setError(err.message || "Failed to fetch products");
     } finally {
       setLoading(false);
