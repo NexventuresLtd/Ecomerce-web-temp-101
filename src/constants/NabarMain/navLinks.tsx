@@ -3,7 +3,7 @@ import type {  NavItem } from "../../types/Navbar/navTypes";
 export const topNavItems = [
     { name: 'B2B, Gov, Students & More', href: '#' },
     { name: 'umukamezi250@gmail.com', href: 'mailto:umukamezi250@gmail.com' },
-    { name: 'About Us', href: '#' }
+    { name: 'About Us', href: '/about' }
 ];
 
 // export const mainNavItems: NavItem[] = [

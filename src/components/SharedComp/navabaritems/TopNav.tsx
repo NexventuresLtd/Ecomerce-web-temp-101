@@ -1,11 +1,13 @@
-import {  Phone, HelpCircle, MessageCircle } from 'lucide-react';
+import {  Phone, 
+    // HelpCircle, MessageCircle
+ } from 'lucide-react';
 import {  topNavItems } from '../../../constants/NabarMain/navLinks';
 
 const TopNav = () => {
     return (
         <>
             {/* Top Bar */}
-            <div className="bg-gray-100 border-b border-gray-200 hidden xl:block">
+            <div className="bg-primary/40 border-b border-gray-200 hidden xl:block">
                 <div className="max-w-full md:max-w-11/12 mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-8 text-xs">
                         <div className="flex space-x-4">
@@ -16,13 +18,13 @@ const TopNav = () => {
                             ))}
                         </div>
                         <div className="flex items-center space-x-4 text-gray-600">
-                            <span>The Professional's Source since 1973</span>
-                            <div className="flex items-center space-x-2">
+                            <span>The Professional's Source since 2020</span>
+                            <div onClick={() => window.open('tel:250781691713')} className="flex cursor-pointer items-center space-x-2">
                                 <Phone className="w-3 h-3" />
                                 <span>250781691713</span>
                             </div>
-                            <HelpCircle className="w-3 h-3" />
-                            <MessageCircle className="w-3 h-3" />
+                            {/* <HelpCircle className="w-3 h-3" /> */}
+                            {/* <MessageCircle className="w-3 h-3" /> */}
                         </div>
                     </div>
                 </div>
