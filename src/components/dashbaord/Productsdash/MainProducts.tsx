@@ -75,14 +75,14 @@ interface CategoryHierarchy {
 }
 
 interface ProductFilters {
-    search: string;
-    category: string;
-    minPrice: number;
-    maxPrice: number;
-    inStock: boolean;
-    isNew: boolean;
-    isFeatured: boolean;
-    sortBy: 'newest' | 'price_low' | 'price_high' | 'name';
+    search: any;
+    category: any;
+    minPrice: any;
+    maxPrice: any;
+    inStock: any;
+    isNew: any;
+    isFeatured: any;
+    sortBy: any;
 }
 
 // Color Picker Component
@@ -419,12 +419,12 @@ const ProductManagement: React.FC = () => {
     const [filters, setFilters] = useState<ProductFilters>({
         search: '',
         category: '',
-        minPrice: 0,
-        maxPrice: 1000000,
-        inStock: false,
-        isNew: false,
-        isFeatured: false,
-        sortBy: 'newest'
+        minPrice: null,
+        maxPrice: null,
+        inStock: null,
+        isNew: null,
+        isFeatured: null,
+        sortBy: null
     });
     const [pagination, setPagination] = useState({
         skip: 0,
@@ -437,6 +437,7 @@ const ProductManagement: React.FC = () => {
         try {
             const response = await mainAxios.get(`/products?skip=${pagination.skip}&limit=${pagination.limit}`);
             setProducts(response.data);
+            // console.log("alebi", response.data);
         } catch (error) {
             console.error('Error fetching products:', error);
         } finally {
@@ -449,17 +450,40 @@ const ProductManagement: React.FC = () => {
     }, [fetchProducts]);
 
     const filteredProducts = products.filter(product => {
-        const matchesSearch = product.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+        const matchesSearch =
+            !filters.search ||
+            product.title.toLowerCase().includes(filters.search.toLowerCase()) ||
             product.description.toLowerCase().includes(filters.search.toLowerCase());
-        const matchesCategory = !filters.category || product.category?.name === filters.category;
-        const matchesPrice = product.price >= filters.minPrice && product.price <= filters.maxPrice;
-        const matchesStock = !filters.inStock || product.instock > 0;
-        const matchesNew = !filters.isNew || product.is_new;
-        const matchesFeatured = !filters.isFeatured || product.is_featured;
 
-        return matchesSearch && matchesCategory && matchesPrice && matchesStock && matchesNew && matchesFeatured;
+        const matchesCategory =
+            !filters.category || product.category?.name === filters.category;
+
+        const matchesPrice =
+            (filters.minPrice == null && filters.maxPrice == null) ||
+            (product.price >= (filters.minPrice ?? 0) &&
+                product.price <= (filters.maxPrice ?? Infinity));
+
+        const matchesStock =
+            !filters.inStock || product.instock > 0;
+
+        const matchesNew =
+            !filters.isNew || product.is_new;
+
+        const matchesFeatured =
+            !filters.isFeatured || product.is_featured;
+
+        return (
+            matchesSearch &&
+            matchesCategory &&
+            matchesPrice &&
+            matchesStock &&
+            matchesNew &&
+            matchesFeatured
+        );
     });
 
+    // console.log("filteredProducts", filteredProducts);
+    // console.log("products", products);
     const sortedProducts = [...filteredProducts].sort((a, b) => {
         switch (filters.sortBy) {
             case 'price_low':
@@ -637,14 +661,14 @@ const ProductFilters: React.FC<{
                                         type="number"
                                         value={filters.minPrice}
                                         onChange={(e) => onFiltersChange({ ...filters, minPrice: Number(e.target.value) })}
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary"
+                                        className="flex-1 px-3 w-full py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary"
                                         placeholder="Min"
                                     />
                                     <input
                                         type="number"
                                         value={filters.maxPrice}
                                         onChange={(e) => onFiltersChange({ ...filters, maxPrice: Number(e.target.value) })}
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary"
+                                        className="flex-1 px-3 w-full py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary"
                                         placeholder="Max"
                                     />
                                 </div>
@@ -730,6 +754,7 @@ const ProductCard: React.FC<{
 }> = ({ product, onEdit, onDelete, formatRWF }) => {
     const primaryImage = product.images.find(img => img.is_primary) || product.images[0];
     const imageUrl = primaryImage?.url ? `${import.meta.env.VITE_API_BASE_URL}${primaryImage.url}` : '';
+    console.log("product", primaryImage.url);
 
     return (
         <motion.div
@@ -748,7 +773,6 @@ const ProductCard: React.FC<{
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                 )}
-
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-wrap gap-1">
                     {product.is_new && (
@@ -863,8 +887,8 @@ const Pagination: React.FC<{
                                 skip: (page - 1) * pagination.limit
                             })}
                             className={`w-10 h-10 rounded-lg border transition-colors ${currentPage === page
-                                    ? 'bg-primary text-white border-primary'
-                                    : 'border-gray-300 hover:bg-gray-50'
+                                ? 'bg-primary text-white border-primary'
+                                : 'border-gray-300 hover:bg-gray-50'
                                 }`}
                         >
                             {page}
@@ -1064,10 +1088,10 @@ const ProductForm: React.FC<{
                                     <div className="flex items-center">
                                         <div
                                             className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${isCompleted
-                                                    ? 'bg-primary border-primary text-white'
-                                                    : isCurrent
-                                                        ? 'border-primary text-primary bg-primary/10'
-                                                        : 'border-gray-300 text-gray-400'
+                                                ? 'bg-primary border-primary text-white'
+                                                : isCurrent
+                                                    ? 'border-primary text-primary bg-primary/10'
+                                                    : 'border-gray-300 text-gray-400'
                                                 }`}
                                         >
                                             {isCompleted ? <Check size={16} /> : <Icon size={16} />}
