@@ -551,7 +551,7 @@ const ProductViewPage: React.FC = () => {
                                 >
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                         {product.features.map((feature, index) => (
-                                            <div key={index} className="flex items-start gap-3 bg-white w-fit px-3 cursor-pointer hover:bg-secondary/10 rounded-2xl">
+                                            <div key={index} className="flex items-start gap-3 bg-white w-fit px-3 py-3 cursor-pointer hover:bg-secondary/10 rounded-2xl">
                                                 <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                                                 <span className="hover:text-gray-500">{feature}</span>
                                             </div>
@@ -614,7 +614,7 @@ const ProductViewPage: React.FC = () => {
                                     <X className="w-5 h-5" />
                                 </button>
                                 <div className="w-full h-full bg-gray-100 rounded-lg overflow-hidden">
-                                    {product.tutorial_video}
+                                    {/* {product.tutorial_video} */}
                                     <iframe
                                         src={toEmbedUrl(product.tutorial_video)}
                                         className="w-full h-full"

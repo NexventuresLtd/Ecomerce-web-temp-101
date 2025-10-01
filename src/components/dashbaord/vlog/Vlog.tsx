@@ -1,19 +1,19 @@
 // components/VlogManager.tsx
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Play, 
-  Eye, 
-  Search, 
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Play,
+  Eye,
+  Search,
   Youtube,
   Calendar,
-//   Filter,
-//   Upload,
-//   Tag,
-//   Users
+  //   Filter,
+  //   Upload,
+  //   Tag,
+  //   Users
 } from 'lucide-react';
 import type { Vlog, VlogCreate } from '../../../types/vlog/vogtypes';
 import { vlogService } from '../../../app/vlog/vlog';
@@ -178,13 +178,19 @@ const VlogForm: React.FC<VlogFormProps> = ({ vlog, onSubmit, onCancel, loading }
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Category *
               </label>
-              <input
-                type="text"
+              <select
                 required
                 value={formData.category}
                 onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              >
+                <option value="">Select a category</option>
+                <option value="Tech">Tech</option>
+                <option value="Business">Business</option>
+                <option value="Lifestyle">Lifestyle</option>
+                <option value="Tutorials">Tutorials</option>
+              </select>
+
             </div>
           </div>
 
@@ -397,7 +403,7 @@ const VlogManager: React.FC = () => {
 
   const handleUpdateVlog = async (vlogData: VlogCreate) => {
     if (!editingVlog) return;
-    
+
     try {
       const updatedVlog = await vlogService.updateVlog(editingVlog.id, vlogData);
       setVlogs(prev => prev.map(vlog => vlog.id === editingVlog.id ? updatedVlog : vlog));
@@ -424,7 +430,7 @@ const VlogManager: React.FC = () => {
   // Filter vlogs based on search and category
   const filteredVlogs = vlogs.filter(vlog => {
     const matchesSearch = vlog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vlog.description.toLowerCase().includes(searchTerm.toLowerCase());
+      vlog.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !selectedCategory || vlog.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });

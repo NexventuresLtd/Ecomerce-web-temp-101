@@ -54,11 +54,11 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
         <>
             <div className="bg-white border-b border-gray-200" onMouseEnter={() => setActiveDropdown(null)}>
                 <div className="max-w-full md:max-w-11/12 mx-auto px-4 sm:px-6 lg:px-2">
-                    <div className="flex justify-between items-center h-16">
+                    <div className="flex justify-between items-center h-22">
                         {/* Logo */}
                         <div className="flex-shrink-0 cursor-pointer" onClick={() => window.location.href = "/"}>
                             <div className="px-4 py-3">
-                                <div className="text-transparent uppercase bg-clip-text bg-black font-extrabold text-3xl leading-tight h-16 w-22 overflow-hidden">
+                                <div className="text-transparent uppercase bg-clip-text bg-black font-extrabold text-3xl leading-tight h-22 w-22 overflow-hidden">
                                  <img src="/Umukamezilogo.jpg" className='w-full h-full object- scale-120' alt=""  />   
                                 </div>
                             </div>

@@ -136,7 +136,6 @@ const Hero: React.FC = () => {
                 {/* <StatsDisplay stats={currentSlideData.stats} /> */}
 
                 {/* CTA Buttons */}
-
                 <CTAButtons
                   primary={currentSlideData.ctaPrimary}
                   secondary={currentSlideData.ctaSecondary}

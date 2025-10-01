@@ -320,7 +320,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ query, products, o
                                 <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-md overflow-hidden">
                                     {getPrimaryImage(product) ? (
                                         <img
-                                            src={`${import.meta.env.VITE_API_BASE_URL}/${getPrimaryImage(product)}`}
+                                            src={`${import.meta.env.VITE_API_BASE_URL}${getPrimaryImage(product)}`}
                                             alt={product.title}
                                             className="w-full h-full object-cover"
                                         />
