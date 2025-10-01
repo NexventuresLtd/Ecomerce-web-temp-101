@@ -75,7 +75,7 @@ export const categoryApi = {
         localStorage.removeItem(CACHE_PREFIX + `main_${id}`);
     },
 
-    getSubCategories: async () => fetchWithCache("sub", "/categories/sub"),
+    getSubCategories: async () => fetchWithCache("sub", "/categories/sub/?skip=0&limit=100000"),
     getSubCategory: async (id: number) =>
         fetchWithCache(`sub_${id}`, `/categories/sub/${id}`),
 
@@ -99,7 +99,7 @@ export const categoryApi = {
     },
 
     getProductCategories: async () =>
-        fetchWithCache("product", "/categories/product"),
+        fetchWithCache("product", "/categories/product?skip=0&limit=100000"),
     getProductCategory: async (id: number) =>
         fetchWithCache(`product_${id}`, `/categories/product/${id}`),
 
