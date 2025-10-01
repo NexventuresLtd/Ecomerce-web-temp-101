@@ -18,14 +18,18 @@ import {
     Download,
 } from 'lucide-react';
 import Navbar from '../../components/SharedComp/navabaritems/NavBar';
-import Offers from '../../components/HomePage/body/Offers/OurOffers';
 import Footer from '../../components/SharedComp/footer';
 import { RWF } from '../../app/priceConver';
 import { useProduct } from '../../hooks/product/useProduct';
 import { cartApi } from '../../app/products/cart';
 import { wishlistService } from '../../app/products/wishlistService';
+import { toEmbedUrl } from '../../app/dashcategory/getUrl';
+
+import Suggestions from './Suggestions';
 
 const ProductViewPage: React.FC = () => {
+
+
     const { product, loading, error } = useProduct();
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [selectedColor, setSelectedColor] = useState<any | null>(null);
@@ -47,7 +51,7 @@ const ProductViewPage: React.FC = () => {
             const response = await cartApi.addToCart(id, quantity, color, delivery);
             if (response.status == 200) {
                 setesucess("cart created sucessfull")
-                window.location.href ="/shopping-cart"
+                window.location.href = "/shopping-cart"
             }
             // you can also add toast/notification here
         } catch (error: any) {
@@ -66,7 +70,7 @@ const ProductViewPage: React.FC = () => {
             if (response.status == 200) {
                 setIsWishlisted(isWishlisted)
                 setesucess("wishList added sucessfull")
-                window.location.href ="/wish-list"
+                window.location.href = "/wish-list"
             }
             // you can also add toast/notification here
         } catch (error: any) {
@@ -218,7 +222,7 @@ const ProductViewPage: React.FC = () => {
                             >
                                 <div className="relative w-full h-full">
                                     <img
-                                        src={`${import.meta.env.VITE_API_BASE_URL}/${product.images?.[selectedImageIndex]?.url || ''}`}
+                                        src={`${import.meta.env.VITE_API_BASE_URL}${product.images?.[selectedImageIndex]?.url || ''}`}
                                         alt={product.title}
                                         className="w-full h-full object-cover transition-opacity duration-300"
                                     />
@@ -228,9 +232,9 @@ const ProductViewPage: React.FC = () => {
                                         {isHovering && product.hover_image && (
                                             <motion.img
                                                 key="hover-image"
-                                                src={`${import.meta.env.VITE_API_BASE_URL}/${product.hover_image}`}
+                                                src={`${import.meta.env.VITE_API_BASE_URL}${product.hover_image}`}
                                                 alt={`${product.title} hover view`}
-                                                className="absolute inset-0 w-full h-full object-cover"
+                                                className="absolute inset-0 hidden w-full h-full object-cover"
                                                 initial={{ opacity: 0 }}
                                                 animate={{ opacity: 1 }}
                                                 exit={{ opacity: 0 }}
@@ -291,7 +295,7 @@ const ProductViewPage: React.FC = () => {
                                                 }`}
                                         >
                                             <img
-                                                src={`${import.meta.env.VITE_API_BASE_URL}/${image.url}`}
+                                                src={`${import.meta.env.VITE_API_BASE_URL}${image.url}`}
                                                 alt={`${product.title} view ${index + 1}`}
                                                 className="w-full h-full object-cover"
                                             />
@@ -576,14 +580,7 @@ const ProductViewPage: React.FC = () => {
                                     className="aspect-video w-full max-w-full"
                                 >
                                     <div className="w-full h-full bg-gray-100 rounded-lg overflow-hidden">
-                                        <iframe
-                                            src={product.tutorial_video}
-                                            className="w-full h-full"
-                                            frameBorder="0"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
-                                            title="Product Tutorial"
-                                        ></iframe>
+                                        <iframe className="w-full h-full" src={toEmbedUrl(product.tutorial_video)} title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>
                                     </div>
                                 </motion.div>
                             )}
@@ -601,7 +598,7 @@ const ProductViewPage: React.FC = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+                            className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
                             onClick={() => setShowVideoModal(false)}
                         >
                             <motion.div
@@ -618,8 +615,9 @@ const ProductViewPage: React.FC = () => {
                                     <X className="w-5 h-5" />
                                 </button>
                                 <div className="w-full h-full bg-gray-100 rounded-lg overflow-hidden">
+                                    {product.tutorial_video}
                                     <iframe
-                                        src={product.tutorial_video}
+                                        src={toEmbedUrl(product.tutorial_video)}
                                         className="w-full h-full"
                                         frameBorder="0"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -632,7 +630,7 @@ const ProductViewPage: React.FC = () => {
                     )}
                 </AnimatePresence>
             </div >
-            <Offers />
+            <Suggestions />
             <Footer />
         </>
     );

@@ -11,7 +11,6 @@ import {
 import Navbar from '../../components/SharedComp/navabaritems/NavBar';
 import Footer from '../../components/SharedComp/footer';
 import { RWF } from '../../app/priceConver';
-import Offers from '../../components/HomePage/body/Offers/OurOffers';
 import { useNavigation } from '../../hooks/product/useNavigation';
 import { handleClickWhatsapp } from '../../app/ProductWhasapp';
 import SkeletonLoader from '../../components/Skeltons/Product';
@@ -19,6 +18,7 @@ import type { Product } from '../../types/Product/producttypeAdmin';
 import { productApi } from '../../app/products/allProductgeter';
 import { useParams } from 'react-router-dom';
 import { decodeId } from '../../app/products/id_encrypter';
+import Suggestions from './Suggestions';
 
 // Filter Types
 interface FilterState {
@@ -55,7 +55,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
         >
             <div className="relative overflow-hidden">
                 <img
-                    src={`${import.meta.env.VITE_API_BASE_URL}/${primaryImage}`}
+                    src={`${import.meta.env.VITE_API_BASE_URL}${primaryImage}`}
                     alt={product.title}
                     className="w-full h-48 object-contain group-hover:scale-105 transition-transform duration-300"
                 />
@@ -82,7 +82,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
                             <p className="text-white text-lg text-center font-medium">
                                 {product.title}
                             </p>
-                            <p className="text-white text-sm text-center">
+                            <p className="text-white text-sm text-center text-wrap line-clamp-2">
                                 {product.description}
                             </p>
                         </motion.div>
@@ -114,14 +114,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
                     <button
                         disabled={(product.instock || 0) < 1}
                         onClick={() => navigateToProduct(product.id.toString())}
-                        className={`${(product.instock || 0) < 1 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} w-full bg-primary text-xs text-white font-semibold rounded-2xl px-3 py-3 transition-colors duration-300 flex items-center justify-center gap-2`}>
+                        className={`${(product.instock || 0) < 1 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} w-full bg-yellow-500 text-xs text-white font-semibold rounded-lg px-3 py-3 transition-colors duration-300 flex items-center justify-center gap-2`}>
                         <ShoppingCartIcon size={18} />
                         Shop Now
                     </button>
                     <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className={`w-full py-3 px-3 rounded-xl text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2 bg-green-600 hover:bg-primary/90 cursor-pointer
+                        className={`w-full py-3 px-3 rounded-lg text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2 bg-teal-600 hover:bg-primary/90 cursor-pointer
                   `}
                         onClick={() => handleClickWhatsapp(product.title)}
                     >
@@ -759,7 +759,7 @@ const AllProductsPage: React.FC = () => {
                     </div>
                 </div>
             </div>
-            <Offers />
+            <Suggestions />
             <Footer />
         </>
     );
