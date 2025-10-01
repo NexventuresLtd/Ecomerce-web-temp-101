@@ -10,11 +10,13 @@ import type { CategoryHierarchy, Product } from "../../../types/Product/productt
 export const ProductForm = ({
     product,
     onSubmit,
+    isEditing = false,
     loading = false
 }: {
     product?: Product | null;
     onSubmit: (data: Product) => void;
     onCancel: () => void;
+    isEditing?: boolean;
     loading?: boolean;
 }) => {
     const [step, setStep] = useState(1);
@@ -23,7 +25,7 @@ export const ProductForm = ({
         subCategories: [],
         productCategories: []
     });
-
+    console.log(isEditing)
     const [selectedMain, setSelectedMain] = useState<number | null>(null);
     const [selectedSub, setSelectedSub] = useState<number | null>(null);
     const [currentTag, setCurrentTag] = useState('');
@@ -464,6 +466,7 @@ export const ProductForm = ({
 
             <div className="grid grid-cols-1 gap-6">
                 <ImageUpload
+                    isEditing={product ? true : false}
                     onImageUpload={handleHoverImageUpload}
                     multiple={false}
                     label="Hover Image"
@@ -624,6 +627,7 @@ export const ProductForm = ({
             <ImageUpload
                 onImageUpload={handleProductImagesUpload}
                 multiple={true}
+                isEditing={product ? true : false}
                 label="Upload product images (multiple)"
                 existingImages={formData.images || []}
                 loading={loading}

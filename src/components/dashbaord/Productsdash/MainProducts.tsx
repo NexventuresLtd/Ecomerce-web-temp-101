@@ -312,6 +312,7 @@ const ProductList = () => {
                 size="xl"
             >
                 <ProductForm
+                    isEditing={editingProduct ? true : false}
                     product={editingProduct}
                     onSubmit={handleFormSubmit}
                     onCancel={() => setShowForm(false)}

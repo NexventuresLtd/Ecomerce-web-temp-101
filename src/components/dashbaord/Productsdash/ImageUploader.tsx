@@ -6,12 +6,14 @@ import { fileToBase64 } from "../../../app/ImageConvert";
 export const ImageUpload = ({
     onImageUpload,
     multiple = false,
+    isEditing = false,
     label,
     existingImages = [],
     loading = false
 }: {
     onImageUpload: (images: Array<{ url: string; is_primary: boolean }>) => void;
     multiple?: boolean;
+    isEditing?: boolean;
     label: string;
     existingImages?: Array<{ url: string; is_primary: boolean }>;
     loading?: boolean;
@@ -123,7 +125,7 @@ export const ImageUpload = ({
                     {previewImages.map((image, index) => (
                         <div key={index} className="relative group">
                             <img
-                                src={image.url}
+                                src={`${isEditing ? import.meta.env.VITE_API_BASE_URL + "/" + image.url : image.url}`}
                                 alt={`Preview ${index + 1}`}
                                 className="w-full h-32 object-cover rounded-md"
                             />

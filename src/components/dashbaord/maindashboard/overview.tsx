@@ -77,7 +77,7 @@ interface StatCard {
 
 type ColorType = 'blue' | 'green' | 'orange' | 'purple' | 'pink' | 'indigo' | 'teal';
 
-const UmukzameziDashboard = () => {
+const umukameziDashboard = () => {
   const [timeRange, setTimeRange] = useState('7d');
   const [dashboardData, setDashboardData] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -277,7 +277,7 @@ const UmukzameziDashboard = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `umukzamezi-dashboard-report-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `umukamezi-dashboard-report-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -332,7 +332,7 @@ const UmukzameziDashboard = () => {
         <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Umukzamezi Dashboard</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">umukamezi Dashboard</h1>
               <p className="text-gray-600 mt-1">Real-time E-commerce Analytics & Overview</p>
               <p className="text-sm text-gray-500 mt-1">
                 Last updated: {new Date().toLocaleString()}
@@ -582,4 +582,4 @@ const Star = ({ size }: { size: number }) => (
   </svg>
 );
 
-export default UmukzameziDashboard;
+export default umukameziDashboard;
