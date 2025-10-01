@@ -606,7 +606,7 @@ const CartAdmin: React.FC = () => {
               <button
                 onClick={generatePDFReport}
                 disabled={generatingReport || filteredCarts.length === 0}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-md disabled:opacity-50"
+                className="w-full text-left hidden px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-md disabled:opacity-50"
               >
                 📊 Summary Report (PDF)
               </button>
