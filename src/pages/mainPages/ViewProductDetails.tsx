@@ -436,7 +436,7 @@ const ProductViewPage: React.FC = () => {
                                 <div className="relative" ref={shareRef}>
                                     <button
                                         onClick={() => {
-                                            const imageUrl = product.images?.[0]?.url || ''; // get the image URL with fallback
+                                            const imageUrl = `${import.meta.env.VITE_API_BASE_URL}${product.images?.[0]?.url || ''}`; // get the image URL with fallback
                                             const link = document.createElement("a");
                                             link.href = imageUrl;
                                             link.download = "Umukamezi-product-image.jpg"; // you can customize the filename

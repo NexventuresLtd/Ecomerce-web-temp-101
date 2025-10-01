@@ -18,6 +18,8 @@
     "crypto-js": "^4.2.0",
     "framer-motion": "^12.23.12",
     "hashids": "^2.3.0",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.539.0",
     "react": "^19.1.1",
