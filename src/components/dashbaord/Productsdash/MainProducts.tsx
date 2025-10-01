@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
 import { categoryApi } from '../../../app/dashcategory/category';
+import EnhancedTextEditor from './Enhanced';
 
 // Types
 interface ProductImage {
@@ -1493,6 +1494,7 @@ const BasicInfoStep: React.FC<{
                                     disabled={loading}
                                 >
                                     <option value="">Select Warranty</option>
+                                    <option value="no warranty">No Warranty</option>
                                     {warrantyOptions.map(option => (
                                         <option key={option} value={option}>{option}</option>
                                     ))}
@@ -1590,7 +1592,7 @@ const MediaAndTagsStep: React.FC<{
         }
     };
 
-    const handleFeatureInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleFeatureInput = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             handleAddFeature();
@@ -1616,7 +1618,7 @@ const MediaAndTagsStep: React.FC<{
 
     return (
         <div className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
                 {/* Left Column - Tags */}
                 <div className="space-y-6">
                     <div>
@@ -1684,21 +1686,29 @@ const MediaAndTagsStep: React.FC<{
                 <div className="space-y-6">
                     <div>
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Product Features</h3>
-                        <div className="space-y-4">
+                        <div className="space-y-4 ">
                             <div className="flex gap-3">
-                                <input
-                                    type="text"
+                                <textarea
                                     value={currentFeature}
                                     onChange={(e) => setCurrentFeature(e.target.value)}
                                     onKeyDown={handleFeatureInput}
                                     placeholder="Add features (comma separated or press Enter)"
-                                    className="flex-1 px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    className="flex-1 px-3 py-3 hidden border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                                     disabled={loading}
+                                    rows={3}
+                                />
+                                <EnhancedTextEditor
+                                    value={formData.features.join('\n')}
+                                    onChange={(value) => onChange({ ...formData, features: value.split('\n').filter((f: string) => f.trim()) })}
+                                    placeholder="Enter product features, specifications, and benefits..."
+                                    loading={loading}
+                                    label="Product features"
+                                    required
                                 />
                                 <button
                                     type="button"
                                     onClick={handleAddFeature}
-                                    className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:bg-gray-400 transition-colors font-medium"
+                                    className="px-6 py-3 hidden bg-primary text-white rounded-lg hover:bg-primary/90 disabled:bg-gray-400 transition-colors font-medium"
                                     disabled={loading || !currentFeature.trim()}
                                 >
                                     Add

@@ -58,8 +58,8 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                         {/* Logo */}
                         <div className="flex-shrink-0 cursor-pointer" onClick={() => window.location.href = "/"}>
                             <div className="px-4 py-3">
-                                <div className="text-transparent uppercase bg-clip-text bg-black font-extrabold text-3xl leading-tight h-14 w-22 overflow-hidden">
-                                 <img src="/Umukamezilogo.jpg" className='w-full h-full object-cover scale-150' alt=""  />   
+                                <div className="text-transparent uppercase bg-clip-text bg-black font-extrabold text-3xl leading-tight h-16 w-22 overflow-hidden">
+                                 <img src="/Umukamezilogo.jpg" className='w-full h-full object- scale-120' alt=""  />   
                                 </div>
                             </div>
                         </div>

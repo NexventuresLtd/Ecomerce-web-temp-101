@@ -103,7 +103,7 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
     );
   }
 
-  if (error && categories.length === 0) {
+  if (error && categories && categories.length === 0) {
     return (
       <div className="p-8 min-w-[800px]">
         <div className="text-red-600 text-sm mb-2 font-medium">Error loading categories</div>
@@ -112,9 +112,11 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
     );
   }
 
-  const currentCategory = categories?.find(
-    (cat) => cat.name.toLowerCase() === itemName.toLowerCase()
-  );
+  const currentCategory = Array.isArray(categories)
+    ? categories.find(
+      (cat) => cat.name.toLowerCase() === itemName.toLowerCase()
+    )
+    : null;
 
   if (currentCategory) {
     return (

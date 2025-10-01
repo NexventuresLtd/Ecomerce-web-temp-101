@@ -14,7 +14,6 @@ import {
     Check,
     Play,
     X,
-    Award,
     Download,
 } from 'lucide-react';
 import Navbar from '../../components/SharedComp/navabaritems/NavBar';
@@ -566,10 +565,10 @@ const ProductViewPage: React.FC = () => {
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="text-center py-12"
+                                    className=""
                                 >
-                                    <Award className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                                    <p className="text-gray-600">{product.is_new ? 'New Condition' : 'Used Condition'}</p>
+                                    {/* <Award className="w-16 h-16 text-gray-300 mx-auto mb-4" /> */}
+                                    <p className="text-gray-600">{product.is_new ? 'New' : 'Used'}</p>
                                 </motion.div>
                             )}
 

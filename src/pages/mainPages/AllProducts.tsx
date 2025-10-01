@@ -123,7 +123,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
                         whileTap={{ scale: 0.98 }}
                         className={`w-full py-3 px-3 rounded-lg text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2 bg-teal-600 hover:bg-primary/90 cursor-pointer
                   `}
-                        onClick={() => handleClickWhatsapp(product.title)}
+                        onClick={() => handleClickWhatsapp('', '', `${import.meta.env.VITE_API_BASE_URL}/products/share/product/${product.id} 
+                            Hi, I am interested in your product: ${product.title}. 
+                            Price: ${product.price ? RWF.format(product.price) : 'Not available'}.`
+                                                    )}
                     >
                         <>
                             <ShoppingCartIcon size={18} />

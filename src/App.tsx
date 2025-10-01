@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/mainPages/HomePage";
 import ScrollToHash from "./hooks/ScrollController";
@@ -20,33 +19,42 @@ import NotFound from "./components/ProductViewDetails/NotFound";
 import { categoryApi } from "./app/dashcategory/category";
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<ViewType>('dashboard');
+  const [currentView, setCurrentView] = useState<ViewType>("dashboard");
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true); // 🔹 Loader state
 
-  // Load saved view from memory on mount
+  // Load saved view from memory + categories on mount
   useEffect(() => {
-    const savedView = sessionStorage.getItem('adminDashboardView') as ViewType;
-    if (savedView) {
-      setCurrentView(savedView);
-    }
-    categoryApi.getFullHierarchy();
+    const init = async () => {
+      const savedView = sessionStorage.getItem("adminDashboardView") as ViewType;
+      if (savedView) {
+        setCurrentView(savedView);
+      }
+      try {
+        await categoryApi.getFullHierarchy();
+      } catch (error) {
+        console.error("Category load failed:", error);
+      } finally {
+        setLoading(false); // 🔹 Hide loader after init
+      }
+    };
+    init();
   }, []);
 
   // Save current view to memory whenever it changes
   useEffect(() => {
-    sessionStorage.setItem('adminDashboardView', currentView);
+    sessionStorage.setItem("adminDashboardView", currentView);
   }, [currentView]);
 
-  // Close sidebar when clicking outside on mobile
+  // Close sidebar when resizing to desktop
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
         setSidebarOpen(false);
       }
     };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const contextValue: AppContextType = {
@@ -55,27 +63,44 @@ export default function App() {
     isSidebarOpen,
     setSidebarOpen,
   };
+
   return (
-      <AppContext.Provider value={contextValue}>
+    <AppContext.Provider value={contextValue}>
       <BrowserRouter>
         <ScrollToHash />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/product/:productId" element={<ViewProductDetails />} />
-          <Route path="/products/:category" element={<AllProducts />} />
-          <Route path="/products/" element={<AllProducts />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/shopping-cart" element={<ShoppingCart />} />
-          <Route path="/wish-list" element={<WishlistPage />} />
-          <Route path="/profile" element={<UserDashboard />} />
-          <Route path="/vlog" element={<VlogPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/authentication" element={getUserInfo ? <HomePage /> : <AnimatedLoginPage />} />
-          <Route path="/admin-dashboard" element={getUserInfo ? <MainContent /> : <AnimatedLoginPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+
+        {/* Loader screen */}
+        {loading && (
+          <div className="w-full h-full fixed left-0 top-0 z-[100] bg-white flex justify-center items-center">
+            <img src="/load.gif" className="w-64 animate-pulse" />
+          </div>
+        )}
+
+        {/* Main routes */}
+        {!loading && (
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/product/:productId" element={<ViewProductDetails />} />
+            <Route path="/products/:category" element={<AllProducts />} />
+            <Route path="/products/" element={<AllProducts />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/shopping-cart" element={<ShoppingCart />} />
+            <Route path="/wish-list" element={<WishlistPage />} />
+            <Route path="/profile" element={<UserDashboard />} />
+            <Route path="/vlog" element={<VlogPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route
+              path="/authentication"
+              element={getUserInfo ? <HomePage /> : <AnimatedLoginPage />}
+            />
+            <Route
+              path="/admin-dashboard"
+              element={getUserInfo ? <MainContent /> : <AnimatedLoginPage />}
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        )}
       </BrowserRouter>
     </AppContext.Provider>
-
   );
 }
