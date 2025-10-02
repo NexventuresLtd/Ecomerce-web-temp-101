@@ -8,7 +8,8 @@ import {
   CreditCard,
   Smartphone,
   Shield,
-  Truck
+  Truck,
+  Music2Icon
 } from 'lucide-react';
 
 // Types
@@ -46,14 +47,13 @@ const supportLinks: LinkItem[] = [
 ];
 
 const socialLinks: SocialLink[] = [
-  { icon: Facebook, href: 'https://facebook.com', label: 'Facebook' },
-  { icon: Twitter, href: 'https://twitter.com', label: 'Twitter' },
-  { icon: Instagram, href: 'https://instagram.com', label: 'Instagram' },
-  { icon: Youtube, href: 'https://youtube.com', label: 'YouTube' }
+  { icon: Facebook, href: 'https://www.facebook.com/profile.php?id=61555679100920', label: 'Facebook' },
+  { icon: Music2Icon, href: 'https://www.tiktok.com/@umukamezishop', label: 'Tiktok' },
+  { icon: Instagram, href: 'https://www.instagram.com/umukamezi250/', label: 'Instagram' },
+  { icon: Youtube, href: 'https://www.youtube.com/@UMUKAMEZISHOP', label: 'YouTube' }
 ];
-
-// Newsletter Form Component
-interface NewsletterFormProps { }
+interface NewsletterFormProps {}
+// Newsletter Subscription Form Component
 
 const NewsletterForm: React.FC<NewsletterFormProps> = () => {
   const [email, setEmail] = React.useState('');
@@ -154,14 +154,14 @@ const Footer: React.FC = () => {
           {/* Brand & About */}
           <motion.div variants={itemVariants} className="space-y-4 lg:col-span-1">
             <div className="flex items-center space-x-2">
-              {/* Logo */}
-              <div className="flex-shrink-0 cursor-pointer" onClick={() => window.location.href = "/"}>
-                <div className="px-4 py-3">
-                  <div className="text-transparent uppercase bg-clip-text bg-black font-extrabold text-3xl leading-tight h-14 w-22 overflow-hidden">
-                    <img src="/Umukamezilogo.jpg" className='w-full h-full object-cover scale-150' alt="" />
-                  </div>
-                </div>
-              </div>
+                        {/* Logo */}
+                        <div className="flex-shrink-0 cursor-pointer" onClick={() => window.location.href = "/"}>
+                            <div className="px-4 py-3">
+                                <div className="text-transparent uppercase bg-clip-text bg-black font-extrabold text-3xl leading-tight h-16 w-16 overflow-hidden">
+                                 <img src="/Umukamezilogo.jpg" className='w-full h-full object- scale-120' alt=""  />   
+                                </div>
+                            </div>
+                        </div>
 
             </div>
             <p className="text-white/80 text-sm leading-relaxed max-w-sm">
