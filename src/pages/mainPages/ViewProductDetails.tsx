@@ -568,7 +568,7 @@ const ProductViewPage: React.FC = () => {
                                     className=""
                                 >
                                     {/* <Award className="w-16 h-16 text-gray-300 mx-auto mb-4" /> */}
-                                    <p className="text-gray-600">{product.is_new ? 'New' : 'Used'}</p>
+                                    <p className="text-gray-600">{product.is_new} Condition</p>
                                 </motion.div>
                             )}
 

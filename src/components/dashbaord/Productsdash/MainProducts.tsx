@@ -47,7 +47,7 @@ interface Product {
     original_price?: number;
     discount?: number;
     rating: number;
-    is_new: boolean;
+    is_new: string;
     is_featured: boolean;
     is_active: boolean;
     reviews_count: number;
@@ -778,7 +778,7 @@ const ProductCard: React.FC<{
                 <div className="absolute top-3 left-3 flex flex-wrap gap-1">
                     {product.is_new && (
                         <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                            New
+                            {product.is_new}
                         </span>
                     )}
                     {product.is_featured && (
@@ -1345,22 +1345,25 @@ const BasicInfoStep: React.FC<{
                                 placeholder="Enter product description"
                             />
                         </div>
+                        <div>
+                            <label className="flex items-center mb-2">Mark as New Product *</label>
+                            <select
+                                name="is_new"
+                                value={formData.is_new}
+                                onChange={handleChange}
+                                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                disabled={loading}
+                            >
+                                <option value="">-- Select --</option>
+                                <option value="Used">Used</option>
+                                <option value="New">New</option>
+                                <option value="Used New">Used New</option>
+                            </select>
+                        </div>
                         {/* Status Flags */}
                         <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
                             <h3 className="text-lg font-medium text-gray-900">Status</h3>
                             <div className="space-y-3">
-                                <label className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        name="is_new"
-                                        checked={formData.is_new}
-                                        onChange={handleChange}
-                                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                                        disabled={loading}
-                                    />
-                                    <span className="ml-3 text-sm text-gray-700">Mark as New Product</span>
-                                </label>
-
                                 <label className="flex items-center">
                                     <input
                                         type="checkbox"
