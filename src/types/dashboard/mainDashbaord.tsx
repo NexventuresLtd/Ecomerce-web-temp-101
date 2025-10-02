@@ -6,6 +6,7 @@ export type ViewType =
   | "users"
   | "orders"
   | "vlog"
+  | "report"
   | "wishlists"
   | "carts";
 

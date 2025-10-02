@@ -9,6 +9,7 @@ import WishlistAdmin from '../../components/dashbaord/Productsdash/WishlistAdmin
 import CartAdmin from '../../components/dashbaord/Productsdash/CartAdmin';
 import Overview from '../../components/dashbaord/maindashboard/overview';
 import VlogManager from '../../components/dashbaord/vlog/Vlog';
+import DashboardReport from '../../components/dashbaord/maindashboard/DashbaordReport';
 
 // Main Content Component
 const MainContent: React.FC = () => {
@@ -26,6 +27,8 @@ const MainContent: React.FC = () => {
             //     return <UsersView />;
             case "vlog":
                 return <VlogManager />;
+            case "report":
+                return <DashboardReport />;
             case "wishlists":
                 return <WishlistAdmin />;
             case "carts":
