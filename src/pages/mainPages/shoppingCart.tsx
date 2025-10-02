@@ -347,7 +347,7 @@ const CartItem: React.FC<{
                     onMouseLeave={() => setIsHovered(false)}
                 >
                     <img
-                        src={`${import.meta.env.VITE_API_BASE_URL}/${primaryImage}`}
+                        src={`${import.meta.env.VITE_API_BASE_URL}${primaryImage}`}
                         alt={item.product_name}
                         className="w-full h-full object-cover transition-all duration-300"
                     />

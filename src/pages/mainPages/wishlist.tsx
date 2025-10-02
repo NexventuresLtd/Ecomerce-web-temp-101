@@ -48,7 +48,7 @@ const WishlistItemComponent: React.FC<WishlistItemProps> = ({
       {/* Product Image */}
       <div className="relative aspect-square overflow-hidden bg-gray-50">
         <motion.img
-          src={`${import.meta.env.VITE_API_BASE_URL}/${mainImage}`}
+          src={`${import.meta.env.VITE_API_BASE_URL}${mainImage}`}
           alt={item.product_name}
           className="w-full h-full object-cover"
           whileHover={{ scale: 1.05 }}
