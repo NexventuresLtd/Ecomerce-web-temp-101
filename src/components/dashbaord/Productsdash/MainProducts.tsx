@@ -1316,7 +1316,7 @@ const ProductManagement: React.FC = () => {
     const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [entriesPerPage, setEntriesPerPage] = useState(10);
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'id', direction: 'desc' });
 
     // Fetch products only once on component mount
     const fetchProducts = useCallback(async () => {
@@ -1534,7 +1534,7 @@ const ProductManagement: React.FC = () => {
                                             </td>
                                         </tr>
                                     ) : (
-                                        displayedProducts.map((product) => {
+                                        displayedProducts.map((product,index) => {
                                             const primaryImage = product.images.find(img => img.is_primary) || product.images[0];
                                             const imageUrl = primaryImage?.url ? `${import.meta.env.VITE_API_BASE_URL}${primaryImage.url}` : '';
 
@@ -1545,7 +1545,7 @@ const ProductManagement: React.FC = () => {
                                                 >
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="text-sm font-medium text-gray-900 bg-gray-50 px-3 py-1 rounded-lg inline-block">
-                                                            #{product.id}
+                                                            #{index}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
