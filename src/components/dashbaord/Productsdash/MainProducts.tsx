@@ -1132,7 +1132,7 @@ const MediaAndTagsStep: React.FC<{
     loading: boolean;
 }> = ({ formData, onChange, loading }) => {
     const [currentTag, setCurrentTag] = useState('');
-    const [currentFeature, setCurrentFeature] = useState('');
+    // const [currentFeature, setCurrentFeature] = useState('');
 
     const handleAddTag = () => {
         if (currentTag.trim() && !formData.tags.includes(currentTag.trim())) {
