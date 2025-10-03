@@ -1151,22 +1151,22 @@ const MediaAndTagsStep: React.FC<{
         });
     };
 
-    const handleAddFeature = () => {
-        if (currentFeature.trim() && !formData.features.includes(currentFeature.trim())) {
-            onChange({
-                ...formData,
-                features: [...formData.features, currentFeature.trim()]
-            });
-            setCurrentFeature('');
-        }
-    };
+    // const handleAddFeature = () => {
+    //     if (currentFeature.trim() && !formData.features.includes(currentFeature.trim())) {
+    //         onChange({
+    //             ...formData,
+    //             features: [...formData.features, currentFeature.trim()]
+    //         });
+    //         setCurrentFeature('');
+    //     }
+    // };
 
-    const handleRemoveFeature = (index: number) => {
-        onChange({
-            ...formData,
-            features: formData.features.filter((_: string, i: number) => i !== index)
-        });
-    };
+    // const handleRemoveFeature = (index: number) => {
+    //     onChange({
+    //         ...formData,
+    //         features: formData.features.filter((_: string, i: number) => i !== index)
+    //     });
+    // };
 
     return (
         <div className="space-y-6">
@@ -1534,7 +1534,7 @@ const ProductManagement: React.FC = () => {
                                             </td>
                                         </tr>
                                     ) : (
-                                        displayedProducts.map((product, index) => {
+                                        displayedProducts.map((product) => {
                                             const primaryImage = product.images.find(img => img.is_primary) || product.images[0];
                                             const imageUrl = primaryImage?.url ? `${import.meta.env.VITE_API_BASE_URL}${primaryImage.url}` : '';
 
