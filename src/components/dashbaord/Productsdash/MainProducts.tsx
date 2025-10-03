@@ -1545,7 +1545,7 @@ const ProductManagement: React.FC = () => {
                                                 >
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="text-sm font-medium text-gray-900 bg-gray-50 px-3 py-1 rounded-lg inline-block">
-                                                            #{index}
+                                                            #{index+1}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
