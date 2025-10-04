@@ -1088,6 +1088,7 @@ const BasicInfoStep: React.FC<{
                         disabled={loading}
                     >
                         <option value="">Select warranty</option>
+                        <option value="No Warranty">No Warranty</option>
                         {warrantyOptions.map((option, index) => (
                             <option key={index} value={option}>{option}</option>
                         ))}
