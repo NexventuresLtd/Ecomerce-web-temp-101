@@ -575,7 +575,7 @@ const ProductForm: React.FC<{
         price: product?.price || '',
         original_price: product?.original_price || '',
         discount: product?.discount || '',
-        is_new: product?.is_new || false,
+        is_new: product?.is_new || '',
         is_featured: product?.is_featured || false,
         is_active: product?.is_active !== undefined ? product.is_active : true,
         instock: product?.instock || '',
@@ -1319,23 +1319,49 @@ const ProductManagement: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [entriesPerPage, setEntriesPerPage] = useState(10);
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'id', direction: 'desc' });
+    const [hasMore, setHasMore] = useState(true);
+    const [skip, setSkip] = useState(0);
+    const limit = 100;
 
-    // Fetch products only once on component mount
     const fetchProducts = useCallback(async () => {
-        setLoading(true);
+        // Prevent multiple simultaneous calls
+        if (!hasMore || loading) return;
+
+        if (skip == 0) setLoading(true);
         try {
-            const response = await mainAxios.get(`/products`);
-            setProducts(response.data);
+            const currentSkip = skip; // snapshot current skip to prevent race condition
+            const response = await mainAxios.get(`/products/?skip=${currentSkip}&limit=${limit}`);
+            const newData = response.data;
+
+            if (newData.length < limit) setHasMore(false);
+
+            // Avoid duplicates by filtering new ones
+            setProducts(prev => {
+                const existingIds = new Set(prev.map(p => p.id));
+                const filtered = newData.filter((p: any) => !existingIds.has(p.id));
+                return [...prev, ...filtered];
+            });
+
+            setSkip(prev => prev + limit);
         } catch (error) {
-            console.error('Error fetching products:', error);
+            console.error("Error fetching products:", error);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [skip, hasMore, loading]);
 
     useEffect(() => {
-        fetchProducts();
-    }, [fetchProducts]);
+        fetchProducts(); // initial fetch
+
+        const interval = setInterval(() => {
+            if (hasMore && !loading) {
+                fetchProducts();
+            }
+        }, 5000); // background fetch every 5 seconds
+
+        return () => clearInterval(interval);
+    }, [fetchProducts, hasMore, loading]);
+
 
     const handleSort = (key: string) => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -1536,7 +1562,7 @@ const ProductManagement: React.FC = () => {
                                             </td>
                                         </tr>
                                     ) : (
-                                        displayedProducts.map((product,index) => {
+                                        displayedProducts.map((product, index) => {
                                             const primaryImage = product.images.find(img => img.is_primary) || product.images[0];
                                             const imageUrl = primaryImage?.url ? `${import.meta.env.VITE_API_BASE_URL}${primaryImage.url}` : '';
 
@@ -1547,7 +1573,7 @@ const ProductManagement: React.FC = () => {
                                                 >
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="text-sm font-medium text-gray-900 bg-gray-50 px-3 py-1 rounded-lg inline-block">
-                                                            #{index+1}
+                                                            #{index + 1}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
