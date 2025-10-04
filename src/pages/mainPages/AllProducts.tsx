@@ -126,7 +126,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
                         onClick={() => handleClickWhatsapp('', '', `${import.meta.env.VITE_API_BASE_URL}/products/share/product/${product.id} 
                             Hi, I am interested in your product: ${product.title}. 
                             Price: ${product.price ? RWF.format(product.price) : 'Not available'}.`
-                                                    )}
+                        )}
                     >
                         <>
                             <ShoppingCartIcon size={18} />
@@ -417,22 +417,28 @@ const AllProductsPage: React.FC = () => {
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [autoLoadEnabled, setAutoLoadEnabled] = useState(true);
 
-    // Load products from API
+    // Load products from API (sorted by id DESC)
     const loadProducts = useCallback(async (): Promise<void> => {
         try {
             setLoading(true);
             const response = await productApi.getProducts(skip, limit);
-            const newProducts: Product[] = response.products || response;
+            let newProducts: Product[] = response.products || response;
+
+            // Sort by ID descending
+            newProducts = newProducts.sort((a, b) => b.id - a.id);
 
             setAllProducts(prev => {
                 const existingIds = new Set(prev.map(p => p.id));
                 const filteredNew = newProducts.filter(p => !existingIds.has(p.id));
-                return [...prev, ...filteredNew];
+
+                // Combine and maintain overall DESC order
+                const combined = [...prev, ...filteredNew];
+                return combined.sort((a, b) => b.id - a.id);
             });
 
             setSkip(prev => prev + limit);
 
-            // If we get fewer products than requested, we've reached the end
+            // Stop loading if fewer items returned
             if (newProducts.length < limit) {
                 setHasMoreProducts(false);
             }
@@ -446,7 +452,8 @@ const AllProductsPage: React.FC = () => {
     // Initial data load
     useEffect(() => {
         loadProducts();
-    }, []);
+    }, [loadProducts]);
+
 
     // Update max price when products are loaded
     useEffect(() => {
@@ -528,18 +535,18 @@ const AllProductsPage: React.FC = () => {
     }, [filters, currentSort, searchQuery]);
 
     // Displayed products based on display count
-    const displayedProducts = filteredAndSortedProducts.slice(0, displayCount);
+    const displayedProducts = filteredAndSortedProducts;
     const hasMoreFilteredProducts = displayCount < filteredAndSortedProducts.length;
 
     // Load more products function
     const loadMoreProducts = useCallback(async () => {
         if (isLoadingMore || !hasMoreFilteredProducts) return;
 
-        setIsLoadingMore(true);
+        // setIsLoadingMore(true);
         // Simulate loading time
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setDisplayCount(prev => prev + 12);
-        setIsLoadingMore(false);
+        // await new Promise(resolve => setTimeout(resolve, 10));
+        // setDisplayCount(prev => prev + 12);
+        // setIsLoadingMore(false);
     }, [isLoadingMore, hasMoreFilteredProducts]);
 
     // Load more products from API when needed
