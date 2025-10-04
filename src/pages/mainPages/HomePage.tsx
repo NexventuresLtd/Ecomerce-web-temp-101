@@ -85,8 +85,8 @@ const HomePage = () => {
               subtitle="Don't miss out on our newest arrivals"
               showLoadMore={true}
               products={latestProducts}
-              initialDisplayCount={4}
-              hasMore={hasMore && latestProducts.length > 4}
+              initialDisplayCount={12}
+              hasMore={hasMore && latestProducts.length > 12}
               onLoadMore={loadProducts}
               isLoadingMore={loading}
             />}
@@ -94,9 +94,9 @@ const HomePage = () => {
               title="Re used Products"
               subtitle="Grab these deals before they're gone"
               showLoadMore={true}
-              initialDisplayCount={12}
+              initialDisplayCount={24}
               products={reusedProducts}
-              hasMore={hasMore && reusedProducts.length > 12}
+              hasMore={hasMore && reusedProducts.length > 24}
               onLoadMore={loadProducts}
               isLoadingMore={loading}
             />
