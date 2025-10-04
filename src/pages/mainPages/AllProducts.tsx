@@ -517,12 +517,12 @@ const AllProductsPage: React.FC = () => {
                 break;
             case 'featured':
             default:
-                filtered.sort((a, b) => {
-                    if (a.is_featured !== b.is_featured) {
-                        return b.is_featured ? 1 : -1;
-                    }
-                    return (b.rating || 0) - (a.rating || 0);
-                });
+                // filtered.sort((a, b) => {
+                //     if (a.is_featured !== b.is_featured) {
+                //         return b.is_featured ? 1 : -1;
+                //     }
+                //     return (b.rating || 0) - (a.rating || 0);
+                // });
                 break;
         }
 
