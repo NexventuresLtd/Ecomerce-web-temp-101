@@ -1052,6 +1052,7 @@ const BasicInfoStep: React.FC<{
                                 >
                                     <option value="new">New</option>
                                     <option value="used">Used</option>
+                                    <option value="used as New">Used as New</option>
                                     <option value="refurbished">Refurbished</option>
                                 </select>
                             </div>
