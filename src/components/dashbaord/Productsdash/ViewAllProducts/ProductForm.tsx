@@ -276,6 +276,27 @@ const ProductForm: React.FC<{
                                 )}
                             </button>
                         )}
+                        {step != 4 &&
+
+                            <button
+                                onClick={handleSubmit}
+                                disabled={loading || (!product && formData.images.length === 0)}
+                                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors font-medium"
+                            >
+                                {loading ? (
+                                    <>
+                                        <Loader className="animate-spin" size={20} />
+                                        {product ? 'Updating...' : 'Creating...'}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Check size={20} />
+                                        {product ? 'Update Product' : 'Create Product'}
+                                    </>
+                                )}
+                            </button>
+                        }
+
                     </div>
                 </div>
             </motion.div>

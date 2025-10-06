@@ -220,10 +220,16 @@ const ProductManagement: React.FC = () => {
                             setEditingProduct(null);
                         }}
                         onSave={async () => {
-                            await fetchProducts();
+                            setProducts([]);      // clear old products
+                            setSkip(0);           // reset pagination
+                            setHasMore(true);
+                            setLoading(false);
+                            await new Promise(res => setTimeout(res, 100)); // small delay to let state settle
+                            await fetchProducts(); // now this will start from 0
                             setShowAddForm(false);
                             setEditingProduct(null);
-                            setLoading(false);
+
+
                         }}
                         formatRWF={formatRWF}
                     />
