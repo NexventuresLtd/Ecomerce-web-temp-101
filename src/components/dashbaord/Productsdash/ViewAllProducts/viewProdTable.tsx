@@ -64,6 +64,9 @@ const ViewProdTable = ({
                                             Status
                                         </th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                            Brock
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                             Category
                                         </th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -185,6 +188,13 @@ const ViewProdTable = ({
                                                             <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
                                                                 {product.is_new}
                                                             </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm text-gray-900 max-w-xs">
+                                                            {product.brock || (
+                                                                <span className="text-gray-400 italic">No brock</span>
+                                                            )}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">

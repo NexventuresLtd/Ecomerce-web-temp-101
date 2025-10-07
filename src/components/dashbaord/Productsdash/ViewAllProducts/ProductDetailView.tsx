@@ -129,7 +129,7 @@ const ProductDetailView: React.FC<{
                                     )}
                                     {product.brock && (
                                         <div>
-                                            <label className="font-medium text-gray-700">Additional Info</label>
+                                            <label className="font-medium text-gray-700">Brock</label>
                                             <p className="text-gray-600 mt-1">{product.brock}</p>
                                         </div>
                                     )}
