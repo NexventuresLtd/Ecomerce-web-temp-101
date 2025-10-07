@@ -296,14 +296,14 @@ const BasicInfoStep: React.FC<{
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Additional Information</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Brock</label>
                 <textarea
                     name="brock"
                     value={formData.brock}
                     onChange={handleChange}
                     rows={3}
                     className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter any additional product information"
+                    placeholder="Enter any Brock information"
                     disabled={loading}
                 />
             </div>

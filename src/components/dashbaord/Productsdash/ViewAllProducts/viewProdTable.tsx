@@ -48,14 +48,14 @@ const ViewProdTable = ({
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                             Product
                                         </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                            <button onClick={() => handleSort('price')} className="flex items-center gap-2 hover:text-gray-900 transition-colors">
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700  tracking-wider">
+                                            <button onClick={() => handleSort('price')} className="flex uppercase items-center gap-2 hover:text-gray-900 transition-colors">
                                                 <span>Price</span>
                                                 <SortIcon columnKey="price" />
                                             </button>
                                         </th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                            <button onClick={() => handleSort('instock')} className="flex items-center gap-2 hover:text-gray-900 transition-colors">
+                                            <button onClick={() => handleSort('instock')} className="flex uppercase items-center gap-2 hover:text-gray-900 transition-colors">
                                                 <span>Stock</span>
                                                 <SortIcon columnKey="instock" />
                                             </button>
@@ -198,7 +198,7 @@ const ViewProdTable = ({
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <div className="text-sm text-gray-900 max-w-xs">
+                                                        <div className="text-sm text-gray-900 max-w-xs uppercase">
                                                             {product.category?.name || (
                                                                 <span className="text-gray-400 italic">No category</span>
                                                             )}
