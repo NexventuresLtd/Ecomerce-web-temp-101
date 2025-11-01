@@ -224,7 +224,7 @@ const VlogCard: React.FC<VlogCardProps> = ({
                 </p>
 
                 <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 hidden">
                         <Eye className="w-4 h-4" />
                         <span>{formatViews(vlog.views)} views</span>
                     </div>
@@ -510,38 +510,38 @@ const VlogPage: React.FC = () => {
         try {
             setLoading(true);
             setError(null);
-            const vlogsData = await vlogService.getVlogs(0, 50); // Load first 50 vlogs
+            const vlogsData = await vlogService.getVlogs(0, 500); // Load first 50 vlogs
             setVlogs(vlogsData);
         } catch (err) {
             console.error('Error loading vlogs:', err);
             setError('Failed to load vlogs. Please try again later.');
             // Fallback to mock data if API fails
-            setVlogs([
-                {
-                    id: '1',
-                    title: 'Building a Startup from Zero: My Journey',
-                    description: 'Join me as I share the complete journey of building a tech startup from scratch...',
-                    youtube_id: 'TcpQ4OAKVpQ',
-                    thumbnail: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=480&h=270&fit=crop',
-                    channel: 'TechEntrepreneur',
-                    published_at: '2024-08-15',
-                    views: 245000,
-                    tags: ['startup', 'entrepreneurship', 'business', 'tech'],
-                    category: 'Business'
-                },
-                {
-                    id: '9',
-                    title: 'Camera Setup for Professional Projects',
-                    description: 'Step-by-step guide on setting up DSLR and mirrorless cameras for professional filming.',
-                    youtube_id: 'TcpQ4OAKVpQ',
-                    thumbnail: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=480&h=270&fit=crop',
-                    channel: 'ProCreator',
-                    published_at: '2024-09-01',
-                    views: 51000,
-                    tags: ['camera', 'tutorial', 'projects', 'filmmaking'],
-                    category: 'Tutorials'
-                }
-            ]);
+            // setVlogs([
+            //     {
+            //         id: '1',
+            //         title: 'Building a Startup from Zero: My Journey',
+            //         description: 'Join me as I share the complete journey of building a tech startup from scratch...',
+            //         youtube_id: 'TcpQ4OAKVpQ',
+            //         thumbnail: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=480&h=270&fit=crop',
+            //         channel: 'TechEntrepreneur',
+            //         published_at: '2024-08-15',
+            //         views: 245000,
+            //         tags: ['startup', 'entrepreneurship', 'business', 'tech'],
+            //         category: 'Business'
+            //     },
+            //     {
+            //         id: '9',
+            //         title: 'Camera Setup for Professional Projects',
+            //         description: 'Step-by-step guide on setting up DSLR and mirrorless cameras for professional filming.',
+            //         youtube_id: 'TcpQ4OAKVpQ',
+            //         thumbnail: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=480&h=270&fit=crop',
+            //         channel: 'ProCreator',
+            //         published_at: '2024-09-01',
+            //         views: 51000,
+            //         tags: ['camera', 'tutorial', 'projects', 'filmmaking'],
+            //         category: 'Tutorials'
+            //     }
+            // ]);
         } finally {
             setLoading(false);
         }
@@ -566,8 +566,16 @@ const VlogPage: React.FC = () => {
             );
         }
 
+        // Sort by date descending
+        // Sort by date descending
+        filtered = filtered.sort(
+            (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
+        );
+
+
         return filtered;
     }, [searchTerm, selectedCategory, vlogs]);
+
 
     const relatedVlogs = useMemo(() => {
         if (!selectedVlog) return [];
@@ -619,7 +627,7 @@ const VlogPage: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar />
-            
+
             {/* Error Banner */}
             {error && (
                 <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
@@ -691,6 +699,7 @@ const VlogPage: React.FC = () => {
                 )}
             </AnimatePresence>
             <Footer />
+
         </div>
     );
 };

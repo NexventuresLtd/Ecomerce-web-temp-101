@@ -5,12 +5,14 @@ import type { HeroData } from "../../types/HomeHero";
 export const heroData: HeroData = {
 //   brandTitle: "NexShop",
 //   brandSubtitle: "Discover Tomorrow's Products Today",
+
+
   slides: [
     {
       id: 1,
-      title: "Revolutionary Tech Collection",
+      title: "REVOLUTION IN PHOTOGRAPHY GAME",
       subtitle: "Smart Devices That Transform Your Lifestyle",
-      description: "Experience cutting-edge technology with our curated selection of premium gadgets and smart home solutions.",
+      description: "top notching Equipment to present africa in world of photography",
       ctaPrimary: "Shop Now",
       ctaSecondary: "Explore Collection",
       imageUrl: "https://umukamezi.com/assets/uploads/slider-1.jpg",
@@ -38,9 +40,9 @@ export const heroData: HeroData = {
     },
     {
       id: 3,
-      title: "Electronics & Gadgets",
+      title: "  A KIT FITTIING YOUR SKILLS",
       subtitle: "Innovative Tech for Everyday Life",
-      description: "Discover the latest electronics that make life easier and more enjoyable.",
+      description: "your skills doesn't want you to use analog Gears",
       ctaPrimary: "Explore Electronics",
       ctaSecondary: "Tech Specs",
       imageUrl: "https://umukamezi.com/assets/uploads/slider-6.jpg",
