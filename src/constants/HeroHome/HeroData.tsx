@@ -15,7 +15,7 @@ export const heroData: HeroData = {
       description: "top notching Equipment to present africa in world of photography",
       ctaPrimary: "Shop Now",
       ctaSecondary: "Explore Collection",
-      imageUrl: "https://umukamezi.com/assets/uploads/slider-1.jpg",
+      imageUrl: "https://older.umukamezi.com/assets/uploads/slider-1.jpg",
       badge: "New Arrivals",
       stats: {
         rating: 4.9,
@@ -30,7 +30,7 @@ export const heroData: HeroData = {
       description: "Professional cameras and accessories for photographers of all skill levels.",
       ctaPrimary: "Shop Cameras",
       ctaSecondary: "View Gallery",
-      imageUrl: "https://umukamezi.com/assets/uploads/slider-5.jpg",
+      imageUrl: "https://older.umukamezi.com/assets/uploads/slider-5.jpg",
       badge: "Limited Edition",
       stats: {
         rating: 4.8,
@@ -45,7 +45,7 @@ export const heroData: HeroData = {
       description: "your skills doesn't want you to use analog Gears",
       ctaPrimary: "Explore Electronics",
       ctaSecondary: "Tech Specs",
-      imageUrl: "https://umukamezi.com/assets/uploads/slider-6.jpg",
+      imageUrl: "https://older.umukamezi.com/assets/uploads/slider-6.jpg",
       badge: "Best Sellers",
       stats: {
         rating: 4.9,
