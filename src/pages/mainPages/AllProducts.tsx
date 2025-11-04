@@ -456,7 +456,7 @@ const AllProductsPage: React.FC = () => {
     const [hasMoreProducts, setHasMoreProducts] = useState<boolean>(true);
     const [skip, setSkip] = useState<number>(0);
     const limit: number = 1000;
-
+    console.log(error);
     // Default state: no filters, newest first sorting
     const [filters, setFilters] = useState<FilterState>({
         categories: [],
