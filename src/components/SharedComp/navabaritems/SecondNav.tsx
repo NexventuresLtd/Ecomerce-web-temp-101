@@ -1,4 +1,4 @@
-import { Search, User, X } from 'lucide-react';
+import { Database, Search, User, X } from 'lucide-react';
 import UserInfo from './UserInfo';
 import { useState, useEffect } from 'react';
 
@@ -6,7 +6,6 @@ import { SearchResults } from './search';
 import { useNavigation } from '../../../hooks/product/useNavigation';
 import type { Product } from '../../../types/Product/producttypeAdmin';
 import { productApi } from '../../../app/products/allProductgeter';
-
 
 interface SecondNavProps {
     isMenuOpen: boolean
@@ -19,6 +18,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
     const [allProducts, setAllProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [useDatabaseSearch, setUseDatabaseSearch] = useState<boolean>(false);
     console.log(error)
     const { navigateToProduct } = useNavigation();
 
@@ -48,6 +48,10 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
 
     const clearSearch = () => {
         setQuery('');
+    };
+
+    const handleDatabaseToggle = (useDatabase: boolean) => {
+        setUseDatabaseSearch(useDatabase);
     };
 
     return (
@@ -82,8 +86,21 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
                                     placeholder="Search for products..."
-                                    className="w-full pl-10 pr-10 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-lg"
+                                    className="w-full pl-10 pr-20 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-lg"
                                 />
+                                {/* Database Search Toggle Button */}
+                                <button
+                                    onClick={() => setUseDatabaseSearch(!useDatabaseSearch)}
+                                    className={`absolute flex items-center gap-2 right-10 top-1/2 transform -translate-y-1/2 p-1 rounded ${
+                                        useDatabaseSearch 
+                                            ? 'bg-secondary text-white' 
+                                            : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                                    }`}
+                                    title={useDatabaseSearch ? 'Searching from database' : 'Search from database'}
+                                >
+                                    <Database className="w-4 h-4" />
+                                    Search
+                                </button>
                                 {query && (
                                     <button
                                         onClick={clearSearch}
@@ -109,6 +126,8 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                             products={allProducts}
                             onSelect={handleProductSelect}
                             isLoading={loading}
+                            useDatabase={useDatabaseSearch}
+                            onDatabaseToggle={handleDatabaseToggle}
                         />
                     )}
                 </div>

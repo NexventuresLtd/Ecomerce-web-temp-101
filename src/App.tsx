@@ -17,6 +17,7 @@ import MainContent from "./pages/adminDashboard/MainDashboard";
 import UserDashboard from "./pages/Profile";
 import NotFound from "./components/ProductViewDetails/NotFound";
 import { categoryApi } from "./app/dashcategory/category";
+import NotAuthorized from "./pages/mainPages/NotAuthorized";
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>("dashboard");
@@ -91,11 +92,11 @@ export default function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route
               path="/authentication"
-              element={getUserInfo ? <HomePage /> : <AnimatedLoginPage />}
+              element={getUserInfo ? <HomePage /> :  <AnimatedLoginPage />}
             />
             <Route
               path="/admin-dashboard"
-              element={getUserInfo ? <MainContent /> : <AnimatedLoginPage />}
+              element={getUserInfo ? getUserInfo.role == "admin" ? <MainContent /> : <NotAuthorized /> : <AnimatedLoginPage />}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>

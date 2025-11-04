@@ -48,12 +48,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-all duration-300 group cursor-pointer"
+            className="bg-gray-100 rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-all duration-300 group cursor-pointer"
             onMouseEnter={() => setShowDescription(true)}
             onMouseLeave={() => setShowDescription(false)}
             onClick={() => navigateToProduct(product.id.toString())}
         >
-            <div className="relative overflow-hidden">
+            <div className="relative overflow-hidden bg-white">
                 <img
                     src={`${import.meta.env.VITE_API_BASE_URL}${primaryImage}`}
                     alt={product.title}
