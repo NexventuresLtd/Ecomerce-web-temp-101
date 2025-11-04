@@ -6,7 +6,8 @@ import {
     Search,
     SlidersHorizontal,
     X,
-    ShoppingCartIcon
+    ShoppingCartIcon,
+    Loader2
 } from 'lucide-react';
 import Navbar from '../../components/SharedComp/navabaritems/NavBar';
 import Footer from '../../components/SharedComp/footer';
@@ -19,6 +20,7 @@ import { productApi } from '../../app/products/allProductgeter';
 import { useParams } from 'react-router-dom';
 import { decodeId } from '../../app/products/id_encrypter';
 import Suggestions from './Suggestions';
+import { categoryApi } from '../../app/dashcategory/category';
 
 // Filter Types
 interface FilterState {
@@ -32,7 +34,15 @@ interface FilterState {
 // Sort Types
 type SortOption = 'price-asc' | 'price-desc' | 'newest' | 'rating' | 'featured';
 
-// Product Card Component matching the Offers component structure
+// Category Types
+interface Category {
+    id: number;
+    name: string;
+    description?: string;
+    parent_id?: number;
+}
+
+// Product Card Component
 interface ProductCardProps {
     product: Product;
     index: number;
@@ -60,17 +70,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
                     className="w-full h-48 object-contain group-hover:scale-105 transition-transform duration-300"
                 />
                 {product.discount !== 0 && (
-                    <div className="absolute hidden top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
                         -{product.discount}%
                     </div>
                 )}
                 {product.is_new && (
-                    <div className="absolute hidden top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                    <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                         NEW
                     </div>
                 )}
 
-                {/* Description overlay on hover */}
                 <AnimatePresence>
                     {showDescription && (
                         <motion.div
@@ -149,14 +158,14 @@ const SortDropdown: React.FC<SortDropdownProps> = ({ currentSort, onSortChange }
     const [isOpen, setIsOpen] = useState(false);
 
     const sortOptions: { value: SortOption; label: string }[] = [
-        { value: 'featured', label: 'Featured' },
         { value: 'newest', label: 'Newest First' },
+        { value: 'featured', label: 'Featured' },
         { value: 'price-asc', label: 'Price: Low to High' },
         { value: 'price-desc', label: 'Price: High to Low' },
         { value: 'rating', label: 'Highest Rated' }
     ];
 
-    const currentLabel = sortOptions.find(opt => opt.value === currentSort)?.label || 'Featured';
+    const currentLabel = sortOptions.find(opt => opt.value === currentSort)?.label || 'Newest First';
 
     return (
         <div className="relative">
@@ -202,12 +211,19 @@ interface FilterSidebarProps {
     onFiltersChange: (filters: FilterState) => void;
     isOpen: boolean;
     onClose: () => void;
-    products: Product[];
+    categories: Category[];
+    categoriesLoading: boolean;
 }
 
-const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, onFiltersChange, isOpen, onClose, products }) => {
-    const categories = Array.from(new Set(products.map(p => p.category?.name || '').filter(Boolean)));
-    const maxPrice = Math.max(...products.map(p => p.price || 0), 100000);
+const FilterSidebar: React.FC<FilterSidebarProps> = ({ 
+    filters, 
+    onFiltersChange, 
+    isOpen, 
+    onClose, 
+    categories,
+    categoriesLoading 
+}) => {
+    const maxPrice = 1000000; // Set a reasonable max price
 
     const updateFilters = (key: keyof FilterState, value: any) => {
         onFiltersChange({ ...filters, [key]: value });
@@ -219,19 +235,30 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, onFiltersChange,
             : [...filters.categories, category];
         updateFilters('categories', updated);
     };
-    let { category } = useParams<{ category: string }>();
-    const [newcategory, setNewCategory] = useState<any>("")
+
+    const handlePriceRangeChange = (value: number) => {
+        updateFilters('priceRange', [0, value]);
+    };
+
+    // Handle URL category parameter
+    const { category } = useParams<{ category: string }>();
+    
     useEffect(() => {
         if (category) {
-            const ds = decodeId(category)
-            setNewCategory(ds)
-            toggleCategory(newcategory)
-            console.log("no:", newcategory)
+            try {
+                const decodedCategory = decodeId(category);
+                const categoryString = String(decodedCategory);
+                if (decodedCategory && !filters.categories.includes(categoryString)) {
+                    updateFilters('categories', [...filters.categories, categoryString]);
+                }
+            } catch (error) {
+                console.error("Error decoding category:", error);
+            }
         }
-    }, [newcategory]);
+    }, [category]);
 
     const sidebarContent = (
-        <div className=" space-y-6">
+        <div className="space-y-6">
             <div className="flex items-center justify-between lg:hidden">
                 <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
                 <button
@@ -244,43 +271,69 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, onFiltersChange,
 
             {/* Categories */}
             <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Categories</h3>
-                <div className="space-y-2">
-                    {categories.map((category) => (
-                        <label key={category} className="flex items-center">
-                            <input
-                                type="checkbox"
-                                checked={filters.categories.includes(category)}
-                                onChange={() => toggleCategory(category)}
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">{category}</span>
-                        </label>
-                    ))}
+                <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-medium text-gray-900">Categories</h3>
+                    {categoriesLoading && (
+                        <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                    )}
+                </div>
+                <div className="space-y-2 max-h-110 overflow-y-auto">
+                    {categoriesLoading ? (
+                        <div className="space-y-2">
+                            {[...Array(8)].map((_, i) => (
+                                <div key={i} className="flex items-center">
+                                    <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                                    <div className="ml-2 h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : categories.length > 0 ? (
+                        categories.map((category) => (
+                            <label key={category.id} className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    checked={filters.categories.includes(category.name)}
+                                    onChange={() => toggleCategory(category.name)}
+                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="ml-2 text-sm text-gray-700 truncate">
+                                    {category.name}
+                                </span>
+                            </label>
+                        ))
+                    ) : (
+                        <p className="text-sm text-gray-500">No categories available</p>
+                    )}
                 </div>
             </div>
 
             {/* Price Range */}
             <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Price Range</h3>
-                <div className="space-y-2">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">
+                    Price Range - Up to {RWF.format(filters.priceRange[1])}
+                </h3>
+                <div className="space-y-4">
                     <input
                         type="range"
                         min="0"
                         max={maxPrice}
+                        step="1000"
                         value={filters.priceRange[1]}
-                        onChange={(e) => updateFilters('priceRange', [0, Number(e.target.value)])}
-                        className="w-full"
+                        onChange={(e) => handlePriceRangeChange(Number(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                     />
                     <div className="flex justify-between text-sm text-gray-500">
                         <span>Rwf 0</span>
-                        <span>Rwf {RWF.format(filters.priceRange[1])}</span>
+                        <span>Rwf {RWF.format(maxPrice)}</span>
+                    </div>
+                    <div className="text-center text-xs text-gray-600">
+                        Current max: {RWF.format(filters.priceRange[1])}
                     </div>
                 </div>
             </div>
 
             {/* Rating */}
-            <div>
+            <div className='hidden'>
                 <h3 className="text-sm font-medium text-gray-900 mb-3">Minimum Rating</h3>
                 <div className="space-y-2">
                     {[4, 3, 2, 1].map((rating) => (
@@ -329,7 +382,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, onFiltersChange,
                     minRating: 0,
                     inStockOnly: false
                 })}
-                className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors"
+                className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
             >
                 Clear All Filters
             </button>
@@ -384,8 +437,9 @@ const LoadMoreButton: React.FC<LoadMoreButtonProps> = ({ isLoading, hasMore, onC
             <button
                 onClick={onClick}
                 disabled={isLoading}
-                className="bg-primary hover:bg-primary/80 disabled:bg-primary/20 text-white font-semibold rounded-2xl px-8 py-3 transition-colors duration-300 disabled:cursor-not-allowed"
+                className="bg-primary hover:bg-primary/80 disabled:bg-primary/20 text-white font-semibold rounded-2xl px-8 py-3 transition-colors duration-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
             >
+                {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                 {isLoading ? 'Loading...' : 'Load More Products'}
             </button>
         </div>
@@ -395,50 +449,67 @@ const LoadMoreButton: React.FC<LoadMoreButtonProps> = ({ isLoading, hasMore, onC
 // Main All Products Page Component
 const AllProductsPage: React.FC = () => {
     const [allProducts, setAllProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [categoriesLoading, setCategoriesLoading] = useState<boolean>(true);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [hasMoreProducts, setHasMoreProducts] = useState<boolean>(true);
     const [skip, setSkip] = useState<number>(0);
-    const limit: number = 600;
-    console.log(error)
-    // console.log(error)
+    const limit: number = 1000;
+
+    // Default state: no filters, newest first sorting
     const [filters, setFilters] = useState<FilterState>({
         categories: [],
         brands: [],
-        priceRange: [0, 100000],
+        priceRange: [0, 1000000], // Max price range by default
         minRating: 0,
         inStockOnly: false
     });
 
-    const [currentSort, setCurrentSort] = useState<SortOption>('featured');
+    const [currentSort, setCurrentSort] = useState<SortOption>('newest'); // Default to newest
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [displayCount, setDisplayCount] = useState(12);
+    const [displayCount, setDisplayCount] = useState(24);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [autoLoadEnabled, setAutoLoadEnabled] = useState(true);
 
-    // Load products from API (sorted by id DESC)
-    const loadProducts = useCallback(async (): Promise<void> => {
+    // Load categories from API
+    const loadCategories = useCallback(async (): Promise<void> => {
         try {
-            setLoading(true);
+            setCategoriesLoading(true);
+            const productCategories = await categoryApi.getProductCategories();
+            setCategories(productCategories || []);
+        } catch (err: any) {
+            console.error("Failed to load categories:", err);
+            setCategories([]);
+        } finally {
+            setCategoriesLoading(false);
+        }
+    }, []);
+
+    // Load products from API
+    const loadProducts = useCallback(async (loadMore: boolean = false): Promise<void> => {
+        try {
+            if (!loadMore) {
+                setLoading(true);
+            } else {
+                setIsLoadingMore(true);
+            }
+
             const response = await productApi.getProducts(skip, limit);
             let newProducts: Product[] = response.products || response;
 
-            // Sort by ID descending
-            newProducts = newProducts.sort((a, b) => b.id - a.id);
-
             setAllProducts(prev => {
+                if (!loadMore) {
+                    return newProducts;
+                }
                 const existingIds = new Set(prev.map(p => p.id));
                 const filteredNew = newProducts.filter(p => !existingIds.has(p.id));
-
-                // Combine and maintain overall DESC order
-                const combined = [...prev, ...filteredNew];
-                return combined.sort((a, b) => b.id - a.id);
+                return [...prev, ...filteredNew];
             });
 
             setSkip(prev => prev + limit);
 
-            // Stop loading if fewer items returned
             if (newProducts.length < limit) {
                 setHasMoreProducts(false);
             }
@@ -446,62 +517,59 @@ const AllProductsPage: React.FC = () => {
             setError(err.message || "Failed to fetch products");
         } finally {
             setLoading(false);
+            setIsLoadingMore(false);
         }
     }, [skip, limit]);
 
     // Initial data load
     useEffect(() => {
-        loadProducts();
-    }, [loadProducts]);
+        const initializeData = async () => {
+            await loadCategories();
+            await loadProducts(false);
+        };
+        
+        initializeData();
+    }, []);
 
-
-    // Update max price when products are loaded
-    useEffect(() => {
-        if (allProducts.length > 0) {
-            const maxPrice = Math.max(...allProducts.map(p => p.price || 0), 100000);
-            setFilters(prev => ({
-                ...prev,
-                priceRange: [0, maxPrice]
-            }));
-        }
-    }, [allProducts]);
-
-    // Filter and sort products
+    // Filter and sort products - NO FILTERING BY DEFAULT
     const filteredAndSortedProducts = useMemo(() => {
-        let filtered = allProducts.filter(product => {
-            // Search filter
-            if (searchQuery && !product.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                !product.description.toLowerCase().includes(searchQuery.toLowerCase())) {
-                return false;
-            }
+        // Start with all products (no filtering by default)
+        let filtered = [...allProducts];
 
-            // Category filter
-            if (filters.categories.length > 0 && !filters.categories.includes(product.category?.name || '')) {
-                return false;
-            }
+        // Only apply filters if they are actively set by user
+        if (searchQuery) {
+            filtered = filtered.filter(product => 
+                product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                product.description.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
 
-            // Price filter
-            const productPrice = product.price || 0;
-            if (productPrice < filters.priceRange[0] || productPrice > filters.priceRange[1]) {
-                return false;
-            }
+        if (filters.categories.length > 0) {
+            filtered = filtered.filter(product => 
+                filters.categories.includes(product.category?.name || '')
+            );
+        }
 
-            // Rating filter
-            const productRating = product.rating || 0;
-            if (productRating < filters.minRating) {
-                return false;
-            }
+        if (filters.priceRange[1] < 1000000) { // Only apply if user changed from default
+            filtered = filtered.filter(product => {
+                const productPrice = product.price || 0;
+                return productPrice >= filters.priceRange[0] && productPrice <= filters.priceRange[1];
+            });
+        }
 
-            // Stock filter
-            const productStock = product.instock || 0;
-            if (filters.inStockOnly && productStock <= 0) {
-                return false;
-            }
+        if (filters.minRating > 0) {
+            filtered = filtered.filter(product => 
+                (product.rating || 0) >= filters.minRating
+            );
+        }
 
-            return true;
-        });
+        if (filters.inStockOnly) {
+            filtered = filtered.filter(product => 
+                (product.instock || 0) > 0
+            );
+        }
 
-        // Sort products
+        // Apply sorting
         switch (currentSort) {
             case 'price-asc':
                 filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
@@ -510,19 +578,23 @@ const AllProductsPage: React.FC = () => {
                 filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
                 break;
             case 'newest':
-                filtered.sort((a, b) => (b.is_new ? 1 : 0) - (a.is_new ? 1 : 0));
+                // Default: sort by ID descending (newest first)
+                filtered.sort((a, b) => b.id - a.id);
                 break;
             case 'rating':
                 filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
                 break;
             case 'featured':
+                filtered.sort((a, b) => {
+                    if (a.is_featured !== b.is_featured) {
+                        return a.is_featured ? -1 : 1;
+                    }
+                    return b.id - a.id; // Fallback to newest first
+                });
+                break;
             default:
-                // filtered.sort((a, b) => {
-                //     if (a.is_featured !== b.is_featured) {
-                //         return b.is_featured ? 1 : -1;
-                //     }
-                //     return (b.rating || 0) - (a.rating || 0);
-                // });
+                // Default sorting: newest first
+                filtered.sort((a, b) => b.id - a.id);
                 break;
         }
 
@@ -531,46 +603,64 @@ const AllProductsPage: React.FC = () => {
 
     // Reset display count when filters change
     useEffect(() => {
-        setDisplayCount(12);
+        setDisplayCount(24);
     }, [filters, currentSort, searchQuery]);
 
     // Displayed products based on display count
-    const displayedProducts = filteredAndSortedProducts;
+    const displayedProducts = filteredAndSortedProducts.slice(0, displayCount);
     const hasMoreFilteredProducts = displayCount < filteredAndSortedProducts.length;
 
-    // Load more products function
+    // Check if any filters are active
+    const hasActiveFilters = useMemo(() => {
+        return (
+            filters.categories.length > 0 ||
+            filters.minRating > 0 ||
+            filters.inStockOnly ||
+            searchQuery ||
+            filters.priceRange[1] < 1000000
+        );
+    }, [filters, searchQuery]);
+
+    // Load more filtered products function
     const loadMoreProducts = useCallback(async () => {
         if (isLoadingMore || !hasMoreFilteredProducts) return;
 
-        // setIsLoadingMore(true);
-        // Simulate loading time
-        // await new Promise(resolve => setTimeout(resolve, 10));
-        // setDisplayCount(prev => prev + 12);
-        // setIsLoadingMore(false);
-    }, [isLoadingMore, hasMoreFilteredProducts]);
+        setIsLoadingMore(true);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        setDisplayCount(prev => Math.min(prev + 24, filteredAndSortedProducts.length));
+        setIsLoadingMore(false);
+    }, [isLoadingMore, hasMoreFilteredProducts, filteredAndSortedProducts.length]);
 
     // Load more products from API when needed
     const loadMoreApiProducts = useCallback(async () => {
         if (isLoadingMore || !hasMoreProducts) return;
 
-        setIsLoadingMore(true);
-        await loadProducts();
-        setIsLoadingMore(false);
+        await loadProducts(true);
     }, [isLoadingMore, hasMoreProducts, loadProducts]);
 
+    // Auto-load functionality
     useEffect(() => {
         if (!autoLoadEnabled) return;
 
         const container = document.getElementById('main_content');
         if (!container) return;
 
+        let isThrottled = false;
+        const throttleDelay = 100;
+
         const handleScroll = () => {
+            if (isThrottled) return;
+
+            isThrottled = true;
+            setTimeout(() => {
+                isThrottled = false;
+            }, throttleDelay);
+
             const scrollTop = container.scrollTop;
             const scrollHeight = container.scrollHeight;
             const clientHeight = container.clientHeight;
 
-            // Load more when within 20% of bottom
-            if (scrollTop + clientHeight >= scrollHeight - clientHeight * 0.1) {
+            if (scrollTop + clientHeight >= scrollHeight - 300) {
                 if (hasMoreFilteredProducts) {
                     loadMoreProducts();
                 } else if (hasMoreProducts) {
@@ -586,8 +676,8 @@ const AllProductsPage: React.FC = () => {
     return (
         <>
             <Navbar />
-            <div className="min-h-screen max-w-full m-auto ">
-                <div className="flex ">
+            <div className="min-h-screen max-w-full m-auto">
+                <div className="flex">
                     <div className="h-[calc(100vh-64px)]">
                         {/* Filter Sidebar */}
                         <FilterSidebar
@@ -595,12 +685,13 @@ const AllProductsPage: React.FC = () => {
                             onFiltersChange={setFilters}
                             isOpen={isFilterOpen}
                             onClose={() => setIsFilterOpen(false)}
-                            products={allProducts}
+                            categories={categories}
+                            categoriesLoading={categoriesLoading}
                         />
                     </div>
 
                     {/* Main Content */}
-                    <div className="flex-1 lg:ml-0 h-[calc(100vh-64px)] overflow-y-auto " id='main_content'>
+                    <div className="flex-1 lg:ml-0 h-[calc(100vh-64px)] overflow-y-auto" id='main_content'>
                         {/* Header */}
                         <div className="bg-white border-b border-gray-200 px-4 lg:px-8 py-6">
                             <div className="max-w-full mx-auto">
@@ -613,7 +704,7 @@ const AllProductsPage: React.FC = () => {
                                     </div>
                                     <button
                                         onClick={() => setIsFilterOpen(true)}
-                                        className="lg-hidden bg-white border border-gray-300 rounded-lg px-4 py-2 flex items-center gap-2 hover:border-gray-400 transition-colors"
+                                        className="lg:hidden bg-white border border-gray-300 rounded-lg px-4 py-2 flex items-center gap-2 hover:border-gray-400 transition-colors"
                                     >
                                         <SlidersHorizontal className="w-4 h-4" />
                                         <span>Filters</span>
@@ -621,7 +712,7 @@ const AllProductsPage: React.FC = () => {
                                 </div>
 
                                 {/* Search Bar */}
-                                <div className="relative max-w-md hidden">
+                                <div className="relative max-w-md">
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                     <input
                                         type="text"
@@ -639,15 +730,16 @@ const AllProductsPage: React.FC = () => {
                             <div className="max-w-full mx-auto flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <p className="text-sm text-gray-600">
-                                        Showing {Math.min(displayedProducts.length, filteredAndSortedProducts.length)} of {filteredAndSortedProducts.length} products
+                                        Showing {displayedProducts.length} of {filteredAndSortedProducts.length} products
+                                        {hasMoreProducts && ` (${allProducts.length} loaded)`}
                                     </p>
-                                    {(filters.categories.length > 0 || filters.brands.length > 0 || filters.minRating > 0 || filters.inStockOnly || searchQuery) && (
+                                    {hasActiveFilters && (
                                         <button
                                             onClick={() => {
                                                 setFilters({
                                                     categories: [],
                                                     brands: [],
-                                                    priceRange: [0, Math.max(...allProducts.map(p => p.price || 0), 100000)],
+                                                    priceRange: [0, 1000000], // Reset to max
                                                     minRating: 0,
                                                     inStockOnly: false
                                                 });
@@ -687,27 +779,31 @@ const AllProductsPage: React.FC = () => {
                                         ))}
                                     </div>
                                 ) : displayedProducts.length > 0 ? (
-                                    <motion.div
-                                        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ duration: 0.5 }}
-                                    >
-                                        {displayedProducts.map((product, index) => (
-                                            <ProductCard
-                                                key={product.id}
-                                                product={product}
-                                                index={index}
-                                            />
-                                        ))}
-                                        {/* Skeleton Loaders */}
-                                        {isLoadingMore && <>
-                                            {[...Array(12)].map((_, index) => (
-                                                <SkeletonLoader key={index} />
+                                    <>
+                                        <motion.div
+                                            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            transition={{ duration: 0.5 }}
+                                        >
+                                            {displayedProducts.map((product, index) => (
+                                                <ProductCard
+                                                    key={`${product.id}-${index}`}
+                                                    product={product}
+                                                    index={index}
+                                                />
                                             ))}
-                                        </>}
-
-                                    </motion.div>
+                                        </motion.div>
+                                        
+                                        {/* Loading indicator */}
+                                        {(isLoadingMore || loading) && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 mt-8">
+                                                {[...Array(4)].map((_, index) => (
+                                                    <SkeletonLoader key={`skeleton-${index}`} />
+                                                ))}
+                                            </div>
+                                        )}
+                                    </>
                                 ) : (
                                     <motion.div
                                         initial={{ opacity: 0, y: 20 }}
@@ -729,7 +825,7 @@ const AllProductsPage: React.FC = () => {
                                                     setFilters({
                                                         categories: [],
                                                         brands: [],
-                                                        priceRange: [0, Math.max(...allProducts.map(p => p.price || 0), 100000)],
+                                                        priceRange: [0, 1000000],
                                                         minRating: 0,
                                                         inStockOnly: false
                                                     });
