@@ -399,7 +399,7 @@ const AllProductsPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [hasMoreProducts, setHasMoreProducts] = useState<boolean>(true);
     const [skip, setSkip] = useState<number>(0);
-    const limit: number = 20;
+    const limit: number = 600;
     console.log(error)
     // console.log(error)
     const [filters, setFilters] = useState<FilterState>({
