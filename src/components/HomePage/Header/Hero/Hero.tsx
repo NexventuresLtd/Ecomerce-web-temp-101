@@ -61,7 +61,7 @@ const Hero: React.FC = () => {
         <div className="absolute inset-0 bg-black/50 opacity-100"></div> {/* Overlay */}
       </div>
 
-      <div className="w-full mx-auto px-6 py-12 relative z-10">
+      <div className="w-full mx-auto px-6 py-12 relative z-10  cursor-pointer min-[500px]" onClick={handleSecondaryClick}>
         {/* Brand Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -179,11 +179,11 @@ const Hero: React.FC = () => {
       </div>
 
       {/* Auto-play pause on hover */}
-      <div
+      {/* <div
         onMouseEnter={() => setIsAutoPlaying(false)}
         onMouseLeave={() => setIsAutoPlaying(true)}
         className="absolute inset-0"
-      ></div>
+      ></div> */}
     </section>
   );
 };

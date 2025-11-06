@@ -1,4 +1,5 @@
-import type {  NavItem } from "../../types/Navbar/navTypes";
+// constants/NabarMain/navLinks.ts
+import type { NavItem } from "../../types/Navbar/navTypes";
 
 export const topNavItems = [
     { name: 'B2B, Gov, Students & More', href: '#' },
@@ -6,20 +7,6 @@ export const topNavItems = [
     { name: 'About Us', href: '/about' }
 ];
 
-// export const mainNavItems: NavItem[] = [
-//     { title: 'Home', name: 'Home', href: '/', hasDropdown: false },
-//     { title: 'All Products', name: 'All Products', href: '/products', hasDropdown: false },
-//     { title: 'Photograph', name: 'Camera', href: '#', hasDropdown: true },
-//     { title: 'Videography', name: 'Lenses', href: '#', hasDropdown: true },
-//     { title: 'Computer', name: 'Computer', href: '#', hasDropdown: true },
-//     { title: 'Pro Audio', name: 'Pro Audio', href: '#', hasDropdown: true },
-//     { title: 'Lighting', name: 'Lighting', href: '#', hasDropdown: true },
-//     { title: 'Phone', name: 'Phone', href: '#', hasDropdown: true },
-//     { title: 'Other Accessories', name: 'Other Accessories', href: '#', hasDropdown: true },
-//     { title: 'About Us', name: 'About Us', href: '/about', hasDropdown: false },
-//     { title: 'Vlog', name: 'Vlog', href: '/vlog', hasDropdown: false },
-//     { title: 'Contact US', name: 'Contact US', href: '/contact', hasDropdown: false }
-// ];
 export const mainNavItems: NavItem[] = [
     { title: 'Home', name: 'Home', href: '/', hasDropdown: false },
     { title: 'All Products', name: 'All Products', href: '/products', hasDropdown: false },
@@ -35,17 +22,51 @@ export const mainNavItems: NavItem[] = [
     { title: 'Contact US', name: 'Contact US', href: '/contact', hasDropdown: false }
 ];
 
-// Add this main category ID mapping array
-export const mainCategoryIds: { [key: string]: number } = {
-    'Camera': 1,
-    'Lenses': 2, 
-    'Computer': 3,
-    'Pro Audio': 4,
-    'Lighting': 5,
-    'Phone': 6,
-    'Other Accessories': 7
+// List of main category names for filtering
+export const mainCategoryNames = [
+    'Camera',
+    'Lenses', 
+    'Computer',
+    'Pro Audio',
+    'Lighting',
+    'Phone',
+    'Other Accessories'
+];
+
+export const mainCategoryIds = [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+];
+
+// Create a mapping object for easy lookup
+export const mainCategoryMap: { [key: string]: number } = {
+    'Camera': 8,
+    'Lenses': 9,
+    'Computer': 10,
+    'Pro Audio': 11,
+    'Lighting': 12,
+    'Phone': 13,
+    'Other Accessories': 14
 };
+
+// Helper function to check if a category name is a main category
+export const isMainCategory = (categoryName: string): boolean => {
+    return mainCategoryNames.includes(categoryName);
+};
+
 // Helper function to get main category ID by name
 export const getMainCategoryId = (categoryName: string): number | null => {
-    return mainCategoryIds[categoryName] || null;
+    return mainCategoryMap[categoryName] || null;
+};
+
+// Helper function to get main category name by ID
+export const getMainCategoryName = (categoryId: number): string | null => {
+    const index = mainCategoryIds.indexOf(categoryId);
+
+    return index !== -1 ? mainCategoryNames[index] : null;
 };

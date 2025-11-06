@@ -645,7 +645,7 @@ const ProductViewPage: React.FC = () => {
                     )}
                 </AnimatePresence>
             </div >
-            <Suggestions />
+            <Suggestions category={product.category_id} />
             <Footer />
         </>
     );

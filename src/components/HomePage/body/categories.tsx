@@ -7,7 +7,9 @@ import SectionHeader from './categoryComps/SectionHeader';
 import GridLayout from './categoryComps/GridLayout';
 import CarouselLayout from './categoryComps/CarouselLayout';
 import { Grid, Sliders } from 'lucide-react';
-import { useNavigation } from '../../../hooks/product/useNavigation';
+// import { useNavigation } from '../../../hooks/product/useNavigation';
+import { useNavigate } from 'react-router-dom';
+import { encodeId } from '../../../app/products/id_encrypter';
 
 const CategorySection: React.FC<CategorySectionProps> = ({
     title = "Shop by Category",
@@ -18,7 +20,8 @@ const CategorySection: React.FC<CategorySectionProps> = ({
     const [currentIndex, setCurrentIndex] = useState(0);
     const [itemsPerView, setItemsPerView] = useState(4);
     const [viewMode, setViewmode] = useState('grid')
-    const { navigateToProductCategory } = useNavigation()
+    // const { navigateToProductCategory } = useNavigation()
+    const navigate = useNavigate();
     // Responsive items per view
     useEffect(() => {
         const updateItemsPerView = () => {
@@ -52,9 +55,30 @@ const CategorySection: React.FC<CategorySectionProps> = ({
             setCurrentIndex(prev => Math.min(categoriesData.length - itemsPerView, prev + 1));
         }
     };
+    // Handle main category click - use query parameters
+    const handleMainCategoryClick = (categoryTitle: string) => {
+        const categoryMap: { [key: string]: number } = {
+            'Camera': 1,
+            'Lenses': 2,
+            'Computer': 3,
+            'Pro Audio': 4,
+            'Lighting': 5,
+            'Phone': 6,
+            'Other Accessories': 7,
+        };
 
+        const categoryId = categoryMap[categoryTitle];
+        if (categoryId) {
+            const encodedId = encodeId(categoryId);
+            // Use query parameter instead of path parameter
+            navigate(`/products?category=${encodedId}`);
+        } else {
+            navigate(`/products?category=${encodeURIComponent(categoryTitle)}`);
+        }
+    };
 
     const handleCategoryClick = (category: any) => {
+        // alert("clicked category: " + category);
         const categories = [
             { title: 'Photograph', name: 'Camera' },
             { title: 'Videography', name: 'Lenses' },
@@ -64,13 +88,17 @@ const CategorySection: React.FC<CategorySectionProps> = ({
             { title: 'Phone', name: 'Phone' },
             { title: 'Other Accessories', name: 'Other Accessories' },
         ];
-        // Find category by name
-        const found = categories.find(c => c.title.toLowerCase() === category.toLowerCase());
+
+        const found = categories.find(
+            c => category.toLowerCase().includes(c.title.toLowerCase()) ||
+                c.title.toLowerCase().includes(category.toLowerCase())
+        );
 
         if (found) {
-            navigateToProductCategory(found.name);
+            handleMainCategoryClick(found.name);
         } else {
-            navigateToProductCategory(category);
+            // Optionally handle case where no match is found
+            alert(category);
         }
     };
 

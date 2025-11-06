@@ -3,38 +3,42 @@ import Offers from '../../components/HomePage/body/Offers/OurOffers'
 import type { Product } from '../../types/Product/producttypeAdmin';
 import { productApi } from '../../app/products/allProductgeter';
 
-const Suggestions = () => {
-        const [allProducts, setAllProducts] = useState<Product[]>([]);
-        const [loading] = useState(false);
-        const [hasMore, setHasMore] = useState(true);
-        const [skip, setSkip] = useState(0);
-        const limit = 20; // Initial fetch size
-    
-        // Load all products with pagination
-        const loadProducts = useCallback(async () => {
-            try {
-                const response = await productApi.getProducts(skip, limit);
-                const newProducts = response.products || response;
-                setAllProducts(prev => [...prev, ...newProducts]);
-                setSkip(prev => prev + limit);
-    
-                // If we get fewer products than requested, we've reached the end
-                if (newProducts.length < limit) {
-                    setHasMore(false);
-                }
-            } catch (err: any) {
-                console.log(err);
-                // setError(err.message || "Failed to fetch products");
-            } finally {
+const Suggestions = ({ category }: any) => {
+    const [allProducts, setAllProducts] = useState<Product[]>([]);
+    const [loading] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [skip, setSkip] = useState(0);
+    const limit = 20; // Initial fetch size
 
+    // Load all products with pagination
+    const loadProducts = useCallback(async () => {
+        try {
+            const params: Record<string, any> = {};
+            if (category) {
+                params.product_category_id = category;
             }
-        }, [skip, limit]);
-    
-        // Initial data load
-        useEffect(() => {
-            loadProducts();
-        }, []);
-    
+            const response = await productApi.getProducts(skip, limit, params);
+            const newProducts = response.products || response;
+            setAllProducts(prev => [...prev, ...newProducts]);
+            setSkip(prev => prev + limit);
+
+            // If we get fewer products than requested, we've reached the end
+            if (newProducts.length < limit) {
+                setHasMore(false);
+            }
+        } catch (err: any) {
+            console.log(err);
+            // setError(err.message || "Failed to fetch products");
+        } finally {
+
+        }
+    }, [skip, limit]);
+
+    // Initial data load
+    useEffect(() => {
+        loadProducts();
+    }, []);
+
     return (
         <>
             <Offers

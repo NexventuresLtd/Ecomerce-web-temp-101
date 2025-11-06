@@ -8,24 +8,36 @@ import {
     // FileQuestion,
     // Sliders,
     Video,
+    Users,
     // Dock,
 } from 'lucide-react';
 import type { ViewType } from '../../../types/dashboard/mainDashbaord';
 import { useAppContext } from '../../../contexts/dashbaord/context';
+import { getUserInfo } from '../../../app/Localstorage';
 
 // Sidebar Component
 export const Sidebar: React.FC = () => {
     const { currentView, setCurrentView, isSidebarOpen, setSidebarOpen } = useAppContext();
 
-    const menuItems = [
+    const menuItems =
+    getUserInfo.role === "admin" ?
+    [
         { id: 'dashboard' as ViewType, label: 'Dashboard', icon: LayoutDashboard },
         { id: 'products' as ViewType, label: 'Products', icon: Package },
         { id: 'categories' as ViewType, label: 'Categories', icon: Tag },
         // { id: 'report' as ViewType, label: 'Report', icon: Dock },
-        // { id: 'users' as ViewType, label: 'Users', icon: Users },
+        { id: 'users' as ViewType, label: 'Users', icon: Users },
         { id: 'wishlists' as ViewType, label: 'Wishlists', icon: Heart },
         { id: 'carts' as ViewType, label: 'Carts', icon: ShoppingBag },
         // { id: 'FAQ' as ViewType, label: 'FAQ', icon: FileQuestion },
+        { id: 'vlog' as ViewType, label: 'Vlog', icon: Video },
+    ]:
+    [
+        { id: 'dashboard' as ViewType, label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'products' as ViewType, label: 'Products', icon: Package },
+        // { id: 'categories' as ViewType, label: 'Categories', icon: Tag },
+        { id: 'wishlists' as ViewType, label: 'Wishlists', icon: Heart },
+        { id: 'carts' as ViewType, label: 'Carts', icon: ShoppingBag },
         { id: 'vlog' as ViewType, label: 'Vlog', icon: Video },
     ];
 

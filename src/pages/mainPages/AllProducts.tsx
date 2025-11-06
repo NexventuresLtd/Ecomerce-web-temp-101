@@ -20,15 +20,15 @@ import { handleClickWhatsapp } from '../../app/ProductWhasapp';
 import SkeletonLoader from '../../components/Skeltons/Product';
 import type { Product } from '../../types/Product/producttypeAdmin';
 import { productApi } from '../../app/products/allProductgeter';
-import { useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { decodeId } from '../../app/products/id_encrypter';
-import Suggestions from './Suggestions';
+// import Suggestions from './Suggestions';
 import { categoryApi } from '../../app/dashcategory/category';
-import { mainCategoryIds } from '../../constants/NabarMain/navLinks';
+import { isMainCategory, getMainCategoryId, mainCategoryIds } from '../../constants/NabarMain/navLinks';
 
 // Filter Types
 interface FilterState {
-    main_categories: number[];
+    main_categories: number[]; // Changed to number[] for category IDs
     sub_categories: number[];
     product_categories: number[];
     priceRange: [number, number];
@@ -683,7 +683,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
     const handleCategorySelect = (categoryId: number, categoryType: 'main' | 'sub' | 'product') => {
         const key = `${categoryType}_categories` as keyof FilterState;
-        const currentArray = filters[key] as number[];
+        const currentArray = filters[key] as any[];
 
         const updated = currentArray.includes(categoryId)
             ? currentArray.filter(id => id !== categoryId)
@@ -939,10 +939,10 @@ const AllProductsPage: React.FC = () => {
     const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
     const [correctedQuery, setCorrectedQuery] = useState<string>('');
     const limit: number = 100;
-
+    console.log(searchSuggestions, error)
     // Default state: no filters, newest first sorting
     const [filters, setFilters] = useState<FilterState>({
-        main_categories: [],
+        main_categories: [], // Now stores category IDs as numbers
         sub_categories: [],
         product_categories: [],
         priceRange: [0, 1000000],
@@ -955,37 +955,78 @@ const AllProductsPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
 
     // Get URL parameters
+    // const [searchParams] = useSearchParams();
+    // const categoryParam = searchParams.get('category');
+    // const { query } = useParams();
+    // const searchParam = query || searchParams.get('search') || '';
+    // Get URL parameters
+    // Get URL parameters
     const [searchParams] = useSearchParams();
     const categoryParam = searchParams.get('category');
-    const searchParam = searchParams.get('search');
+    const params = useParams(); // Get all route parameters
 
-    // Handle category parameter from query string - FIXED VERSION
+    // Debug: Check what parameters are available
+    console.log('🔍 All route parameters:', params);
+    console.log('🔍 Search params:', {
+        category: searchParams.get('category'),
+        search: searchParams.get('search')
+    });
+
+    // Extract search query from route parameters
+    // Try different possible parameter names based on your route structure
+    const searchQueryFromRoute = params.query || params.search || params.term || params.q || '';
+
+    // Handle search parameter from route - COMPREHENSIVE FIX
     useEffect(() => {
+        console.log('🔍 Route parameters analysis:', {
+            allParams: params,
+            extractedQuery: searchQueryFromRoute,
+            currentSearchState: searchQuery
+        });
+
+        if (searchQueryFromRoute && searchQueryFromRoute.trim()) {
+            console.log('🎯 Setting search query from URL route:', searchQueryFromRoute);
+            setSearchQuery(searchQueryFromRoute);
+        }
+    }, [searchQueryFromRoute]);
+
+    // Also handle initial load to ensure search is triggered
+    useEffect(() => {
+        if (searchQuery && searchQuery.trim()) {
+            console.log('🚀 Initial search query detected, should trigger search:', searchQuery);
+            // The searchQuery change will automatically trigger loadProducts via the useEffect dependency
+        }
+    }, [searchQuery]);
+    // Handle category parameter from query string - FIXED FOR ID-BASED FILTERING
+    useEffect(() => {
+
         if (categoryParam) {
             console.log('Category query parameter:', categoryParam);
 
             // Check if it's a main category name from navigation
-            const mainCategoryId = mainCategoryIds[categoryParam];
-            if (mainCategoryId) {
-                console.log('Found main category ID:', mainCategoryId, 'for name:', categoryParam);
-                
-                const newFilters: FilterState = {
-                    main_categories: [mainCategoryId],
-                    sub_categories: [],
-                    product_categories: [],
-                    priceRange: [0, 1000000],
-                    minRating: 0,
-                    inStockOnly: false
-                };
+            if (isMainCategory(categoryParam)) {
+                console.log('Found main category name:', categoryParam);
 
-                console.log('Setting filters from main category name:', newFilters);
-                setFilters(newFilters);
+                const categoryId = getMainCategoryId(categoryParam);
+                if (categoryId) {
+                    const newFilters: FilterState = {
+                        main_categories: [categoryId], // Store the category ID for main categories
+                        sub_categories: [],
+                        product_categories: [],
+                        priceRange: [0, 1000000],
+                        minRating: 0,
+                        inStockOnly: false
+                    };
+
+                    console.log('Setting filters from main category name:', newFilters);
+                    setFilters(newFilters);
+                }
             } else {
                 // Handle encoded category path (existing logic)
                 console.log('Treating as encoded category path');
                 const pathSegments = categoryParam.split('/');
                 console.log('Category path segments:', pathSegments);
-                
+
                 const decodedSegments = pathSegments.map(segment => {
                     try {
                         return decodeId(segment);
@@ -996,7 +1037,7 @@ const AllProductsPage: React.FC = () => {
                 });
 
                 console.log('Decoded category segments:', decodedSegments);
-                
+
                 const newFilters: FilterState = {
                     main_categories: [],
                     sub_categories: [],
@@ -1006,21 +1047,38 @@ const AllProductsPage: React.FC = () => {
                     inStockOnly: false
                 };
 
-                // Assign IDs to appropriate filter arrays based on segment position
+                // For encoded paths, check if it's a main category or other category
                 if (decodedSegments.length >= 1) {
                     const mainCategoryId = Number(decodedSegments[0]);
                     if (!isNaN(mainCategoryId)) {
-                        newFilters.main_categories = [mainCategoryId];
+                        // Check if this ID corresponds to a main category in our mapping
+                        const isMainCat = mainCategoryIds.includes(mainCategoryId);
+
+                        if (isMainCat) {
+                            // It's a main category - use the ID directly
+                            newFilters.main_categories = [mainCategoryId];
+                            console.log(`Using main category ID directly: ${mainCategoryId}`);
+                        } else {
+                            // It's another type of category - use the mapping logic
+                            const mappedId = mainCategoryIds[mainCategoryId - 1];
+                            if (mappedId) {
+                                newFilters.main_categories = [mappedId];
+                                console.log(`Mapped category ID ${mainCategoryId} to main category ID: ${mappedId}`);
+                            } else {
+                                newFilters.main_categories = [mainCategoryId];
+                                console.log(`Using category ID directly (no mapping available): ${mainCategoryId}`);
+                            }
+                        }
                     }
                 }
-                
+
                 if (decodedSegments.length >= 2) {
                     const subCategoryId = Number(decodedSegments[1]);
                     if (!isNaN(subCategoryId)) {
                         newFilters.sub_categories = [subCategoryId];
                     }
                 }
-                
+
                 if (decodedSegments.length >= 3) {
                     const productCategoryId = Number(decodedSegments[2]);
                     if (!isNaN(productCategoryId)) {
@@ -1032,14 +1090,14 @@ const AllProductsPage: React.FC = () => {
                 setFilters(newFilters);
             }
         }
-    }, [categoryParam]);
+    }, [categoryParam, categories]);
 
-    // Handle search parameter from query string
-    useEffect(() => {
-        if (searchParam) {
-            setSearchQuery(searchParam);
-        }
-    }, [searchParam]);
+    // // Handle search parameter from query string
+    // useEffect(() => {
+    //     if (searchParam) {
+    //         setSearchQuery(searchParam);
+    //     }
+    // }, [searchParam]);
 
     // Load categories from API with proper hierarchy
     const loadCategories = useCallback(async (): Promise<void> => {
@@ -1091,7 +1149,7 @@ const AllProductsPage: React.FC = () => {
         }
     }, []);
 
-    // Load products from API - UPDATED to include category filtering
+    // Load products from API - FIXED for ID-based main category filtering
     const loadProducts = useCallback(async (loadMore: boolean = false): Promise<void> => {
         try {
             const currentSkip = loadMore ? skip : 0;
@@ -1136,10 +1194,10 @@ const AllProductsPage: React.FC = () => {
                     params.sort_order = 'desc';
                 }
 
-                // Add category hierarchy filters
+                // Add category hierarchy filters - MAIN CATEGORIES NOW USE IDs
                 if (filters.main_categories.length > 0) {
                     params.main_category_id = filters.main_categories;
-                    console.log('Filtering by main categories:', filters.main_categories);
+                    console.log('Filtering by main category IDs:', filters.main_categories);
                 }
 
                 if (filters.sub_categories.length > 0) {
@@ -1168,14 +1226,14 @@ const AllProductsPage: React.FC = () => {
                     params.rating_min = filters.minRating.toString();
                 }
 
-                console.log('API Request Params with category filtering:', params);
+                console.log('API Request Params with category ID filtering:', params);
                 response = await productApi.getProducts(currentSkip, limit, params);
             }
 
             const newProducts: Product[] = response.products || [];
             const total = response.total_count || 0;
 
-            console.log('API Response with category filter:', {
+            console.log('API Response with category ID filter:', {
                 productsCount: newProducts.length,
                 totalCount: total,
                 hasMore: newProducts.length === limit,
@@ -1183,7 +1241,7 @@ const AllProductsPage: React.FC = () => {
                 isSearch: !!searchQuery.trim(),
                 categoryParam,
                 filtersApplied: {
-                    main: filters.main_categories.length,
+                    main: filters.main_categories,
                     sub: filters.sub_categories.length,
                     product: filters.product_categories.length,
                     priceRange: filters.priceRange
@@ -1311,14 +1369,15 @@ const AllProductsPage: React.FC = () => {
         setSearchQuery(e.target.value);
     };
 
-    // Get category display name for title
+    // Get category display name for title - SIMPLIFIED
     const getCategoryDisplayName = () => {
         if (categoryParam) {
-            // Check if it's a main category name
-            if (mainCategoryIds[categoryParam]) {
-                return categoryParam; // Return the category name directly
+            // For main categories, just return the name directly
+            if (isMainCategory(categoryParam)) {
+                return categoryParam;
             }
 
+            // For encoded paths, try to get the display name
             try {
                 const pathSegments = categoryParam.split('/');
                 const decodedSegments = pathSegments.map(segment => {
@@ -1541,7 +1600,7 @@ const AllProductsPage: React.FC = () => {
                     </div>
                 </div>
             </div>
-            <Suggestions />
+            {/* <Suggestions /> */}
             <Footer />
         </>
     );

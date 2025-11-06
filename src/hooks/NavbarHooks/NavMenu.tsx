@@ -101,6 +101,7 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
       return mainCategory.name;
     }
   };
+  getCategoryDisplayName
 
   if (loading && categories.length === 0) {
     return (
