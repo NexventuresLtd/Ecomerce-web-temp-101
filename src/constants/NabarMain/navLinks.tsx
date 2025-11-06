@@ -34,3 +34,18 @@ export const mainNavItems: NavItem[] = [
     { title: 'Vlog', name: 'Vlog', href: '/vlog', hasDropdown: false },
     { title: 'Contact US', name: 'Contact US', href: '/contact', hasDropdown: false }
 ];
+
+// Add this main category ID mapping array
+export const mainCategoryIds: { [key: string]: number } = {
+    'Camera': 1,
+    'Lenses': 2, 
+    'Computer': 3,
+    'Pro Audio': 4,
+    'Lighting': 5,
+    'Phone': 6,
+    'Other Accessories': 7
+};
+// Helper function to get main category ID by name
+export const getMainCategoryId = (categoryName: string): number | null => {
+    return mainCategoryIds[categoryName] || null;
+};

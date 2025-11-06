@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ChevronDown,
@@ -20,10 +20,11 @@ import { handleClickWhatsapp } from '../../app/ProductWhasapp';
 import SkeletonLoader from '../../components/Skeltons/Product';
 import type { Product } from '../../types/Product/producttypeAdmin';
 import { productApi } from '../../app/products/allProductgeter';
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { decodeId } from '../../app/products/id_encrypter';
 import Suggestions from './Suggestions';
 import { categoryApi } from '../../app/dashcategory/category';
+import { mainCategoryIds } from '../../constants/NabarMain/navLinks';
 
 // Filter Types
 interface FilterState {
@@ -56,16 +57,13 @@ interface ProductCardProps {
     index: number;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const [showDescription, setShowDescription] = useState(false);
     const primaryImage = product.images?.find(img => img.is_primary)?.url || product.images?.[0]?.url || '';
     const { navigateToProduct } = useNavigation();
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
             className="bg-gray-100 rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-all duration-300 group cursor-pointer"
             onMouseEnter={() => setShowDescription(true)}
             onMouseLeave={() => setShowDescription(false)}
@@ -213,7 +211,7 @@ const SortDropdown: React.FC<SortDropdownProps> = ({ currentSort, onSortChange }
     );
 };
 
-// Price Range Slider Component with Hover Effect
+// Fixed Price Range Slider Component with Working Dragging
 interface PriceRangeSliderProps {
     priceRange: [number, number];
     onPriceRangeChange: (range: [number, number]) => void;
@@ -225,34 +223,104 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
     onPriceRangeChange,
     maxPrice
 }) => {
+    const [localRange, setLocalRange] = useState<[number, number]>(priceRange);
+    const [activeThumb, setActiveThumb] = useState<'min' | 'max' | null>(null);
     const [hoverValue, setHoverValue] = useState<number | null>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const sliderRef = useRef<HTMLDivElement>(null);
+    const rangeRef = useRef<[number, number]>(priceRange);
 
-    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!isDragging) return;
+    // Keep ref in sync
+    useEffect(() => {
+        rangeRef.current = localRange;
+    }, [localRange]);
 
-        const slider = e.currentTarget;
+    // Sync with parent when priceRange prop changes
+    useEffect(() => {
+        setLocalRange(priceRange as [number, number]);
+    }, [priceRange]);
+
+    // Update parent filter whenever localRange changes
+    useEffect(() => {
+        if (localRange[0] !== priceRange[0] || localRange[1] !== priceRange[1]) {
+            const timeoutId = setTimeout(() => {
+                onPriceRangeChange(localRange);
+            }, 100);
+
+            return () => clearTimeout(timeoutId);
+        }
+    }, [localRange, priceRange, onPriceRangeChange]);
+
+    // === DRAG LOGIC ===
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!isDragging || !activeThumb || !sliderRef.current) return;
+
+        const slider = sliderRef.current;
         const rect = slider.getBoundingClientRect();
-        const percentage = (e.clientX - rect.left) / rect.width;
-        const newValue = Math.min(maxPrice, Math.max(0, Math.round(percentage * maxPrice)));
+        const percentage = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+        const newValue = Math.round(percentage * maxPrice);
+        const currentRange = rangeRef.current;
 
-        onPriceRangeChange([0, newValue]);
-    };
+        let newRange: [number, number];
+        if (activeThumb === 'min') {
+            const minValue = Math.min(newValue, currentRange[1] - 1000);
+            newRange = [Math.max(0, minValue), currentRange[1]];
+        } else {
+            const maxValue = Math.max(newValue, currentRange[0] + 1000);
+            newRange = [currentRange[0], Math.min(maxPrice, maxValue)];
+        }
 
-    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-        setIsDragging(true);
-        handleMouseMove(e);
-    };
+        setLocalRange(newRange as [number, number]);
+    }, [isDragging, activeThumb, maxPrice]);
 
-    const handleMouseUp = () => {
+    const handleMouseUp = useCallback(() => {
         setIsDragging(false);
+        setActiveThumb(null);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    }, [handleMouseMove]);
+
+    const handleMouseDown = (thumb: 'min' | 'max') => (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setActiveThumb(thumb);
+        setIsDragging(true);
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
     };
 
-    const handleHover = (e: React.MouseEvent<HTMLDivElement>) => {
-        const slider = e.currentTarget;
+    useEffect(() => {
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [handleMouseMove, handleMouseUp]);
+
+    // === TRACK CLICK & HOVER ===
+    const handleTrackClick = (e: React.MouseEvent) => {
+        if (!sliderRef.current || isDragging) return;
+
+        const slider = sliderRef.current;
         const rect = slider.getBoundingClientRect();
-        const percentage = (e.clientX - rect.left) / rect.width;
-        const hoverPrice = Math.min(maxPrice, Math.max(0, Math.round(percentage * maxPrice)));
+        const percentage = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+        const clickedValue = Math.round(percentage * maxPrice);
+        const [minVal, maxVal] = localRange;
+
+        const newRange = Math.abs(clickedValue - minVal) < Math.abs(clickedValue - maxVal)
+            ? [Math.min(clickedValue, maxVal - 1000), maxVal]
+            : [minVal, Math.max(clickedValue, minVal + 1000)];
+
+        setLocalRange(newRange as [number, number]);
+    };
+
+    const handleMouseMoveOnTrack = (e: React.MouseEvent) => {
+        if (!sliderRef.current || isDragging) return;
+
+        const slider = sliderRef.current;
+        const rect = slider.getBoundingClientRect();
+        const percentage = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+        const hoverPrice = Math.round(percentage * maxPrice);
         setHoverValue(hoverPrice);
     };
 
@@ -260,56 +328,191 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
         setHoverValue(null);
     };
 
-    const percentage = (priceRange[1] / maxPrice) * 100;
+    // Input handlers
+    const handleMinInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = Number(e.target.value);
+        if (value >= 0 && value <= localRange[1] - 1000) {
+            const newRange: [number, number] = [value, localRange[1]];
+            setLocalRange(newRange as [number, number]);
+        }
+    };
+
+    const handleMaxInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = Number(e.target.value);
+        if (value >= localRange[0] + 1000 && value <= maxPrice) {
+            const newRange: [number, number] = [localRange[0], value];
+            setLocalRange(newRange as [number, number]);
+        }
+    };
+
+    // Quick selection buttons
+    const quickRanges = [
+        { label: "Under 10k", range: [0, 10000] as [number, number] },
+        { label: "10k - 50k", range: [10000, 50000] as [number, number] },
+        { label: "50k - 100k", range: [50000, 100000] as [number, number] },
+        { label: "100k - 500k", range: [100000, 500000] as [number, number] },
+        { label: "500k+", range: [500000, maxPrice] as [number, number] },
+    ];
+
+    const handleQuickRangeSelect = (range: [number, number]) => {
+        setLocalRange(range as [number, number]);
+    };
+
+    const minPercentage = (localRange[0] / maxPrice) * 100;
+    const maxPercentage = (localRange[1] / maxPrice) * 100;
+    const hoverPercentage = hoverValue ? (hoverValue / maxPrice) * 100 : null;
 
     return (
-        <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">
-                Price Range - Up to {RWF.format(priceRange[1])}
-            </h3>
+        <div className="space-y-6 p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Price Range</h3>
 
-            <div className="relative">
-                {/* Hover Tooltip */}
-                {hoverValue !== null && (
-                    <div
-                        className="absolute bottom-full mb-2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded pointer-events-none z-10"
-                        style={{ left: `${(hoverValue / maxPrice) * 100}%` }}
+            {/* Quick Selection Buttons */}
+            <div className="flex flex-wrap gap-2 mb-4">
+                {quickRanges.map((quickRange, index) => (
+                    <button
+                        key={index}
+                        onClick={() => handleQuickRangeSelect(quickRange.range)}
+                        className={`px-3 py-1 text-xs rounded-full border transition-colors ${localRange[0] === quickRange.range[0] && localRange[1] === quickRange.range[1]
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                            }`}
                     >
-                        {RWF.format(hoverValue)}
+                        {quickRange.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Price Inputs */}
+            <div className="flex items-center justify-between gap-4 mb-6">
+                <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Min Price</label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">RWF</span>
+                        <input
+                            type="number"
+                            value={localRange[0]}
+                            onChange={handleMinInputChange}
+                            className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            min="0"
+                            max={localRange[1] - 1000}
+                        />
                     </div>
-                )}
-
-                {/* Slider Track */}
-                <div
-                    className="relative h-2 bg-gray-200 rounded-lg cursor-pointer"
-                    onMouseMove={handleHover}
-                    onMouseLeave={handleMouseLeave}
-                    onMouseDown={handleMouseDown}
-                    onMouseUp={handleMouseUp}
-                >
-                    {/* Filled Track */}
-                    <div
-                        className="absolute h-full bg-blue-600 rounded-lg"
-                        style={{ width: `${percentage}%` }}
-                    />
-
-                    {/* Thumb */}
-                    <div
-                        className="absolute top-1/2 transform -translate-y-1/2 w-4 h-4 bg-blue-600 rounded-full shadow-lg cursor-grab active:cursor-grabbing"
-                        style={{ left: `${percentage}%`, marginLeft: '-8px' }}
-                        onMouseDown={handleMouseDown}
-                    />
+                </div>
+                <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Max Price</label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">RWF</span>
+                        <input
+                            type="number"
+                            value={localRange[1]}
+                            onChange={handleMaxInputChange}
+                            className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            min={localRange[0] + 1000}
+                            max={maxPrice}
+                        />
+                    </div>
                 </div>
             </div>
 
-            <div className="flex justify-between text-sm text-gray-500">
-                <span>Rwf 0</span>
-                <span>Rwf {RWF.format(maxPrice)}</span>
+            {/* Dual Range Slider with Working Dragging */}
+            <div className="relative py-6">
+                {/* Hover Tooltip */}
+                {hoverValue !== null && !isDragging && (
+                    <div
+                        className="absolute bottom-full mb-2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded pointer-events-none z-30 transition-all duration-150"
+                        style={{
+                            left: `${hoverPercentage}%`,
+                        }}
+                    >
+                        {RWF.format(hoverValue)}
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                    </div>
+                )}
+
+                {/* Slider Track Container */}
+                <div
+                    ref={sliderRef}
+                    className="relative h-2 bg-gray-300 rounded-full cursor-pointer"
+                    onMouseMove={handleMouseMoveOnTrack}
+                    onMouseLeave={handleMouseLeave}
+                    onClick={handleTrackClick}
+                >
+                    {/* Selected Range */}
+                    <div
+                        className="absolute h-2 bg-blue-600 rounded-full"
+                        style={{
+                            left: `${minPercentage}%`,
+                            width: `${maxPercentage - minPercentage}%`
+                        }}
+                    />
+
+                    {/* Min Thumb - DRAGGABLE */}
+                    <div
+                        className={`absolute top-1/2 w-5 h-5 bg-blue-600 border-2 border-white rounded-full shadow-lg transform -translate-y-1/2 cursor-grab active:cursor-grabbing transition-all ${activeThumb === 'min' ? 'scale-125 ring-4 ring-blue-200 z-30' : 'hover:scale-110 z-20'
+                            }`}
+                        style={{
+                            left: `${minPercentage}%`,
+                        }}
+                        onMouseDown={handleMouseDown('min')}
+                    />
+
+                    {/* Max Thumb - DRAGGABLE */}
+                    <div
+                        className={`absolute top-1/2 w-5 h-5 bg-blue-600 border-2 border-white rounded-full shadow-lg transform -translate-y-1/2 cursor-grab active:cursor-grabbing transition-all ${activeThumb === 'max' ? 'scale-125 ring-4 ring-blue-200 z-30' : 'hover:scale-110 z-20'
+                            }`}
+                        style={{
+                            left: `${maxPercentage}%`,
+                        }}
+                        onMouseDown={handleMouseDown('max')}
+                    />
+
+                    {/* Active Thumb Tooltip */}
+                    {isDragging && activeThumb && (
+                        <div
+                            className="absolute bottom-full mb-3 transform -translate-x-1/2 bg-blue-600 text-white text-sm py-1 px-3 rounded-lg pointer-events-none z-40 font-semibold shadow-lg"
+                            style={{
+                                left: activeThumb === 'min' ? `${minPercentage}%` : `${maxPercentage}%`
+                            }}
+                        >
+                            {RWF.format(activeThumb === 'min' ? localRange[0] : localRange[1])}
+                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-blue-600"></div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Price Labels */}
+                <div className="flex justify-between text-sm text-gray-600 mt-4">
+                    <span>RWF 0</span>
+                    <span>RWF {RWF.format(maxPrice)}</span>
+                </div>
             </div>
 
-            {/* Current selection display */}
-            <div className="text-center text-xs text-gray-600 bg-blue-50 py-1 rounded">
-                Selected: Up to {RWF.format(priceRange[1])}
+            {/* Selected Range Display */}
+            <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm font-medium text-blue-800">
+                    <strong>Active Filter:</strong> RWF {RWF.format(localRange[0])} - RWF {RWF.format(localRange[1])}
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                    Products will update automatically as you adjust the range
+                </p>
+            </div>
+
+            {/* Clear Filter Button */}
+            {(localRange[0] > 0 || localRange[1] < maxPrice) && (
+                <button
+                    onClick={() => {
+                        const defaultRange: [number, number] = [0, maxPrice];
+                        setLocalRange(defaultRange as [number, number]);
+                    }}
+                    className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                >
+                    Clear Price Filter
+                </button>
+            )}
+
+            {/* Instructions */}
+            <div className="text-xs text-gray-500 text-center">
+                💡 <strong>Drag the blue handles</strong> to adjust prices • Click anywhere on the track to jump • Use inputs for precise control
             </div>
         </div>
     );
@@ -404,8 +607,8 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                         {category.name}
                     </span>
                     <span className={`text-xs px-2 py-1 rounded-full ${categoryType === 'main' ? 'bg-purple-100 text-purple-800' :
-                            categoryType === 'sub' ? 'bg-green-100 text-green-800' :
-                                'bg-blue-100 text-blue-800'
+                        categoryType === 'sub' ? 'bg-green-100 text-green-800' :
+                            'bg-blue-100 text-blue-800'
                         }`}>
                         {categoryType}
                     </span>
@@ -501,49 +704,6 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         );
     };
 
-    // Handle URL category parameter - FIXED DECODING
-    const { category } = useParams<{ category: string }>();
-
-    useEffect(() => {
-        if (category) {
-            try {
-                console.log('URL Category parameter:', category);
-                const decodedCategory = decodeId(category);
-                console.log('Decoded category ID:', decodedCategory);
-
-                if (decodedCategory && !isNaN(decodedCategory)) {
-                    // Auto-select the category and determine its type
-                    const findCategoryInHierarchy = (cats: Category[], targetId: number): { category: Category, type: 'main' | 'sub' | 'product' } | null => {
-                        for (const cat of cats) {
-                            if (cat.id === targetId) return { category: cat, type: 'main' };
-                            if (cat.sub_categories) {
-                                for (const subCat of cat.sub_categories) {
-                                    if (subCat.id === targetId) return { category: subCat, type: 'sub' };
-                                    if (subCat.product_categories) {
-                                        for (const prodCat of subCat.product_categories) {
-                                            if (prodCat.id === targetId) return { category: prodCat, type: 'product' };
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        return null;
-                    };
-
-                    const foundCategory = findCategoryInHierarchy(categories, decodedCategory);
-                    if (foundCategory) {
-                        handleCategorySelect(decodedCategory, foundCategory.type);
-                        console.log(`Auto-selected ${foundCategory.type} category:`, foundCategory.category.name);
-                    } else {
-                        console.warn('Category not found in hierarchy:', decodedCategory);
-                    }
-                }
-            } catch (error) {
-                console.error("Error decoding category:", error);
-            }
-        }
-    }, [category, categories]);
-
     const sidebarContent = (
         <div className="space-y-6">
             <div className="flex items-center justify-between lg:hidden">
@@ -616,7 +776,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 )}
             </div>
 
-            {/* Price Range with Hover Effect */}
+            {/* Fixed Price Range Slider */}
             <PriceRangeSlider
                 priceRange={filters.priceRange}
                 onPriceRangeChange={handlePriceRangeChange}
@@ -741,6 +901,30 @@ const LoadMoreButton: React.FC<LoadMoreButtonProps> = ({ isLoading, hasMore, onC
     );
 };
 
+// Search API function
+const searchProducts = async (query: string, skip: number = 0, limit: number = 100) => {
+    try {
+        const response = await fetch(
+            `${import.meta.env.VITE_API_BASE_URL}/search?query=${encodeURIComponent(query)}&limit=${limit}&skip=${skip}`
+        );
+
+        if (!response.ok) {
+            throw new Error(`Search failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return {
+            products: data.products || [],
+            total_count: data.total_results || 0,
+            corrected_query: data.corrected_query,
+            suggestions: data.suggestions || []
+        };
+    } catch (error) {
+        console.error('Search API error:', error);
+        throw error;
+    }
+};
+
 // Main All Products Page Component
 const AllProductsPage: React.FC = () => {
     const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -752,6 +936,8 @@ const AllProductsPage: React.FC = () => {
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [skip, setSkip] = useState<number>(0);
     const [totalCount, setTotalCount] = useState<number>(0);
+    const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
+    const [correctedQuery, setCorrectedQuery] = useState<string>('');
     const limit: number = 100;
 
     // Default state: no filters, newest first sorting
@@ -768,25 +954,109 @@ const AllProductsPage: React.FC = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // Get URL parameters
+    const [searchParams] = useSearchParams();
+    const categoryParam = searchParams.get('category');
+    const searchParam = searchParams.get('search');
+
+    // Handle category parameter from query string - FIXED VERSION
+    useEffect(() => {
+        if (categoryParam) {
+            console.log('Category query parameter:', categoryParam);
+
+            // Check if it's a main category name from navigation
+            const mainCategoryId = mainCategoryIds[categoryParam];
+            if (mainCategoryId) {
+                console.log('Found main category ID:', mainCategoryId, 'for name:', categoryParam);
+                
+                const newFilters: FilterState = {
+                    main_categories: [mainCategoryId],
+                    sub_categories: [],
+                    product_categories: [],
+                    priceRange: [0, 1000000],
+                    minRating: 0,
+                    inStockOnly: false
+                };
+
+                console.log('Setting filters from main category name:', newFilters);
+                setFilters(newFilters);
+            } else {
+                // Handle encoded category path (existing logic)
+                console.log('Treating as encoded category path');
+                const pathSegments = categoryParam.split('/');
+                console.log('Category path segments:', pathSegments);
+                
+                const decodedSegments = pathSegments.map(segment => {
+                    try {
+                        return decodeId(segment);
+                    } catch (error) {
+                        console.warn('Failed to decode segment:', segment, error);
+                        return segment;
+                    }
+                });
+
+                console.log('Decoded category segments:', decodedSegments);
+                
+                const newFilters: FilterState = {
+                    main_categories: [],
+                    sub_categories: [],
+                    product_categories: [],
+                    priceRange: [0, 1000000],
+                    minRating: 0,
+                    inStockOnly: false
+                };
+
+                // Assign IDs to appropriate filter arrays based on segment position
+                if (decodedSegments.length >= 1) {
+                    const mainCategoryId = Number(decodedSegments[0]);
+                    if (!isNaN(mainCategoryId)) {
+                        newFilters.main_categories = [mainCategoryId];
+                    }
+                }
+                
+                if (decodedSegments.length >= 2) {
+                    const subCategoryId = Number(decodedSegments[1]);
+                    if (!isNaN(subCategoryId)) {
+                        newFilters.sub_categories = [subCategoryId];
+                    }
+                }
+                
+                if (decodedSegments.length >= 3) {
+                    const productCategoryId = Number(decodedSegments[2]);
+                    if (!isNaN(productCategoryId)) {
+                        newFilters.product_categories = [productCategoryId];
+                    }
+                }
+
+                console.log('Setting filters from category path:', newFilters);
+                setFilters(newFilters);
+            }
+        }
+    }, [categoryParam]);
+
+    // Handle search parameter from query string
+    useEffect(() => {
+        if (searchParam) {
+            setSearchQuery(searchParam);
+        }
+    }, [searchParam]);
+
     // Load categories from API with proper hierarchy
     const loadCategories = useCallback(async (): Promise<void> => {
         try {
             setCategoriesLoading(true);
 
-            // Use the hierarchy endpoint from your API
             const hierarchy = await categoryApi.getFullHierarchy();
 
             if (hierarchy && hierarchy.length > 0) {
                 setCategories(hierarchy);
             } else {
-                // Fallback: build hierarchy manually
                 const mainCategories = await categoryApi.getMainCategories();
 
                 if (mainCategories && mainCategories.length > 0) {
                     const hierarchy: Category[] = [];
 
                     for (const mainCat of mainCategories) {
-                        // Get sub categories for this main category
                         const subCategories = await categoryApi.getSubCategories();
                         const filteredSubs = subCategories.filter((sub: any) => sub.main_category_id === mainCat.id);
 
@@ -796,7 +1066,6 @@ const AllProductsPage: React.FC = () => {
                         };
 
                         for (const subCat of filteredSubs) {
-                            // Get product categories for this sub category
                             const productCategories = await categoryApi.getProductCategories();
                             const filteredProducts = productCategories.filter((prod: any) => prod.sub_category_id === subCat.id);
 
@@ -822,8 +1091,7 @@ const AllProductsPage: React.FC = () => {
         }
     }, []);
 
-    // Load products from API - FIXED: Proper query parameter handling
-    // In your AllProductsPage component - replace the loadProducts function
+    // Load products from API - UPDATED to include category filtering
     const loadProducts = useCallback(async (loadMore: boolean = false): Promise<void> => {
         try {
             const currentSkip = loadMore ? skip : 0;
@@ -835,81 +1103,90 @@ const AllProductsPage: React.FC = () => {
                 setSkip(0);
             }
 
-            // Build query parameters as object
-            const params: Record<string, any> = {
-                skip: currentSkip.toString(),
-                limit: limit.toString(),
-            };
+            let response;
 
-            // Add sorting
-            if (currentSort === 'newest') {
-                params.sort_by = 'created_at';
-                params.sort_order = 'desc';
-            } else if (currentSort === 'price-asc') {
-                params.sort_by = 'price';
-                params.sort_order = 'asc';
-            } else if (currentSort === 'price-desc') {
-                params.sort_by = 'price';
-                params.sort_order = 'desc';
-            } else if (currentSort === 'rating') {
-                params.sort_by = 'rating';
-                params.sort_order = 'desc';
-            } else if (currentSort === 'featured') {
-                params.sort_by = 'is_featured';
-                params.sort_order = 'desc';
+            // Use search endpoint if search query exists
+            if (searchQuery.trim()) {
+                console.log('Using search endpoint for query:', searchQuery);
+                response = await searchProducts(searchQuery, currentSkip, limit);
+                setSearchSuggestions(response.suggestions || []);
+                setCorrectedQuery(response.corrected_query || '');
+            } else {
+                // Use regular products endpoint with filters
+                const params: Record<string, any> = {
+                    skip: currentSkip.toString(),
+                    limit: limit.toString(),
+                };
+
+                // Add sorting
+                if (currentSort === 'newest') {
+                    params.sort_by = 'created_at';
+                    params.sort_order = 'desc';
+                } else if (currentSort === 'price-asc') {
+                    params.sort_by = 'price';
+                    params.sort_order = 'asc';
+                } else if (currentSort === 'price-desc') {
+                    params.sort_by = 'price';
+                    params.sort_order = 'desc';
+                } else if (currentSort === 'rating') {
+                    params.sort_by = 'rating';
+                    params.sort_order = 'desc';
+                } else if (currentSort === 'featured') {
+                    params.sort_by = 'is_featured';
+                    params.sort_order = 'desc';
+                }
+
+                // Add category hierarchy filters
+                if (filters.main_categories.length > 0) {
+                    params.main_category_id = filters.main_categories;
+                    console.log('Filtering by main categories:', filters.main_categories);
+                }
+
+                if (filters.sub_categories.length > 0) {
+                    params.sub_category_id = filters.sub_categories;
+                    console.log('Filtering by sub categories:', filters.sub_categories);
+                }
+
+                if (filters.product_categories.length > 0) {
+                    params.product_category_id = filters.product_categories;
+                    console.log('Filtering by product categories:', filters.product_categories);
+                }
+
+                // Add price range filter
+                if (filters.priceRange[1] < 1000000 || filters.priceRange[0] > 0) {
+                    params.price_min = filters.priceRange[0].toString();
+                    params.price_max = filters.priceRange[1].toString();
+                }
+
+                // Add in-stock filter
+                if (filters.inStockOnly) {
+                    params.instock_min = '1';
+                }
+
+                // Add rating filter
+                if (filters.minRating > 0) {
+                    params.rating_min = filters.minRating.toString();
+                }
+
+                console.log('API Request Params with category filtering:', params);
+                response = await productApi.getProducts(currentSkip, limit, params);
             }
-
-            // Add category hierarchy filters
-            if (filters.main_categories.length > 0) {
-                params.main_category_id = filters.main_categories;
-            }
-
-            if (filters.sub_categories.length > 0) {
-                params.sub_category_id = filters.sub_categories;
-            }
-
-            if (filters.product_categories.length > 0) {
-                params.product_category_id = filters.product_categories;
-            }
-
-            // Add price range filter
-            if (filters.priceRange[1] < 1000000) {
-                params.price_min = '0';
-                params.price_max = filters.priceRange[1].toString();
-            }
-
-            // Add in-stock filter
-            if (filters.inStockOnly) {
-                params.instock_min = '1';
-            }
-
-            // Add rating filter
-            if (filters.minRating > 0) {
-                params.rating_min = filters.minRating.toString();
-            }
-
-            // Add search query
-            if (searchQuery) {
-                params.search = searchQuery;
-            }
-
-            console.log('API Request Params:', params);
-
-            // FIXED: Pass params as object
-            const response = await productApi.getProducts(currentSkip, limit, params);
 
             const newProducts: Product[] = response.products || [];
             const total = response.total_count || 0;
 
-            console.log('API Response:', {
+            console.log('API Response with category filter:', {
                 productsCount: newProducts.length,
                 totalCount: total,
                 hasMore: newProducts.length === limit,
                 currentSkip,
+                isSearch: !!searchQuery.trim(),
+                categoryParam,
                 filtersApplied: {
                     main: filters.main_categories.length,
                     sub: filters.sub_categories.length,
-                    product: filters.product_categories.length
+                    product: filters.product_categories.length,
+                    priceRange: filters.priceRange
                 }
             });
 
@@ -935,7 +1212,7 @@ const AllProductsPage: React.FC = () => {
             setInitialLoading(false);
             setLoadingMore(false);
         }
-    }, [skip, limit, filters, currentSort, searchQuery]);
+    }, [skip, limit, filters, currentSort, searchQuery, categoryParam]);
 
     // Initial data load
     useEffect(() => {
@@ -949,6 +1226,7 @@ const AllProductsPage: React.FC = () => {
 
     // Reload products when filters, sort, or search change
     useEffect(() => {
+        console.log('Filters changed, reloading products:', filters);
         setAllProducts([]);
         setHasMore(true);
         loadProducts(false);
@@ -960,12 +1238,12 @@ const AllProductsPage: React.FC = () => {
         await loadProducts(true);
     }, [loadingMore, hasMore, loadProducts]);
 
-    // Filter and sort products
+    // Filter and sort products (client-side fallback)
     const filteredAndSortedProducts = useMemo(() => {
         let filtered = [...allProducts];
 
-        // Apply client-side filtering for better UX
-        if (filters.priceRange[1] < 1000000) {
+        // Apply client-side filtering as fallback
+        if (filters.priceRange[1] < 1000000 || filters.priceRange[0] > 0) {
             filtered = filtered.filter(product => {
                 const productPrice = product.price || 0;
                 return productPrice >= filters.priceRange[0] && productPrice <= filters.priceRange[1];
@@ -981,13 +1259,6 @@ const AllProductsPage: React.FC = () => {
         if (filters.inStockOnly) {
             filtered = filtered.filter(product =>
                 (product.instock || 0) > 0
-            );
-        }
-
-        if (searchQuery) {
-            filtered = filtered.filter(product =>
-                product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                product.description.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
 
@@ -1030,9 +1301,53 @@ const AllProductsPage: React.FC = () => {
             filters.minRating > 0 ||
             filters.inStockOnly ||
             searchQuery ||
-            filters.priceRange[1] < 1000000
+            filters.priceRange[1] < 1000000 ||
+            filters.priceRange[0] > 0
         );
     }, [filters, searchQuery]);
+
+    // Handle search input change
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
+    };
+
+    // Get category display name for title
+    const getCategoryDisplayName = () => {
+        if (categoryParam) {
+            // Check if it's a main category name
+            if (mainCategoryIds[categoryParam]) {
+                return categoryParam; // Return the category name directly
+            }
+
+            try {
+                const pathSegments = categoryParam.split('/');
+                const decodedSegments = pathSegments.map(segment => {
+                    try {
+                        return decodeId(segment);
+                    } catch {
+                        return segment;
+                    }
+                });
+
+                // Get category names from your categories data
+                const getCategoryName = (id: number): string => {
+                    const category = categories.find(cat => cat.id === id);
+                    return category?.name || `Category ${id}`;
+                };
+
+                if (decodedSegments.length === 1) {
+                    return getCategoryName(Number(decodedSegments[0]));
+                } else if (decodedSegments.length === 2) {
+                    return `${getCategoryName(Number(decodedSegments[0]))} → ${getCategoryName(Number(decodedSegments[1]))}`;
+                } else if (decodedSegments.length >= 3) {
+                    return `${getCategoryName(Number(decodedSegments[0]))} → ${getCategoryName(Number(decodedSegments[1]))} → ${getCategoryName(Number(decodedSegments[2]))}`;
+                }
+            } catch (error) {
+                console.error('Error getting category display name:', error);
+            }
+        }
+        return 'Category';
+    };
 
     return (
         <>
@@ -1058,10 +1373,27 @@ const AllProductsPage: React.FC = () => {
                             <div className="max-w-full mx-auto">
                                 <div className="flex items-center justify-between mb-4">
                                     <div>
-                                        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">All Products</h1>
+                                        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                                            {searchQuery
+                                                ? `Search Results for "${searchQuery}"`
+                                                : categoryParam
+                                                    ? `Products in ${getCategoryDisplayName()}`
+                                                    : 'All Products'
+                                            }
+                                        </h1>
                                         <p className="text-gray-600 mt-1">
-                                            Discover amazing products from verified sellers
+                                            {searchQuery
+                                                ? `Found ${totalCount} products matching your search`
+                                                : categoryParam
+                                                    ? `Browse ${totalCount} products in ${getCategoryDisplayName()}`
+                                                    : 'Discover amazing products from verified sellers'
+                                            }
                                         </p>
+                                        {correctedQuery && (
+                                            <p className="text-sm text-blue-600 mt-1">
+                                                Did you mean: <strong>{correctedQuery}</strong>?
+                                            </p>
+                                        )}
                                     </div>
                                     <button
                                         onClick={() => setIsFilterOpen(true)}
@@ -1079,7 +1411,7 @@ const AllProductsPage: React.FC = () => {
                                         type="text"
                                         placeholder="Search products..."
                                         value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onChange={handleSearchChange}
                                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     />
                                 </div>
@@ -1105,6 +1437,8 @@ const AllProductsPage: React.FC = () => {
                                                     inStockOnly: false
                                                 });
                                                 setSearchQuery('');
+                                                setCorrectedQuery('');
+                                                setSearchSuggestions([]);
                                             }}
                                             className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
                                         >
@@ -1123,7 +1457,7 @@ const AllProductsPage: React.FC = () => {
                         <div className="px-4 lg:px-8 py-8">
                             <div className="max-w-full mx-auto">
                                 {initialLoading && allProducts.length === 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
                                         {[...Array(12)].map((_, index) => (
                                             <SkeletonLoader key={index} />
                                         ))}
@@ -1131,10 +1465,7 @@ const AllProductsPage: React.FC = () => {
                                 ) : filteredAndSortedProducts.length > 0 ? (
                                     <>
                                         <motion.div
-                                            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{ duration: 0.5 }}
+                                            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 gap-8"
                                         >
                                             {filteredAndSortedProducts.map((product, index) => (
                                                 <ProductCard
@@ -1188,6 +1519,8 @@ const AllProductsPage: React.FC = () => {
                                                         inStockOnly: false
                                                     });
                                                     setSearchQuery('');
+                                                    setCorrectedQuery('');
+                                                    setSearchSuggestions([]);
                                                 }}
                                                 className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                                             >

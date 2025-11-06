@@ -82,7 +82,10 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/product/:productId" element={<ViewProductDetails />} />
-            <Route path="/products/:category" element={<AllProducts />} />
+            <Route path="/products/category/:category" element={<AllProducts />} />
+            <Route path="/products/search/:search" element={<AllProducts />} />
+            <Route path="/products/search" element={<AllProducts />} />
+            <Route path="/products" element={<AllProducts />} />
             <Route path="/products/" element={<AllProducts />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/shopping-cart" element={<ShoppingCart />} />
@@ -92,7 +95,7 @@ export default function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route
               path="/authentication"
-              element={getUserInfo ? <HomePage /> :  <AnimatedLoginPage />}
+              element={getUserInfo ? <HomePage /> : <AnimatedLoginPage />}
             />
             <Route
               path="/admin-dashboard"

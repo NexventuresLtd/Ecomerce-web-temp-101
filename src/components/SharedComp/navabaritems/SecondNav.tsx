@@ -1,6 +1,7 @@
 import { Database, Search, User, X } from 'lucide-react';
 import UserInfo from './UserInfo';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { SearchResults } from './search';
 import { useNavigation } from '../../../hooks/product/useNavigation';
@@ -16,9 +17,11 @@ interface SecondNavProps {
 export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown }: SecondNavProps) {
     const [query, setQuery] = useState('');
     const [allProducts, setAllProducts] = useState<Product[]>([]);
+    const [showSearchResults, setShowSearchResults] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [useDatabaseSearch, setUseDatabaseSearch] = useState<boolean>(false);
+    const navigate = useNavigate();
     console.log(error)
     const { navigateToProduct } = useNavigation();
 
@@ -27,7 +30,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
         const loadProducts = async () => {
             try {
                 setLoading(true);
-                const response = await productApi.getProducts(0, 100); // Load first 100 products for search
+                const response = await productApi.getProducts(0, 200); // Load first 200 products for search
                 const products: Product[] = response.products || response;
                 setAllProducts(products);
             } catch (err: any) {
@@ -43,9 +46,9 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
     const handleProductSelect = (product: Product) => {
         setQuery(product.title);
         setActiveDropdown(null);
+        setShowSearchResults(false); // Close search results
         navigateToProduct(product.id.toString());
     };
-
     const clearSearch = () => {
         setQuery('');
     };
@@ -55,9 +58,40 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
     };
 
     const handleSearch = () => {
-        // Add your search logic here
-        console.log('Searching for:', query);
-        // You can trigger the search functionality here
+        if (query.trim()) {
+            navigate(`/products/search/${encodeURIComponent(query.trim())}`);
+            setActiveDropdown(null);
+            setIsMenuOpen(false);
+            setShowSearchResults(false); // Close search results
+        }
+    };
+    useEffect(() => {
+        if (query.trim() && !loading) {
+            setShowSearchResults(true);
+        } else {
+            setShowSearchResults(false);
+        }
+    }, [query, loading]);
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            if (!target.closest('.search-container')) {
+                setShowSearchResults(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+    
+
+    // Handle Enter key press in search input
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
     };
 
     return (
@@ -69,7 +103,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                         <div className="flex-shrink-0 cursor-pointer" onClick={() => window.location.href = "/"}>
                             <div className="px-4 py-3">
                                 <div className="text-transparent uppercase bg-clip-text bg-black font-extrabold text-3xl leading-tight h-22 w-22 overflow-hidden">
-                                 <img src="/Umukamezilogo.jpg" className='w-full h-full object- scale-120' alt=""  />   
+                                    <img src="/Umukamezilogo.jpg" className='w-full h-full object- scale-120' alt="" />
                                 </div>
                             </div>
                         </div>
@@ -90,8 +124,10 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                     <input
                                         type="text"
+                                        onFocus={() => query.trim() && setShowSearchResults(true)}
                                         value={query}
                                         onChange={(e) => setQuery(e.target.value)}
+                                        onKeyPress={handleKeyPress}
                                         placeholder="Search for products..."
                                         className="w-full pl-10 pr-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-lg"
                                     />
@@ -104,25 +140,28 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                                         </button>
                                     )}
                                 </div>
-                                
+
                                 {/* Separate Search Button */}
                                 <button
                                     onClick={handleSearch}
-                                    className="bg-third cursor-pointer text-white px-6 py-3 rounded-lg  transition-colors duration-200 flex items-center justify-center"
+                                    disabled={!query.trim()}
+                                    className={`px-6 py-3 rounded-lg transition-colors duration-200 flex items-center justify-center ${query.trim()
+                                        ? 'bg-third cursor-pointer text-white hover:bg-third/90'
+                                        : 'bg-gray-300 cursor-not-allowed text-gray-500'
+                                        }`}
                                 >
                                     <Search className="w-5 h-5" />
                                 </button>
                             </div>
-                            
+
                             {/* Database Search Toggle Button - Moved below search bar */}
                             <div className="mt-2 flex justify-end hidden">
                                 <button
                                     onClick={() => setUseDatabaseSearch(!useDatabaseSearch)}
-                                    className={`flex items-center gap-2 px-3 py-1 rounded text-sm ${
-                                        useDatabaseSearch 
-                                            ? 'bg-secondary text-white' 
-                                            : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                                    }`}
+                                    className={`flex items-center gap-2 px-3 py-1 rounded text-sm ${useDatabaseSearch
+                                        ? 'bg-secondary text-white'
+                                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                                        }`}
                                     title={useDatabaseSearch ? 'Searching from database' : 'Search from database'}
                                 >
                                     <Database className="w-4 h-4" />
@@ -139,7 +178,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
             <div className="max-w-11/12 mx-auto">
                 <div className="relative">
                     {/* Search Results Dropdown */}
-                    {!loading && (
+                    {showSearchResults && !loading && (
                         <SearchResults
                             query={query}
                             products={allProducts}
