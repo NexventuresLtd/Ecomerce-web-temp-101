@@ -158,14 +158,14 @@ const BasicInfoStep: React.FC<{
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Original Price (RWF)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Old Price (RWF)</label>
                                 <input
                                     type="number"
                                     name="original_price"
                                     value={formData.original_price}
                                     onChange={handleChange}
                                     className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Enter original price"
+                                    placeholder="Enter old price"
                                     disabled={loading}
                                 />
                                 {formData.original_price && (

@@ -24,7 +24,7 @@ const HomePage = () => {
       const newProducts = response.products || response;
       setAllProducts(prev => [...prev, ...newProducts]);
       setSkip(prev => prev + limit);
-      
+
       // If we get fewer products than requested, we've reached the end
       if (newProducts.length < limit) {
         setHasMore(false);
@@ -67,6 +67,7 @@ const HomePage = () => {
           <>
             {featuredProducts.length > 0 &&
               <Offers
+                bg="bg-white"
                 title="Featured Products"
                 subtitle="Our handpicked selection of premium items just for you"
                 showLoadMore={false}
@@ -74,6 +75,7 @@ const HomePage = () => {
               />}
 
             {topPicks.length > 0 && <Offers
+              bg="bg-gray-100"
               title="Top Picks"
               subtitle="Our customers' top picks just for you"
               showLoadMore={false}
@@ -81,6 +83,7 @@ const HomePage = () => {
             />
             }
             {latestProducts.length > 0 && <Offers
+              bg="bg-slate-100"
               title="Latest Products"
               subtitle="Don't miss out on our newest arrivals"
               showLoadMore={true}

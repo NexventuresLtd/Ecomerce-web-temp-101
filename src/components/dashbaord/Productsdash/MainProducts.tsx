@@ -13,6 +13,16 @@ import type { Product } from '../../../types/Product/NewProductDataDash';
 import ProductForm from './ViewAllProducts/ProductForm';
 import ProductDetailView from './ViewAllProducts/ProductDetailView';
 
+// Filter Types
+interface FilterState {
+    categories: string[];
+    priceRange: [number, number];
+    minRating: number;
+    inStockOnly: boolean;
+}
+
+// Sort Types
+type SortOption = 'price-asc' | 'price-desc' | 'newest' | 'rating' | 'featured';
 
 // Main Product Management Component
 const ProductManagement: React.FC = () => {
@@ -24,49 +34,84 @@ const ProductManagement: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [entriesPerPage, setEntriesPerPage] = useState(10);
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'id', direction: 'desc' });
+    
+    // Database pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
     const [hasMore, setHasMore] = useState(true);
-    const [skip, setSkip] = useState(0);
-    const limit = 100;
 
-    const fetchProducts = useCallback(async () => {
-        // Prevent multiple simultaneous calls
-        if (!hasMore || loading) return;
+    // Filter state
+    const [filters, setFilters] = useState<FilterState>({
+        categories: [],
+        priceRange: [0, 1000000],
+        minRating: 0,
+        inStockOnly: false
+    });
 
-        if (skip == 0) setLoading(true);
+    const [currentSort, setCurrentSort] = useState<SortOption>('newest');
+
+    const fetchProducts = useCallback(async (page: number = 1) => {
+        setLoading(true);
+        
         try {
-            const currentSkip = skip; // snapshot current skip to prevent race condition
-            const response = await mainAxios.get(`/products/?skip=${currentSkip}&limit=${limit}`);
-            const newData = response.data;
-
-            if (newData.length < limit) setHasMore(false);
-
-            // Avoid duplicates by filtering new ones
-            setProducts(prev => {
-                const existingIds = new Set(prev.map(p => p.id));
-                const filtered = newData.filter((p: any) => !existingIds.has(p.id));
-                return [...prev, ...filtered];
+            const skip = (page - 1) * entriesPerPage;
+            
+            // Build query parameters based on filters and pagination
+            const queryParams = new URLSearchParams({
+                skip: skip.toString(),
+                limit: entriesPerPage.toString(),
+                sort_by: currentSort === 'newest' ? 'created_at' : 
+                        currentSort === 'price-asc' ? 'price' :
+                        currentSort === 'price-desc' ? 'price' : 'created_at',
+                sort_order: currentSort === 'price-desc' ? 'desc' : 'asc'
             });
 
-            setSkip(prev => prev + limit);
+            // Add price range filter
+            if (filters.priceRange[1] < 1000000) {
+                queryParams.append('price_min', '0');
+                queryParams.append('price_max', filters.priceRange[1].toString());
+            }
+
+            // Add in-stock filter
+            if (filters.inStockOnly) {
+                queryParams.append('instock_min', '1');
+            }
+
+            // Add rating filter
+            if (filters.minRating > 0) {
+                queryParams.append('rating_min', filters.minRating.toString());
+            }
+
+            // Add search query
+            if (searchTerm) {
+                queryParams.append('search', searchTerm);
+            }
+
+            const response = await mainAxios.get(`/products/?${queryParams.toString()}`);
+            const responseData = response.data;
+            
+            const newProducts = responseData.products || [];
+            const total = responseData.total_count || 0;
+
+            setProducts(newProducts);
+            setTotalCount(total);
+            setHasMore(skip + newProducts.length < total);
+            
         } catch (error) {
             console.error("Error fetching products:", error);
         } finally {
             setLoading(false);
         }
-    }, [skip, hasMore, loading]);
+    }, [entriesPerPage, filters, currentSort, searchTerm]);
+
+    // Load products when filters, sort, search, or page changes
+    useEffect(() => {
+        setCurrentPage(1); // Reset to first page when filters change
+    }, [filters, currentSort, searchTerm, entriesPerPage]);
 
     useEffect(() => {
-        fetchProducts(); // initial fetch
-
-        const interval = setInterval(() => {
-            if (hasMore && !loading) {
-                fetchProducts();
-            }
-        }, 100); // background fetch every 1 second
-
-        return () => clearInterval(interval);
-    }, [fetchProducts, hasMore, loading]);
-
+        fetchProducts(currentPage);
+    }, [currentPage, fetchProducts]);
 
     const handleSort = (key: string) => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -76,13 +121,8 @@ const ProductManagement: React.FC = () => {
         setSortConfig({ key, direction });
     };
 
-    const filteredProducts = products.filter(product =>
-        product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category?.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const sortedProducts = [...filteredProducts].sort((a, b) => {
+    // Apply client-side sorting only (filtering is done server-side)
+    const sortedProducts = [...products].sort((a, b) => {
         if (!sortConfig) return 0;
 
         const aValue = a[sortConfig.key as keyof Product];
@@ -94,8 +134,6 @@ const ProductManagement: React.FC = () => {
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
     });
-
-    // const displayedProducts = sortedProducts.slice(0, entriesPerPage);
 
     const formatRWF = (amount: number) => {
         return new Intl.NumberFormat('rw-RW', {
@@ -111,7 +149,8 @@ const ProductManagement: React.FC = () => {
 
         try {
             await mainAxios.delete(`/products/${id}`);
-            await fetchProducts();
+            // Reload current page after deletion
+            await fetchProducts(currentPage);
         } catch (error) {
             console.error('Error deleting product:', error);
         }
@@ -125,23 +164,15 @@ const ProductManagement: React.FC = () => {
             <ChevronUp size={14} className="text-blue-600" /> :
             <ChevronDown size={14} className="text-blue-600" />;
     };
-    // Add these state variables at the top of your ProductManagement component
-    const [currentPage, setCurrentPage] = useState(1);
 
-    // Calculate total pages
-    const totalPages = Math.ceil(filteredProducts.length / entriesPerPage);
+    // Calculate total pages for database pagination
+    const totalPages = Math.ceil(totalCount / entriesPerPage);
 
-    // Update displayedProducts calculation to use pagination
-    const startIndex = (currentPage - 1) * entriesPerPage;
-    const endIndex = startIndex + entriesPerPage;
-    const displayedProducts = sortedProducts.slice(startIndex, endIndex);
-
-    // Reset to page 1 when search term changes or entries per page changes
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchTerm, entriesPerPage]);
-
-    // Your table and footer code here...
+    // Check if any filters are active
+    const hasActiveFilters = filters.categories.length > 0 ||
+        filters.minRating > 0 ||
+        filters.inStockOnly ||
+        filters.priceRange[1] < 1000000;
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
@@ -162,16 +193,32 @@ const ProductManagement: React.FC = () => {
                                 onChange={(e) => setEntriesPerPage(Number(e.target.value))}
                                 className="bg-white border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             >
-                                {Array.from({ length: 500 }, (_, i) => i + 1).map(num => (
-                                    <option key={num} value={num * 10}>{num * 10}</option>
-                                ))}
+                                <option value={10}>10</option>
+                                <option value={25}>25</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
                             </select>
                             <span className="text-gray-700 text-sm font-medium">entries</span>
                         </div>
 
                         <div className="text-sm text-gray-600 bg-blue-50 px-3 py-2 rounded-lg">
-                            Total: <span className="font-semibold text-blue-700">{filteredProducts.length}</span> products
+                            Total: <span className="font-semibold text-blue-700">{totalCount}</span> products
                         </div>
+
+                        {/* Filter Status */}
+                        {hasActiveFilters && (
+                            <button
+                                onClick={() => setFilters({
+                                    categories: [],
+                                    priceRange: [0, 1000000],
+                                    minRating: 0,
+                                    inStockOnly: false
+                                })}
+                                className="text-sm text-blue-600 hover:text-blue-800 transition-colors bg-blue-50 px-3 py-2 rounded-lg"
+                            >
+                                Clear Filters
+                            </button>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -187,6 +234,20 @@ const ProductManagement: React.FC = () => {
                                 className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 bg-white"
                             />
                         </div>
+                        
+                        {/* Sort Dropdown */}
+                        <select
+                            value={currentSort}
+                            onChange={(e) => setCurrentSort(e.target.value as SortOption)}
+                            className="bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="newest">Newest First</option>
+                            <option value="featured">Featured</option>
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                            {/* <option value="rating">Highest Rated</option> */}
+                        </select>
+
                         <button
                             onClick={() => setShowAddForm(true)}
                             className="bg-primary text-white px-5 py-2.5 rounded-lg flex items-center gap-2 hover:from-blue-700 hover:to-blue-800 transition-all duration-200 text-sm font-medium"
@@ -196,20 +257,95 @@ const ProductManagement: React.FC = () => {
                         </button>
                     </div>
                 </div>
+
+                {/* Advanced Filters */}
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Price Range Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Max Price: {formatRWF(filters.priceRange[1])}
+                        </label>
+                        <input
+                            type="range"
+                            min="0"
+                            max="1000000"
+                            step="10000"
+                            value={filters.priceRange[1]}
+                            onChange={(e) => setFilters(prev => ({
+                                ...prev,
+                                priceRange: [0, Number(e.target.value)]
+                            }))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>Rwf 0</span>
+                            <span>Rwf 1M</span>
+                        </div>
+                    </div>
+
+                    {/* Rating Filter */}
+                    <div className='hidden'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Min Rating
+                        </label>
+                        <select
+                            value={filters.minRating}
+                            onChange={(e) => setFilters(prev => ({
+                                ...prev,
+                                minRating: Number(e.target.value)
+                            }))}
+                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value={0}>Any Rating</option>
+                            <option value={4}>4★ & above</option>
+                            <option value={3}>3★ & above</option>
+                            <option value={2}>2★ & above</option>
+                            <option value={1}>1★ & above</option>
+                        </select>
+                    </div>
+
+                    {/* Stock Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Stock Status
+                        </label>
+                        <select
+                            value={filters.inStockOnly ? 'in_stock' : 'all'}
+                            onChange={(e) => setFilters(prev => ({
+                                ...prev,
+                                inStockOnly: e.target.value === 'in_stock'
+                            }))}
+                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="all">All Products</option>
+                            <option value="in_stock">In Stock Only</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             {/* Table Container */}
-
-            <ViewProdTable SortIcon={SortIcon} loading={loading}
-                displayedProducts={displayedProducts}
-                handleSort={handleSort} setCurrentPage={setCurrentPage}
+            <ViewProdTable 
+                SortIcon={SortIcon} 
+                loading={loading}
+                displayedProducts={sortedProducts}
+                handleSort={handleSort} 
+                setCurrentPage={setCurrentPage}
                 setViewingProduct={setViewingProduct}
-                setEditingProduct={setEditingProduct} handleDelete={handleDelete}
-                formatRWF={formatRWF} searchTerm={searchTerm} products={products}
-                filteredProducts={filteredProducts} currentPage={currentPage}
-                entriesPerPage={entriesPerPage} totalPages={totalPages} hasMore={hasMore}
+                setEditingProduct={setEditingProduct} 
+                handleDelete={handleDelete}
+                formatRWF={formatRWF} 
+                searchTerm={searchTerm} 
+                products={products}
+                filteredProducts={products} 
+                currentPage={currentPage}
+                entriesPerPage={entriesPerPage} 
+                totalPages={totalPages} 
+                hasMore={hasMore}
                 setShowAddForm={setShowAddForm}
+                totalCount={totalCount}
             />
+
             {/* Add/Edit Product Form */}
             <AnimatePresence>
                 {(showAddForm || editingProduct) && (
@@ -220,16 +356,10 @@ const ProductManagement: React.FC = () => {
                             setEditingProduct(null);
                         }}
                         onSave={async () => {
-                            setProducts([]);      // clear old products
-                            setSkip(0);           // reset pagination
-                            setHasMore(true);
-                            setLoading(false);
-                            await new Promise(res => setTimeout(res, 100)); // small delay to let state settle
-                            await fetchProducts(); // now this will start from 0
+                            // Reload current page after save
+                            await fetchProducts(currentPage);
                             setShowAddForm(false);
                             setEditingProduct(null);
-
-
                         }}
                         formatRWF={formatRWF}
                     />

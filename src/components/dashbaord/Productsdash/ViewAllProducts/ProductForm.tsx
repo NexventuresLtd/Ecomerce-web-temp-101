@@ -13,12 +13,11 @@ import {
 } from 'lucide-react';
 import mainAxios from '../../../../Instance/mainAxios';
 import { categoryApi } from '../../../../app/dashcategory/category';
-import type { CategoryHierarchy, Product } from '../../../../types/Product/NewProductDataDash';
+import type { CategoryHierarchy, Product, ProductImage } from '../../../../types/Product/NewProductDataDash';
 import BasicInfoStep from './BasicInfoStep';
 import MediaAndTagsStep from './MediaAndTagsStep';
 import ColorsStep from './ColorStep';
 import ImagesStep from './ImagesStep';
-
 
 const ProductForm: React.FC<{
     product?: Product;
@@ -57,8 +56,11 @@ const ProductForm: React.FC<{
         features: product?.features || [],
         colors: product?.colors || [],
         images: [] as File[],
-        existing_images: product?.images || []
+        existing_images: product?.images || [] as ProductImage[]
     });
+
+    // Track original existing images to detect changes
+    const [originalExistingImages, setOriginalExistingImages] = useState<ProductImage[]>([]);
 
     useEffect(() => {
         const loadCategories = async () => {
@@ -94,11 +96,19 @@ const ProductForm: React.FC<{
         loadCategories();
     }, [product]);
 
+    // Initialize original existing images when product loads
+    useEffect(() => {
+        if (product?.images) {
+            setOriginalExistingImages([...product.images]);
+        }
+    }, [product]);
+
     const handleSubmit = async () => {
         setLoading(true);
         try {
             const submitData = new FormData();
 
+            // Basic fields
             submitData.append('title', formData.title);
             submitData.append('description', formData.description);
             submitData.append('price', formData.price.toString());
@@ -108,6 +118,7 @@ const ProductForm: React.FC<{
             submitData.append('is_featured', formData.is_featured.toString());
             submitData.append('is_active', formData.is_active.toString());
 
+            // Optional fields
             if (formData.original_price) submitData.append('original_price', formData.original_price.toString());
             if (formData.discount) submitData.append('discount', formData.discount.toString());
             if (formData.delivery_fee) submitData.append('delivery_fee', formData.delivery_fee);
@@ -116,23 +127,56 @@ const ProductForm: React.FC<{
             if (formData.warranty) submitData.append('warranty', formData.warranty);
             if (formData.tutorial_video) submitData.append('tutorial_video', formData.tutorial_video);
 
+            // JSON fields
             if (formData.tags.length > 0) submitData.append('tags', JSON.stringify(formData.tags));
             if (formData.features.length > 0) submitData.append('features', JSON.stringify(formData.features));
             if (formData.colors.length > 0) submitData.append('colors', JSON.stringify(formData.colors));
 
-            formData.images.forEach((image) => {
-                submitData.append('images', image);
-            });
-
-            if (product) {
-                submitData.append('keep_existing_images', 'true');
+            // Handle new images
+            if (formData.images && formData.images.length > 0) {
+                formData.images.forEach((image: File) => {
+                    submitData.append('images', image);
+                });
             }
 
             if (product) {
+                // For updates, always keep existing images
+                submitData.append('keep_existing_images', 'true');
+                
+                // Send existing images data to update primary image status
+                if (formData.existing_images && formData.existing_images.length > 0) {
+                    submitData.append('existing_images_data', JSON.stringify(formData.existing_images));
+                }
+
+                // First update the product with basic info and new images
                 await mainAxios.put(`/products/${product.id}`, submitData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
+
+                // Check if primary image changed in existing images
+                if (formData.existing_images && formData.existing_images.length > 0) {
+                    const currentPrimaryIndex = formData.existing_images.findIndex((img: ProductImage) => img.is_primary);
+                    const originalPrimaryIndex = originalExistingImages.findIndex((img: ProductImage) => img.is_primary);
+                    
+                    console.log('Primary image check:', {
+                        currentPrimaryIndex,
+                        originalPrimaryIndex,
+                        currentImages: formData.existing_images,
+                        originalImages: originalExistingImages
+                    });
+
+                    // Only update primary image if it actually changed
+                    if (currentPrimaryIndex !== -1 && currentPrimaryIndex !== originalPrimaryIndex) {
+                        console.log('Updating primary image to index:', currentPrimaryIndex);
+                        // Use the backend endpoint to set primary image with query parameter
+                        await mainAxios.patch(`/products/${product.id}/images/set-primary?image_index=${currentPrimaryIndex}`);
+                    } else {
+                        console.log('Primary image did not change, skipping update');
+                    }
+                }
+
             } else {
+                // For new products
                 await mainAxios.post('/products', submitData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
@@ -276,31 +320,11 @@ const ProductForm: React.FC<{
                                 )}
                             </button>
                         )}
-                        {step != 4 &&
-
-                            <button
-                                onClick={handleSubmit}
-                                disabled={loading || (!product && formData.images.length === 0)}
-                                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors font-medium"
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader className="animate-spin" size={20} />
-                                        {product ? 'Updating...' : 'Creating...'}
-                                    </>
-                                ) : (
-                                    <>
-                                        <Check size={20} />
-                                        {product ? 'Update Product' : 'Create Product'}
-                                    </>
-                                )}
-                            </button>
-                        }
-
                     </div>
                 </div>
             </motion.div>
         </div>
     );
 };
+
 export default ProductForm;

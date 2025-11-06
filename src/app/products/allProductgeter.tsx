@@ -3,8 +3,9 @@ import type { Product } from "../../types/Product/producttypeAdmin";
 
 // API service functions
 export const productApi = {
-    getProducts: async (skip = 0, limit = 100) => {
-        const response = await mainAxios.get(`/products?skip=${skip}&limit=${limit}`);
+   getProducts: async (skip = 0, limit = 100, queryParams = '') => {
+        const url = `/products?skip=${skip}&limit=${limit}${queryParams ? `&${queryParams}` : ''}`;
+        const response = await mainAxios.get(url);
         return response.data;
     },
 
@@ -162,6 +163,7 @@ export const productApi = {
 
     setPrimaryImage: async (productId: number, imageIndex: number) => {
         const response = await mainAxios.patch(`/products/${productId}/images/set-primary?image_index=${imageIndex}`);
+        
         return response.data;
     }
 };

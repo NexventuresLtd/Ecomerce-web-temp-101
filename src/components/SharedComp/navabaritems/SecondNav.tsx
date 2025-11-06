@@ -54,6 +54,12 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
         setUseDatabaseSearch(useDatabase);
     };
 
+    const handleSearch = () => {
+        // Add your search logic here
+        console.log('Searching for:', query);
+        // You can trigger the search functionality here
+    };
+
     return (
         <>
             <div className="bg-white border-b border-gray-200" onMouseEnter={() => setActiveDropdown(null)}>
@@ -79,19 +85,40 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
 
                         {/* Search Bar */}
                         <div className={`${isMenuOpen ? 'max-xl:hidden' : ''} flex-1 max-w-4xl mx-4`}>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                <input
-                                    type="text"
-                                    value={query}
-                                    onChange={(e) => setQuery(e.target.value)}
-                                    placeholder="Search for products..."
-                                    className="w-full pl-10 pr-20 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-lg"
-                                />
-                                {/* Database Search Toggle Button */}
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                    <input
+                                        type="text"
+                                        value={query}
+                                        onChange={(e) => setQuery(e.target.value)}
+                                        placeholder="Search for products..."
+                                        className="w-full pl-10 pr-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-lg"
+                                    />
+                                    {query && (
+                                        <button
+                                            onClick={clearSearch}
+                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    )}
+                                </div>
+                                
+                                {/* Separate Search Button */}
+                                <button
+                                    onClick={handleSearch}
+                                    className="bg-third cursor-pointer text-white px-6 py-3 rounded-lg  transition-colors duration-200 flex items-center justify-center"
+                                >
+                                    <Search className="w-5 h-5" />
+                                </button>
+                            </div>
+                            
+                            {/* Database Search Toggle Button - Moved below search bar */}
+                            <div className="mt-2 flex justify-end hidden">
                                 <button
                                     onClick={() => setUseDatabaseSearch(!useDatabaseSearch)}
-                                    className={`absolute flex items-center gap-2 right-10 top-1/2 transform -translate-y-1/2 p-1 rounded ${
+                                    className={`flex items-center gap-2 px-3 py-1 rounded text-sm ${
                                         useDatabaseSearch 
                                             ? 'bg-secondary text-white' 
                                             : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
@@ -99,16 +126,8 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                                     title={useDatabaseSearch ? 'Searching from database' : 'Search from database'}
                                 >
                                     <Database className="w-4 h-4" />
-                                    Search
+                                    Database Search
                                 </button>
-                                {query && (
-                                    <button
-                                        onClick={clearSearch}
-                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                    >
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                )}
                             </div>
                         </div>
 

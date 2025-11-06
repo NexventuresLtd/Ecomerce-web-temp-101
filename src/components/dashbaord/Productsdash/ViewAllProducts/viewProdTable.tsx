@@ -18,12 +18,19 @@ interface ViewModalProps {
     entriesPerPage: number;
     totalPages: number;
     hasMore: boolean;
+    totalCount: number;
 }
+
 const ViewProdTable = ({
     SortIcon, loading, displayedProducts, handleSort, setCurrentPage, setViewingProduct,
-    setEditingProduct, handleDelete, formatRWF, searchTerm, products, filteredProducts, currentPage, entriesPerPage, totalPages, setShowAddForm
-
+    setEditingProduct, handleDelete, formatRWF, searchTerm, currentPage, 
+    entriesPerPage, totalPages, setShowAddForm, totalCount
 }: ViewModalProps) => {
+    
+    // Calculate display range for database pagination
+    const startIndex = (currentPage - 1) * entriesPerPage + 1;
+    const endIndex = Math.min(currentPage * entriesPerPage, totalCount);
+
     return (
         <>
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -63,8 +70,8 @@ const ViewProdTable = ({
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                             Status
                                         </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                            Brock
+                                        <th className="px-6 hidden py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                            Rating
                                         </th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                             Category
@@ -77,7 +84,7 @@ const ViewProdTable = ({
                                 <tbody className="bg-white divide-y divide-gray-100">
                                     {displayedProducts.length === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="px-6 py-16 text-center">
+                                            <td colSpan={8} className="px-6 py-16 text-center">
                                                 <div className="flex flex-col items-center justify-center">
                                                     <Package size={64} className="text-gray-300 mb-4" />
                                                     <p className="text-gray-500 text-lg font-medium">No products found</p>
@@ -97,8 +104,8 @@ const ViewProdTable = ({
                                             </td>
                                         </tr>
                                     ) : (
-                                        displayedProducts.map((product, index) => {
-                                            const primaryImage = product.images.find((img: any) => img.is_primary) || product.images[0];
+                                        displayedProducts.map((product) => {
+                                            const primaryImage = product.images?.find((img: any) => img.is_primary) || product.images?.[0];
                                             const imageUrl = primaryImage?.url ? `${import.meta.env.VITE_API_BASE_URL}${primaryImage.url}` : '';
 
                                             return (
@@ -108,7 +115,7 @@ const ViewProdTable = ({
                                                 >
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="text-sm font-medium text-gray-900 bg-gray-50 px-3 py-1 rounded-lg inline-block">
-                                                            #{index + 1}
+                                                            #{product.id}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
@@ -190,11 +197,16 @@ const ViewProdTable = ({
                                                             </span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="text-sm text-gray-900 max-w-xs">
-                                                            {product.brock || (
-                                                                <span className="text-gray-400 italic">No brock</span>
-                                                            )}
+                                                    <td className="px-6 py-4 whitespace-nowrap hidden">
+                                                        <div className="flex items-center gap-1">
+                                                            <Star size={16} className={`${product.rating >= 1 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                                                            <Star size={16} className={`${product.rating >= 2 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                                                            <Star size={16} className={`${product.rating >= 3 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                                                            <Star size={16} className={`${product.rating >= 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                                                            <Star size={16} className={`${product.rating >= 5 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                                                            <span className="text-sm text-gray-600 ml-1">
+                                                                ({product.reviews_count || 0})
+                                                            </span>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
@@ -242,18 +254,9 @@ const ViewProdTable = ({
                             <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                     <div className="text-sm text-gray-600">
-                                        Showing <span className="font-semibold">
-                                            {Math.min((currentPage - 1) * entriesPerPage + 1, filteredProducts.length)}
-                                        </span> to{' '}
-                                        <span className="font-semibold">
-                                            {Math.min(currentPage * entriesPerPage, filteredProducts.length)}
-                                        </span> of{' '}
-                                        <span className="font-semibold">{filteredProducts.length}</span> products
-                                        {searchTerm && (
-                                            <span className="text-gray-400">
-                                                {' '}(filtered from <span className="font-semibold">{products.length}</span> total)
-                                            </span>
-                                        )}
+                                        Showing <span className="font-semibold">{startIndex}</span> to{' '}
+                                        <span className="font-semibold">{endIndex}</span> of{' '}
+                                        <span className="font-semibold">{totalCount}</span> products
                                     </div>
 
                                     <div className="flex items-center gap-4">

@@ -1,5 +1,6 @@
 // Types
 export interface Product {
+    created_at: string | number | Date;
     id: number;
     title: string;
     description: string;

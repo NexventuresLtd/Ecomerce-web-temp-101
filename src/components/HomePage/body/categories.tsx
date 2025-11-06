@@ -75,7 +75,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({
     };
 
     return (
-        <section className={`py-16 px-4 bg-slate-50 ${className}`}>
+        <section className={`py-16 px-4 bg-slate-100 ${className}`}>
             <div className="max-w-full md:max-w-7xl mx-auto">
                 <SectionHeader title={title} subtitle={subtitle} />
                 <div className="flex gap-2 p-2 py-3 w-full justify-end">

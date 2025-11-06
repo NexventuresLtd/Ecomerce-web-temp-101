@@ -25,6 +25,7 @@ import { wishlistService } from '../../app/products/wishlistService';
 import { toEmbedUrl } from '../../app/dashcategory/getUrl';
 
 import Suggestions from './Suggestions';
+import { isLoggedIn } from '../../app/Localstorage';
 
 const ProductViewPage: React.FC = () => {
 
@@ -415,11 +416,26 @@ const ProductViewPage: React.FC = () => {
                                     onClick={() => {
                                         handleAddToCart(product.id, quantity, selectedColor, selecteddelivery)
                                     }}
-                                    disabled={load || (product.instock || 0) === 0}
-                                    className="flex-1 bg-primary text-white px-6 py-3 rounded-lg font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                                    disabled={!isLoggedIn || load || (product.instock || 0) === 0}
+                                    className="flex-1 bg-primary text-white px-6 py-3 rounded-lg font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 relative group"
                                 >
                                     <ShoppingCart className="w-5 h-5" />
                                     {load ? "Loading" : "Add to Cart"}
+
+                                    {/* Conditional Tooltip */}
+                                    {!isLoggedIn && (
+                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                            Login First
+                                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                                        </div>
+                                    )}
+
+                                    {(product.instock || 0) === 0 && (
+                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-red-600 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                            Out of Stock
+                                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-red-600"></div>
+                                        </div>
+                                    )}
                                 </button>
 
                                 <button
@@ -497,7 +513,7 @@ const ProductViewPage: React.FC = () => {
 
                             {/* Tags */}
                             {product.tags && product.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap gap-2 hidden">
                                     {product.tags.map((tag, index) => (
                                         <span
                                             key={index}
