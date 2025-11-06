@@ -7,7 +7,10 @@ import {
     SlidersHorizontal,
     X,
     ShoppingCartIcon,
-    Loader2
+    Loader2,
+    ChevronRight,
+    Folder,
+    FolderOpen
 } from 'lucide-react';
 import Navbar from '../../components/SharedComp/navabaritems/NavBar';
 import Footer from '../../components/SharedComp/footer';
@@ -24,7 +27,9 @@ import { categoryApi } from '../../app/dashcategory/category';
 
 // Filter Types
 interface FilterState {
-    categories: string[];
+    main_categories: number[];
+    sub_categories: number[];
+    product_categories: number[];
     priceRange: [number, number];
     minRating: number;
     inStockOnly: boolean;
@@ -37,8 +42,12 @@ type SortOption = 'price-asc' | 'price-desc' | 'newest' | 'rating' | 'featured';
 interface Category {
     id: number;
     name: string;
+    slug: string;
     description?: string;
     parent_id?: number;
+    sub_categories?: Category[];
+    product_categories?: Category[];
+    type?: 'main' | 'sub' | 'product';
 }
 
 // Product Card Component
@@ -211,22 +220,22 @@ interface PriceRangeSliderProps {
     maxPrice: number;
 }
 
-const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({ 
-    priceRange, 
-    onPriceRangeChange, 
-    maxPrice 
+const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
+    priceRange,
+    onPriceRangeChange,
+    maxPrice
 }) => {
     const [hoverValue, setHoverValue] = useState<number | null>(null);
     const [isDragging, setIsDragging] = useState(false);
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isDragging) return;
-        
+
         const slider = e.currentTarget;
         const rect = slider.getBoundingClientRect();
         const percentage = (e.clientX - rect.left) / rect.width;
         const newValue = Math.min(maxPrice, Math.max(0, Math.round(percentage * maxPrice)));
-        
+
         onPriceRangeChange([0, newValue]);
     };
 
@@ -258,20 +267,20 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
             <h3 className="text-sm font-medium text-gray-900 mb-3">
                 Price Range - Up to {RWF.format(priceRange[1])}
             </h3>
-            
+
             <div className="relative">
                 {/* Hover Tooltip */}
                 {hoverValue !== null && (
-                    <div 
+                    <div
                         className="absolute bottom-full mb-2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded pointer-events-none z-10"
                         style={{ left: `${(hoverValue / maxPrice) * 100}%` }}
                     >
                         {RWF.format(hoverValue)}
                     </div>
                 )}
-                
+
                 {/* Slider Track */}
-                <div 
+                <div
                     className="relative h-2 bg-gray-200 rounded-lg cursor-pointer"
                     onMouseMove={handleHover}
                     onMouseLeave={handleMouseLeave}
@@ -279,29 +288,167 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
                     onMouseUp={handleMouseUp}
                 >
                     {/* Filled Track */}
-                    <div 
+                    <div
                         className="absolute h-full bg-blue-600 rounded-lg"
                         style={{ width: `${percentage}%` }}
                     />
-                    
+
                     {/* Thumb */}
-                    <div 
+                    <div
                         className="absolute top-1/2 transform -translate-y-1/2 w-4 h-4 bg-blue-600 rounded-full shadow-lg cursor-grab active:cursor-grabbing"
                         style={{ left: `${percentage}%`, marginLeft: '-8px' }}
                         onMouseDown={handleMouseDown}
                     />
                 </div>
             </div>
-            
+
             <div className="flex justify-between text-sm text-gray-500">
                 <span>Rwf 0</span>
                 <span>Rwf {RWF.format(maxPrice)}</span>
             </div>
-            
+
             {/* Current selection display */}
             <div className="text-center text-xs text-gray-600 bg-blue-50 py-1 rounded">
                 Selected: Up to {RWF.format(priceRange[1])}
             </div>
+        </div>
+    );
+};
+
+// Category Item Component
+interface CategoryItemProps {
+    category: Category;
+    level: number;
+    selectedCategories: FilterState;
+    onCategorySelect: (categoryId: number, categoryType: 'main' | 'sub' | 'product') => void;
+    expandedCategories: number[];
+    onToggleExpand: (categoryId: number) => void;
+}
+
+const CategoryItem: React.FC<CategoryItemProps> = ({
+    category,
+    level,
+    selectedCategories,
+    onCategorySelect,
+    expandedCategories,
+    onToggleExpand
+}) => {
+    const hasChildren = (category.sub_categories && category.sub_categories.length > 0) ||
+        (category.product_categories && category.product_categories.length > 0);
+    const isExpanded = expandedCategories.includes(category.id);
+
+    // Determine category type based on level and structure
+    const getCategoryType = (): 'main' | 'sub' | 'product' => {
+        if (level === 0) return 'main';
+        if (category.product_categories && category.product_categories.length > 0) return 'sub';
+        return 'product';
+    };
+
+    const categoryType = getCategoryType();
+    const isSelected = selectedCategories.main_categories.includes(category.id) ||
+        selectedCategories.sub_categories.includes(category.id) ||
+        selectedCategories.product_categories.includes(category.id);
+
+    const paddingLeft = `${level * 16}px`;
+
+    const handleToggle = () => {
+        if (hasChildren) {
+            onToggleExpand(category.id);
+        }
+    };
+
+    const handleSelect = () => {
+        onCategorySelect(category.id, categoryType);
+    };
+
+    return (
+        <div className="select-none">
+            <div
+                className="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                style={{ paddingLeft }}
+            >
+                {/* Expand/Collapse Button */}
+                {hasChildren && (
+                    <button
+                        onClick={handleToggle}
+                        className="p-1 hover:bg-gray-200 rounded transition-colors"
+                    >
+                        <ChevronRight
+                            size={14}
+                            className={`text-gray-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                        />
+                    </button>
+                )}
+
+                {/* Folder Icon for categories with children */}
+                {hasChildren && (
+                    isExpanded ?
+                        <FolderOpen size={16} className="text-blue-600 flex-shrink-0" /> :
+                        <Folder size={16} className="text-gray-500 flex-shrink-0" />
+                )}
+
+                {/* Checkbox */}
+                <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={handleSelect}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                />
+
+                {/* Category Name with Type Badge */}
+                <div className="flex items-center gap-2 flex-1">
+                    <span
+                        className={`text-sm truncate ${isSelected ? 'text-blue-700 font-medium' : 'text-gray-700'}`}
+                        onClick={handleSelect}
+                    >
+                        {category.name}
+                    </span>
+                    <span className={`text-xs px-2 py-1 rounded-full ${categoryType === 'main' ? 'bg-purple-100 text-purple-800' :
+                            categoryType === 'sub' ? 'bg-green-100 text-green-800' :
+                                'bg-blue-100 text-blue-800'
+                        }`}>
+                        {categoryType}
+                    </span>
+                </div>
+            </div>
+
+            {/* Child Categories */}
+            <AnimatePresence>
+                {isExpanded && hasChildren && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {/* Sub Categories */}
+                        {category.sub_categories?.map((subCategory) => (
+                            <CategoryItem
+                                key={subCategory.id}
+                                category={subCategory}
+                                level={level + 1}
+                                selectedCategories={selectedCategories}
+                                onCategorySelect={onCategorySelect}
+                                expandedCategories={expandedCategories}
+                                onToggleExpand={onToggleExpand}
+                            />
+                        ))}
+
+                        {/* Product Categories */}
+                        {category.product_categories?.map((productCategory) => (
+                            <CategoryItem
+                                key={productCategory.id}
+                                category={productCategory}
+                                level={level + 1}
+                                selectedCategories={selectedCategories}
+                                onCategorySelect={onCategorySelect}
+                                expandedCategories={expandedCategories}
+                                onToggleExpand={onToggleExpand}
+                            />
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -325,33 +472,71 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     categoriesLoading
 }) => {
     const maxPrice = 1000000;
+    const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
 
     const updateFilters = (key: keyof FilterState, value: any) => {
         onFiltersChange({ ...filters, [key]: value });
     };
 
-    const toggleCategory = (categoryName: string) => {
-        const updated = filters.categories.includes(categoryName)
-            ? filters.categories.filter(c => c !== categoryName)
-            : [...filters.categories, categoryName];
-        updateFilters('categories', updated);
+    const handleCategorySelect = (categoryId: number, categoryType: 'main' | 'sub' | 'product') => {
+        const key = `${categoryType}_categories` as keyof FilterState;
+        const currentArray = filters[key] as number[];
+
+        const updated = currentArray.includes(categoryId)
+            ? currentArray.filter(id => id !== categoryId)
+            : [...currentArray, categoryId];
+
+        updateFilters(key, updated);
     };
 
     const handlePriceRangeChange = (range: [number, number]) => {
         updateFilters('priceRange', range);
     };
 
-    // Handle URL category parameter
+    const handleToggleExpand = (categoryId: number) => {
+        setExpandedCategories(prev =>
+            prev.includes(categoryId)
+                ? prev.filter(id => id !== categoryId)
+                : [...prev, categoryId]
+        );
+    };
+
+    // Handle URL category parameter - FIXED DECODING
     const { category } = useParams<{ category: string }>();
 
     useEffect(() => {
         if (category) {
             try {
+                console.log('URL Category parameter:', category);
                 const decodedCategory = decodeId(category);
-                const categoryName = categories.find(cat => cat.id === decodedCategory)?.name;
-                
-                if (categoryName && !filters.categories.includes(categoryName)) {
-                    updateFilters('categories', [...filters.categories, categoryName]);
+                console.log('Decoded category ID:', decodedCategory);
+
+                if (decodedCategory && !isNaN(decodedCategory)) {
+                    // Auto-select the category and determine its type
+                    const findCategoryInHierarchy = (cats: Category[], targetId: number): { category: Category, type: 'main' | 'sub' | 'product' } | null => {
+                        for (const cat of cats) {
+                            if (cat.id === targetId) return { category: cat, type: 'main' };
+                            if (cat.sub_categories) {
+                                for (const subCat of cat.sub_categories) {
+                                    if (subCat.id === targetId) return { category: subCat, type: 'sub' };
+                                    if (subCat.product_categories) {
+                                        for (const prodCat of subCat.product_categories) {
+                                            if (prodCat.id === targetId) return { category: prodCat, type: 'product' };
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return null;
+                    };
+
+                    const foundCategory = findCategoryInHierarchy(categories, decodedCategory);
+                    if (foundCategory) {
+                        handleCategorySelect(decodedCategory, foundCategory.type);
+                        console.log(`Auto-selected ${foundCategory.type} category:`, foundCategory.category.name);
+                    } else {
+                        console.warn('Category not found in hierarchy:', decodedCategory);
+                    }
                 }
             } catch (error) {
                 console.error("Error decoding category:", error);
@@ -379,7 +564,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
                     )}
                 </div>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div className="space-y-1 max-h-96 overflow-y-auto">
                     {categoriesLoading ? (
                         <div className="space-y-2">
                             {[...Array(8)].map((_, i) => (
@@ -391,22 +576,44 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         </div>
                     ) : categories.length > 0 ? (
                         categories.map((category) => (
-                            <label key={category.id} className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    checked={filters.categories.includes(category.name)}
-                                    onChange={() => toggleCategory(category.name)}
-                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                />
-                                <span className="ml-2 text-sm text-gray-700 truncate">
-                                    {category.name}
-                                </span>
-                            </label>
+                            <CategoryItem
+                                key={category.id}
+                                category={category}
+                                level={0}
+                                selectedCategories={filters}
+                                onCategorySelect={handleCategorySelect}
+                                expandedCategories={expandedCategories}
+                                onToggleExpand={handleToggleExpand}
+                            />
                         ))
                     ) : (
                         <p className="text-sm text-gray-500">No categories available</p>
                     )}
                 </div>
+
+                {/* Selected Categories Summary */}
+                {(filters.main_categories.length > 0 || filters.sub_categories.length > 0 || filters.product_categories.length > 0) && (
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <h4 className="text-sm font-medium text-blue-900 mb-2">Selected Categories:</h4>
+                        <div className="space-y-1">
+                            {filters.main_categories.length > 0 && (
+                                <div className="text-xs text-blue-700">
+                                    Main: {filters.main_categories.length} selected
+                                </div>
+                            )}
+                            {filters.sub_categories.length > 0 && (
+                                <div className="text-xs text-green-700">
+                                    Sub: {filters.sub_categories.length} selected
+                                </div>
+                            )}
+                            {filters.product_categories.length > 0 && (
+                                <div className="text-xs text-blue-700">
+                                    Product: {filters.product_categories.length} selected
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Price Range with Hover Effect */}
@@ -459,12 +666,17 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
             {/* Clear Filters */}
             <button
-                onClick={() => onFiltersChange({
-                    categories: [],
-                    priceRange: [0, maxPrice],
-                    minRating: 0,
-                    inStockOnly: false
-                })}
+                onClick={() => {
+                    onFiltersChange({
+                        main_categories: [],
+                        sub_categories: [],
+                        product_categories: [],
+                        priceRange: [0, maxPrice],
+                        minRating: 0,
+                        inStockOnly: false
+                    });
+                    setExpandedCategories([]);
+                }}
                 className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
             >
                 Clear All Filters
@@ -475,7 +687,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     return (
         <>
             {/* Desktop Sidebar */}
-            <div className="hidden lg:block w-72 bg-white border-r border-gray-200 p-6 h-full overflow-y-auto">
+            <div className="hidden lg:block w-80 bg-white border-r border-gray-200 p-6 h-full overflow-y-auto">
                 {sidebarContent}
             </div>
 
@@ -520,7 +732,7 @@ const LoadMoreButton: React.FC<LoadMoreButtonProps> = ({ isLoading, hasMore, onC
             <button
                 onClick={onClick}
                 disabled={isLoading}
-                className="bg-primary hover:bg-primary/80 disabled:bg-primary/20 text-white font-semibold rounded-2xl px-8 py-3 transition-colors duration-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
+                className="bg-primary hover:bg-primary/90 text-white font-semibold rounded-2xl px-8 py-3 transition-colors duration-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
             >
                 {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                 {isLoading ? 'Loading...' : 'Load More Products'}
@@ -539,11 +751,14 @@ const AllProductsPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [skip, setSkip] = useState<number>(0);
+    const [totalCount, setTotalCount] = useState<number>(0);
     const limit: number = 100;
 
     // Default state: no filters, newest first sorting
     const [filters, setFilters] = useState<FilterState>({
-        categories: [],
+        main_categories: [],
+        sub_categories: [],
+        product_categories: [],
         priceRange: [0, 1000000],
         minRating: 0,
         inStockOnly: false
@@ -553,12 +768,52 @@ const AllProductsPage: React.FC = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Load categories from API
+    // Load categories from API with proper hierarchy
     const loadCategories = useCallback(async (): Promise<void> => {
         try {
             setCategoriesLoading(true);
-            const productCategories = await categoryApi.getProductCategories();
-            setCategories(productCategories || []);
+
+            // Use the hierarchy endpoint from your API
+            const hierarchy = await categoryApi.getFullHierarchy();
+
+            if (hierarchy && hierarchy.length > 0) {
+                setCategories(hierarchy);
+            } else {
+                // Fallback: build hierarchy manually
+                const mainCategories = await categoryApi.getMainCategories();
+
+                if (mainCategories && mainCategories.length > 0) {
+                    const hierarchy: Category[] = [];
+
+                    for (const mainCat of mainCategories) {
+                        // Get sub categories for this main category
+                        const subCategories = await categoryApi.getSubCategories();
+                        const filteredSubs = subCategories.filter((sub: any) => sub.main_category_id === mainCat.id);
+
+                        const mainCategoryWithSubs: Category = {
+                            ...mainCat,
+                            sub_categories: []
+                        };
+
+                        for (const subCat of filteredSubs) {
+                            // Get product categories for this sub category
+                            const productCategories = await categoryApi.getProductCategories();
+                            const filteredProducts = productCategories.filter((prod: any) => prod.sub_category_id === subCat.id);
+
+                            mainCategoryWithSubs.sub_categories!.push({
+                                ...subCat,
+                                product_categories: filteredProducts
+                            });
+                        }
+
+                        hierarchy.push(mainCategoryWithSubs);
+                    }
+
+                    setCategories(hierarchy);
+                } else {
+                    setCategories([]);
+                }
+            }
         } catch (err: any) {
             console.error("Failed to load categories:", err);
             setCategories([]);
@@ -567,82 +822,120 @@ const AllProductsPage: React.FC = () => {
         }
     }, []);
 
-    // Load products from API
+    // Load products from API - FIXED: Proper query parameter handling
+    // In your AllProductsPage component - replace the loadProducts function
     const loadProducts = useCallback(async (loadMore: boolean = false): Promise<void> => {
         try {
+            const currentSkip = loadMore ? skip : 0;
+
             if (loadMore) {
                 setLoadingMore(true);
             } else {
                 setInitialLoading(true);
+                setSkip(0);
             }
 
-            // Build query parameters based on filters
-            const queryParams = new URLSearchParams({
-                skip: skip.toString(),
+            // Build query parameters as object
+            const params: Record<string, any> = {
+                skip: currentSkip.toString(),
                 limit: limit.toString(),
-                sort_by: currentSort === 'newest' ? 'created_at' : 
-                        currentSort === 'price-asc' ? 'price' :
-                        currentSort === 'price-desc' ? 'price' : 'created_at',
-                sort_order: currentSort === 'price-desc' ? 'desc' : 'asc'
-            });
+            };
 
-            // Add category filters
-            if (filters.categories.length > 0) {
-                const categoryIds = filters.categories.map(catName => {
-                    const category = categories.find(c => c.name === catName);
-                    return category?.id;
-                }).filter(Boolean);
-                
-                if (categoryIds.length > 0) {
-                    queryParams.append('category_id', categoryIds.join(','));
-                }
+            // Add sorting
+            if (currentSort === 'newest') {
+                params.sort_by = 'created_at';
+                params.sort_order = 'desc';
+            } else if (currentSort === 'price-asc') {
+                params.sort_by = 'price';
+                params.sort_order = 'asc';
+            } else if (currentSort === 'price-desc') {
+                params.sort_by = 'price';
+                params.sort_order = 'desc';
+            } else if (currentSort === 'rating') {
+                params.sort_by = 'rating';
+                params.sort_order = 'desc';
+            } else if (currentSort === 'featured') {
+                params.sort_by = 'is_featured';
+                params.sort_order = 'desc';
+            }
+
+            // Add category hierarchy filters
+            if (filters.main_categories.length > 0) {
+                params.main_category_id = filters.main_categories;
+            }
+
+            if (filters.sub_categories.length > 0) {
+                params.sub_category_id = filters.sub_categories;
+            }
+
+            if (filters.product_categories.length > 0) {
+                params.product_category_id = filters.product_categories;
             }
 
             // Add price range filter
             if (filters.priceRange[1] < 1000000) {
-                queryParams.append('price_min', '0');
-                queryParams.append('price_max', filters.priceRange[1].toString());
+                params.price_min = '0';
+                params.price_max = filters.priceRange[1].toString();
             }
 
             // Add in-stock filter
             if (filters.inStockOnly) {
-                queryParams.append('instock_min', '1');
+                params.instock_min = '1';
             }
 
             // Add rating filter
             if (filters.minRating > 0) {
-                queryParams.append('rating_min', filters.minRating.toString());
+                params.rating_min = filters.minRating.toString();
             }
 
             // Add search query
             if (searchQuery) {
-                queryParams.append('search', searchQuery);
+                params.search = searchQuery;
             }
 
-            const response = await productApi.getProducts(skip, limit, queryParams.toString());
+            console.log('API Request Params:', params);
+
+            // FIXED: Pass params as object
+            const response = await productApi.getProducts(currentSkip, limit, params);
+
             const newProducts: Product[] = response.products || [];
+            const total = response.total_count || 0;
+
+            console.log('API Response:', {
+                productsCount: newProducts.length,
+                totalCount: total,
+                hasMore: newProducts.length === limit,
+                currentSkip,
+                filtersApplied: {
+                    main: filters.main_categories.length,
+                    sub: filters.sub_categories.length,
+                    product: filters.product_categories.length
+                }
+            });
 
             setAllProducts(prev => {
                 if (!loadMore) {
                     return newProducts;
                 }
-                
+
                 // Merge and remove duplicates
                 const existingIds = new Set(prev.map(p => p.id));
                 const filteredNew = newProducts.filter(p => !existingIds.has(p.id));
                 return [...prev, ...filteredNew];
             });
 
-            setSkip(prev => prev + limit);
+            setTotalCount(total);
+            setSkip(currentSkip + limit);
             setHasMore(newProducts.length === limit);
 
         } catch (err: any) {
             setError(err.message || "Failed to fetch products");
+            console.error('API Error:', err);
         } finally {
             setInitialLoading(false);
             setLoadingMore(false);
         }
-    }, [skip, limit, filters, currentSort, searchQuery, categories]);
+    }, [skip, limit, filters, currentSort, searchQuery]);
 
     // Initial data load
     useEffect(() => {
@@ -656,7 +949,6 @@ const AllProductsPage: React.FC = () => {
 
     // Reload products when filters, sort, or search change
     useEffect(() => {
-        setSkip(0);
         setAllProducts([]);
         setHasMore(true);
         loadProducts(false);
@@ -673,12 +965,6 @@ const AllProductsPage: React.FC = () => {
         let filtered = [...allProducts];
 
         // Apply client-side filtering for better UX
-        if (filters.categories.length > 0) {
-            filtered = filtered.filter(product =>
-                filters.categories.includes(product.category?.name || '')
-            );
-        }
-
         if (filters.priceRange[1] < 1000000) {
             filtered = filtered.filter(product => {
                 const productPrice = product.price || 0;
@@ -738,7 +1024,9 @@ const AllProductsPage: React.FC = () => {
     // Check if any filters are active
     const hasActiveFilters = useMemo(() => {
         return (
-            filters.categories.length > 0 ||
+            filters.main_categories.length > 0 ||
+            filters.sub_categories.length > 0 ||
+            filters.product_categories.length > 0 ||
             filters.minRating > 0 ||
             filters.inStockOnly ||
             searchQuery ||
@@ -785,7 +1073,7 @@ const AllProductsPage: React.FC = () => {
                                 </div>
 
                                 {/* Search Bar */}
-                                <div className="relative max-w-md hidden">
+                                <div className="relative max-w-md">
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                     <input
                                         type="text"
@@ -803,14 +1091,15 @@ const AllProductsPage: React.FC = () => {
                             <div className="max-w-full mx-auto flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <p className="text-sm text-gray-600">
-                                        Showing {filteredAndSortedProducts.length} products
-                                        {hasMore && ` (${allProducts.length} loaded)`}
+                                        Showing {filteredAndSortedProducts.length} of {totalCount} products
                                     </p>
                                     {hasActiveFilters && (
                                         <button
                                             onClick={() => {
                                                 setFilters({
-                                                    categories: [],
+                                                    main_categories: [],
+                                                    sub_categories: [],
+                                                    product_categories: [],
                                                     priceRange: [0, 1000000],
                                                     minRating: 0,
                                                     inStockOnly: false
@@ -856,6 +1145,15 @@ const AllProductsPage: React.FC = () => {
                                             ))}
                                         </motion.div>
 
+                                        {/* Show skeleton loaders when loading more */}
+                                        {loadingMore && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 mt-8">
+                                                {[...Array(8)].map((_, index) => (
+                                                    <SkeletonLoader key={`skeleton-${index}`} />
+                                                ))}
+                                            </div>
+                                        )}
+
                                         {/* Load More Button */}
                                         <LoadMoreButton
                                             isLoading={loadingMore}
@@ -882,7 +1180,9 @@ const AllProductsPage: React.FC = () => {
                                             <button
                                                 onClick={() => {
                                                     setFilters({
-                                                        categories: [],
+                                                        main_categories: [],
+                                                        sub_categories: [],
+                                                        product_categories: [],
                                                         priceRange: [0, 1000000],
                                                         minRating: 0,
                                                         inStockOnly: false
