@@ -43,7 +43,7 @@ const ProductForm: React.FC<{
         original_price: product?.original_price || '',
         discount: product?.discount || '',
         is_new: product?.is_new || '',
-        is_featured: product?.is_featured || false,
+        is_featured: product?.is_featured || false, // ADDED: is_featured field
         is_active: product?.is_active !== undefined ? product.is_active : true,
         instock: product?.instock || '',
         delivery_fee: product?.delivery_fee || '',
@@ -115,7 +115,7 @@ const ProductForm: React.FC<{
             submitData.append('instock', formData.instock.toString());
             submitData.append('category_id', formData.category_id.toString());
             submitData.append('is_new', formData.is_new.toString());
-            submitData.append('is_featured', formData.is_featured.toString());
+            submitData.append('is_featured', formData.is_featured.toString()); // ADDED: is_featured field
             submitData.append('is_active', formData.is_active.toString());
 
             // Optional fields

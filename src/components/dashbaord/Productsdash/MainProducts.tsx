@@ -22,7 +22,7 @@ interface FilterState {
 }
 
 // Sort Types
-type SortOption = 'price-asc' | 'price-desc' | 'newest' | 'rating' | 'featured';
+type SortOption = 'price-asc' | 'price-desc' | 'newest' | 'rating' | 'featured' | 'oldest';
 
 // Main Product Management Component
 const ProductManagement: React.FC = () => {
@@ -33,7 +33,7 @@ const ProductManagement: React.FC = () => {
     const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [entriesPerPage, setEntriesPerPage] = useState(10);
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'id', direction: 'desc' });
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
     
     // Database pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -43,14 +43,14 @@ const ProductManagement: React.FC = () => {
     // Filter state
     const [filters, setFilters] = useState<FilterState>({
         categories: [],
-        priceRange: [0, 1000000],
+        priceRange: [0, 100000000],
         minRating: 0,
         inStockOnly: false
     });
 
     const [currentSort, setCurrentSort] = useState<SortOption>('newest');
 
-    const fetchProducts = useCallback(async (page: number = 1) => {
+    const fetchProducts = useCallback(async (page: number = 1, searchQuery: string = searchTerm) => {
         setLoading(true);
         
         try {
@@ -60,14 +60,33 @@ const ProductManagement: React.FC = () => {
             const queryParams = new URLSearchParams({
                 skip: skip.toString(),
                 limit: entriesPerPage.toString(),
-                sort_by: currentSort === 'newest' ? 'created_at' : 
-                        currentSort === 'price-asc' ? 'price' :
-                        currentSort === 'price-desc' ? 'price' : 'created_at',
-                sort_order: currentSort === 'price-desc' ? 'desc' : 'asc'
             });
 
+            // Add sorting parameters - FIXED: Restore dynamic sorting
+            if (currentSort === 'newest') {
+                queryParams.append('sort_by', 'created_at');
+                queryParams.append('sort_order', 'desc');
+            } else if (currentSort === 'oldest') {
+                queryParams.append('sort_by', 'created_at');
+                queryParams.append('sort_order', 'asc');
+            } else if (currentSort === 'price-asc') {
+                queryParams.append('sort_by', 'price');
+                queryParams.append('sort_order', 'asc');
+            } else if (currentSort === 'price-desc') {
+                queryParams.append('sort_by', 'price');
+                queryParams.append('sort_order', 'desc');
+            } else if (currentSort === 'featured') {
+                queryParams.append('is_featured', 'true');
+                queryParams.append('sort_by', 'created_at');
+                queryParams.append('sort_order', 'desc');
+            } else {
+                // Default fallback
+                queryParams.append('sort_by', 'created_at');
+                queryParams.append('sort_order', 'desc');
+            }
+
             // Add price range filter
-            if (filters.priceRange[1] < 1000000) {
+            if (filters.priceRange[1] < 100000000) {
                 queryParams.append('price_min', '0');
                 queryParams.append('price_max', filters.priceRange[1].toString());
             }
@@ -77,14 +96,14 @@ const ProductManagement: React.FC = () => {
                 queryParams.append('instock_min', '1');
             }
 
-            // Add rating filter
+            // Add rating filter (keep it in query but it's hidden in UI)
             if (filters.minRating > 0) {
                 queryParams.append('rating_min', filters.minRating.toString());
             }
 
             // Add search query
-            if (searchTerm) {
-                queryParams.append('search', searchTerm);
+            if (searchQuery) {
+                queryParams.append('search', searchQuery);
             }
 
             const response = await mainAxios.get(`/products/?${queryParams.toString()}`);
@@ -104,14 +123,29 @@ const ProductManagement: React.FC = () => {
         }
     }, [entriesPerPage, filters, currentSort, searchTerm]);
 
-    // Load products when filters, sort, search, or page changes
-    useEffect(() => {
-        setCurrentPage(1); // Reset to first page when filters change
-    }, [filters, currentSort, searchTerm, entriesPerPage]);
+    // Handle search submission
+    const handleSearch = useCallback(() => {
+        setCurrentPage(1);
+        fetchProducts(1, searchTerm);
+    }, [searchTerm, fetchProducts]);
 
+    // Handle Enter key press in search input
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
+    // Load products when filters, sort, or entries change
+    useEffect(() => {
+        setCurrentPage(1);
+        fetchProducts(1);
+    }, [filters, currentSort, entriesPerPage]);
+
+    // Load products when page changes
     useEffect(() => {
         fetchProducts(currentPage);
-    }, [currentPage, fetchProducts]);
+    }, [currentPage]);
 
     const handleSort = (key: string) => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -149,7 +183,6 @@ const ProductManagement: React.FC = () => {
 
         try {
             await mainAxios.delete(`/products/${id}`);
-            // Reload current page after deletion
             await fetchProducts(currentPage);
         } catch (error) {
             console.error('Error deleting product:', error);
@@ -172,7 +205,7 @@ const ProductManagement: React.FC = () => {
     const hasActiveFilters = filters.categories.length > 0 ||
         filters.minRating > 0 ||
         filters.inStockOnly ||
-        filters.priceRange[1] < 1000000;
+        filters.priceRange[1] < 100000000;
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
@@ -208,12 +241,15 @@ const ProductManagement: React.FC = () => {
                         {/* Filter Status */}
                         {hasActiveFilters && (
                             <button
-                                onClick={() => setFilters({
-                                    categories: [],
-                                    priceRange: [0, 1000000],
-                                    minRating: 0,
-                                    inStockOnly: false
-                                })}
+                                onClick={() => {
+                                    setFilters({
+                                        categories: [],
+                                        priceRange: [0, 100000000],
+                                        minRating: 0,
+                                        inStockOnly: false
+                                    });
+                                    setCurrentPage(1);
+                                }}
                                 className="text-sm text-blue-600 hover:text-blue-800 transition-colors bg-blue-50 px-3 py-2 rounded-lg"
                             >
                                 Clear Filters
@@ -222,7 +258,7 @@ const ProductManagement: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <div className="relative">
+                        <div className="relative flex items-center">
                             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                                 <Search size={18} />
                             </span>
@@ -231,21 +267,29 @@ const ProductManagement: React.FC = () => {
                                 placeholder="Search products..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                onKeyPress={handleKeyPress}
                                 className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 bg-white"
                             />
+                            <button
+                                onClick={handleSearch}
+                                className="ml-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-lg flex items-center gap-2 transition-all duration-200 text-sm font-medium"
+                            >
+                                <Search size={16} />
+                                Search
+                            </button>
                         </div>
                         
-                        {/* Sort Dropdown */}
+                        {/* Sort Dropdown - FIXED: Now properly sends sorting parameters to backend */}
                         <select
                             value={currentSort}
                             onChange={(e) => setCurrentSort(e.target.value as SortOption)}
                             className="bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
                             <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
                             <option value="featured">Featured</option>
                             <option value="price-asc">Price: Low to High</option>
                             <option value="price-desc">Price: High to Low</option>
-                            {/* <option value="rating">Highest Rated</option> */}
                         </select>
 
                         <button
@@ -268,7 +312,7 @@ const ProductManagement: React.FC = () => {
                         <input
                             type="range"
                             min="0"
-                            max="1000000"
+                            max="100000000"
                             step="10000"
                             value={filters.priceRange[1]}
                             onChange={(e) => setFilters(prev => ({
@@ -279,11 +323,11 @@ const ProductManagement: React.FC = () => {
                         />
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
                             <span>Rwf 0</span>
-                            <span>Rwf 1M</span>
+                            <span>Rwf 100M</span>
                         </div>
                     </div>
 
-                    {/* Rating Filter */}
+                    {/* Rating Filter - FIXED: Kept hidden as before */}
                     <div className='hidden'>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Min Rating
@@ -356,7 +400,6 @@ const ProductManagement: React.FC = () => {
                             setEditingProduct(null);
                         }}
                         onSave={async () => {
-                            // Reload current page after save
                             await fetchProducts(currentPage);
                             setShowAddForm(false);
                             setEditingProduct(null);

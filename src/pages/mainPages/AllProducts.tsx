@@ -36,8 +36,8 @@ interface FilterState {
     inStockOnly: boolean;
 }
 
-// Sort Types
-type SortOption = 'price-asc' | 'price-desc' | 'newest' | 'rating' | 'featured';
+// Sort Types - Added 'oldest' option
+type SortOption = 'price-asc' | 'price-desc' | 'newest' | 'oldest' | 'rating' | 'featured';
 
 // Category Types
 interface Category {
@@ -154,7 +154,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     );
 };
 
-// Sort Dropdown Component
+// Sort Dropdown Component - Updated with oldest option
 interface SortDropdownProps {
     currentSort: SortOption;
     onSortChange: (sort: SortOption) => void;
@@ -165,6 +165,7 @@ const SortDropdown: React.FC<SortDropdownProps> = ({ currentSort, onSortChange }
 
     const sortOptions: { value: SortOption; label: string }[] = [
         { value: 'newest', label: 'Newest First' },
+        { value: 'oldest', label: 'Oldest First' },
         { value: 'featured', label: 'Featured' },
         { value: 'price-asc', label: 'Price: Low to High' },
         { value: 'price-desc', label: 'Price: High to Low' },
@@ -482,8 +483,8 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
 
                 {/* Price Labels */}
                 <div className="flex justify-between text-sm text-gray-600 mt-4">
-                    <span>RWF 0</span>
-                    <span>RWF {RWF.format(maxPrice)}</span>
+                    <span>{"-->"}{RWF.format(localRange[0])} </span>
+                    <span>{"<--"} {RWF.format(maxPrice)}</span>
                 </div>
             </div>
 
@@ -674,7 +675,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     categories,
     categoriesLoading
 }) => {
-    const maxPrice = 1000000;
+    const maxPrice = 100000000;
     const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
 
     const updateFilters = (key: keyof FilterState, value: any) => {
@@ -940,12 +941,13 @@ const AllProductsPage: React.FC = () => {
     const [correctedQuery, setCorrectedQuery] = useState<string>('');
     const limit: number = 100;
     console.log(searchSuggestions, error)
+    
     // Default state: no filters, newest first sorting
     const [filters, setFilters] = useState<FilterState>({
         main_categories: [], // Now stores category IDs as numbers
         sub_categories: [],
         product_categories: [],
-        priceRange: [0, 1000000],
+        priceRange: [0, 100000000],
         minRating: 0,
         inStockOnly: false
     });
@@ -954,12 +956,6 @@ const AllProductsPage: React.FC = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Get URL parameters
-    // const [searchParams] = useSearchParams();
-    // const categoryParam = searchParams.get('category');
-    // const { query } = useParams();
-    // const searchParam = query || searchParams.get('search') || '';
-    // Get URL parameters
     // Get URL parameters
     const [searchParams] = useSearchParams();
     const categoryParam = searchParams.get('category');
@@ -973,7 +969,6 @@ const AllProductsPage: React.FC = () => {
     });
 
     // Extract search query from route parameters
-    // Try different possible parameter names based on your route structure
     const searchQueryFromRoute = params.query || params.search || params.term || params.q || '';
 
     // Handle search parameter from route - COMPREHENSIVE FIX
@@ -997,9 +992,9 @@ const AllProductsPage: React.FC = () => {
             // The searchQuery change will automatically trigger loadProducts via the useEffect dependency
         }
     }, [searchQuery]);
-    // Handle category parameter from query string - FIXED FOR ID-BASED FILTERING
-    useEffect(() => {
 
+    // Handle category parameter from query string - FIXED: ONLY SELECT DEEPEST CATEGORY
+    useEffect(() => {
         if (categoryParam) {
             console.log('Category query parameter:', categoryParam);
 
@@ -1013,7 +1008,7 @@ const AllProductsPage: React.FC = () => {
                         main_categories: [categoryId], // Store the category ID for main categories
                         sub_categories: [],
                         product_categories: [],
-                        priceRange: [0, 1000000],
+                        priceRange: [0, 100000000],
                         minRating: 0,
                         inStockOnly: false
                     };
@@ -1022,7 +1017,7 @@ const AllProductsPage: React.FC = () => {
                     setFilters(newFilters);
                 }
             } else {
-                // Handle encoded category path (existing logic)
+                // Handle encoded category path (e.g., http://127.0.0.1:5173/products?category=2w92Pv1B/KMvD0v1j/3nvZX90b)
                 console.log('Treating as encoded category path');
                 const pathSegments = categoryParam.split('/');
                 console.log('Category path segments:', pathSegments);
@@ -1042,13 +1037,28 @@ const AllProductsPage: React.FC = () => {
                     main_categories: [],
                     sub_categories: [],
                     product_categories: [],
-                    priceRange: [0, 1000000],
+                    priceRange: [0, 100000000],
                     minRating: 0,
                     inStockOnly: false
                 };
 
-                // For encoded paths, check if it's a main category or other category
-                if (decodedSegments.length >= 1) {
+                // FIXED LOGIC: Only select the deepest category level
+                if (decodedSegments.length >= 3) {
+                    // If we have 3 segments (main/sub/product), select ONLY the product category
+                    const productCategoryId = Number(decodedSegments[2]);
+                    if (!isNaN(productCategoryId)) {
+                        newFilters.product_categories = [productCategoryId];
+                        console.log(`Selecting ONLY product category: ${productCategoryId}`);
+                    }
+                } else if (decodedSegments.length === 2) {
+                    // If we have 2 segments (main/sub), select ONLY the sub category
+                    const subCategoryId = Number(decodedSegments[1]);
+                    if (!isNaN(subCategoryId)) {
+                        newFilters.sub_categories = [subCategoryId];
+                        console.log(`Selecting ONLY sub category: ${subCategoryId}`);
+                    }
+                } else if (decodedSegments.length === 1) {
+                    // If we have 1 segment, it's a main category - select ONLY the main category
                     const mainCategoryId = Number(decodedSegments[0]);
                     if (!isNaN(mainCategoryId)) {
                         // Check if this ID corresponds to a main category in our mapping
@@ -1057,7 +1067,7 @@ const AllProductsPage: React.FC = () => {
                         if (isMainCat) {
                             // It's a main category - use the ID directly
                             newFilters.main_categories = [mainCategoryId];
-                            console.log(`Using main category ID directly: ${mainCategoryId}`);
+                            console.log(`Selecting ONLY main category ID directly: ${mainCategoryId}`);
                         } else {
                             // It's another type of category - use the mapping logic
                             const mappedId = mainCategoryIds[mainCategoryId - 1];
@@ -1066,38 +1076,17 @@ const AllProductsPage: React.FC = () => {
                                 console.log(`Mapped category ID ${mainCategoryId} to main category ID: ${mappedId}`);
                             } else {
                                 newFilters.main_categories = [mainCategoryId];
-                                console.log(`Using category ID directly (no mapping available): ${mainCategoryId}`);
+                                console.log(`Selecting ONLY category ID directly (no mapping available): ${mainCategoryId}`);
                             }
                         }
                     }
                 }
 
-                if (decodedSegments.length >= 2) {
-                    const subCategoryId = Number(decodedSegments[1]);
-                    if (!isNaN(subCategoryId)) {
-                        newFilters.sub_categories = [subCategoryId];
-                    }
-                }
-
-                if (decodedSegments.length >= 3) {
-                    const productCategoryId = Number(decodedSegments[2]);
-                    if (!isNaN(productCategoryId)) {
-                        newFilters.product_categories = [productCategoryId];
-                    }
-                }
-
-                console.log('Setting filters from category path:', newFilters);
+                console.log('Setting filters from category path (deepest level only):', newFilters);
                 setFilters(newFilters);
             }
         }
     }, [categoryParam, categories]);
-
-    // // Handle search parameter from query string
-    // useEffect(() => {
-    //     if (searchParam) {
-    //         setSearchQuery(searchParam);
-    //     }
-    // }, [searchParam]);
 
     // Load categories from API with proper hierarchy
     const loadCategories = useCallback(async (): Promise<void> => {
@@ -1149,7 +1138,7 @@ const AllProductsPage: React.FC = () => {
         }
     }, []);
 
-    // Load products from API - FIXED for ID-based main category filtering
+    // Load products from API - FIXED for proper sorting and category filtering
     const loadProducts = useCallback(async (loadMore: boolean = false): Promise<void> => {
         try {
             const currentSkip = loadMore ? skip : 0;
@@ -1176,10 +1165,13 @@ const AllProductsPage: React.FC = () => {
                     limit: limit.toString(),
                 };
 
-                // Add sorting
+                // Add sorting - INCLUDES OLDEST OPTION
                 if (currentSort === 'newest') {
                     params.sort_by = 'created_at';
                     params.sort_order = 'desc';
+                } else if (currentSort === 'oldest') {
+                    params.sort_by = 'created_at';
+                    params.sort_order = 'asc';
                 } else if (currentSort === 'price-asc') {
                     params.sort_by = 'price';
                     params.sort_order = 'asc';
@@ -1194,24 +1186,23 @@ const AllProductsPage: React.FC = () => {
                     params.sort_order = 'desc';
                 }
 
-                // Add category hierarchy filters - MAIN CATEGORIES NOW USE IDs
-                if (filters.main_categories.length > 0) {
-                    params.main_category_id = filters.main_categories;
-                    console.log('Filtering by main category IDs:', filters.main_categories);
-                }
-
-                if (filters.sub_categories.length > 0) {
-                    params.sub_category_id = filters.sub_categories;
-                    console.log('Filtering by sub categories:', filters.sub_categories);
-                }
-
+                // Add category hierarchy filters - ONLY THE DEEPEST CATEGORY LEVEL
                 if (filters.product_categories.length > 0) {
+                    // If product categories are selected, only filter by product categories
                     params.product_category_id = filters.product_categories;
-                    console.log('Filtering by product categories:', filters.product_categories);
+                    console.log('Filtering by ONLY product categories:', filters.product_categories);
+                } else if (filters.sub_categories.length > 0) {
+                    // If sub categories are selected (but no product categories), only filter by sub categories
+                    params.sub_category_id = filters.sub_categories;
+                    console.log('Filtering by ONLY sub categories:', filters.sub_categories);
+                } else if (filters.main_categories.length > 0) {
+                    // If only main categories are selected, filter by main categories
+                    params.main_category_id = filters.main_categories;
+                    console.log('Filtering by ONLY main categories:', filters.main_categories);
                 }
 
                 // Add price range filter
-                if (filters.priceRange[1] < 1000000 || filters.priceRange[0] > 0) {
+                if (filters.priceRange[1] < 100000000 || filters.priceRange[0] > 0) {
                     params.price_min = filters.priceRange[0].toString();
                     params.price_max = filters.priceRange[1].toString();
                 }
@@ -1226,14 +1217,14 @@ const AllProductsPage: React.FC = () => {
                     params.rating_min = filters.minRating.toString();
                 }
 
-                console.log('API Request Params with category ID filtering:', params);
+                console.log('API Request Params with deepest category filtering:', params);
                 response = await productApi.getProducts(currentSkip, limit, params);
             }
 
             const newProducts: Product[] = response.products || [];
             const total = response.total_count || 0;
 
-            console.log('API Response with category ID filter:', {
+            console.log('API Response with deepest category selection:', {
                 productsCount: newProducts.length,
                 totalCount: total,
                 hasMore: newProducts.length === limit,
@@ -1296,12 +1287,12 @@ const AllProductsPage: React.FC = () => {
         await loadProducts(true);
     }, [loadingMore, hasMore, loadProducts]);
 
-    // Filter and sort products (client-side fallback)
+    // Filter and sort products (client-side fallback) - INCLUDES OLDEST SORTING
     const filteredAndSortedProducts = useMemo(() => {
         let filtered = [...allProducts];
 
         // Apply client-side filtering as fallback
-        if (filters.priceRange[1] < 1000000 || filters.priceRange[0] > 0) {
+        if (filters.priceRange[1] < 100000000 || filters.priceRange[0] > 0) {
             filtered = filtered.filter(product => {
                 const productPrice = product.price || 0;
                 return productPrice >= filters.priceRange[0] && productPrice <= filters.priceRange[1];
@@ -1320,7 +1311,7 @@ const AllProductsPage: React.FC = () => {
             );
         }
 
-        // Apply sorting
+        // Apply sorting - INCLUDES OLDEST OPTION
         switch (currentSort) {
             case 'price-asc':
                 filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
@@ -1330,6 +1321,9 @@ const AllProductsPage: React.FC = () => {
                 break;
             case 'newest':
                 filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                break;
+            case 'oldest':
+                filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
                 break;
             case 'rating':
                 filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -1359,7 +1353,7 @@ const AllProductsPage: React.FC = () => {
             filters.minRating > 0 ||
             filters.inStockOnly ||
             searchQuery ||
-            filters.priceRange[1] < 1000000 ||
+            filters.priceRange[1] < 100000000 ||
             filters.priceRange[0] > 0
         );
     }, [filters, searchQuery]);
@@ -1491,7 +1485,7 @@ const AllProductsPage: React.FC = () => {
                                                     main_categories: [],
                                                     sub_categories: [],
                                                     product_categories: [],
-                                                    priceRange: [0, 1000000],
+                                                    priceRange: [0, 100000000],
                                                     minRating: 0,
                                                     inStockOnly: false
                                                 });
@@ -1573,7 +1567,7 @@ const AllProductsPage: React.FC = () => {
                                                         main_categories: [],
                                                         sub_categories: [],
                                                         product_categories: [],
-                                                        priceRange: [0, 1000000],
+                                                        priceRange: [0, 100000000],
                                                         minRating: 0,
                                                         inStockOnly: false
                                                     });

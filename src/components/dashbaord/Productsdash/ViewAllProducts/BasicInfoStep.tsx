@@ -1,3 +1,4 @@
+import { Star } from "lucide-react";
 import type { CategoryHierarchy } from "../../../../types/Product/NewProductDataDash";
 
 
@@ -294,7 +295,43 @@ const BasicInfoStep: React.FC<{
                     </select>
                 </div>
             </div>
-
+            {/* Featured Product Toggle - ADDED THIS SECTION */}
+            <div className="border-t pt-6">
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Featured Product
+                            </label>
+                            <p className="text-sm text-gray-500">
+                                Mark this product as featured to highlight it on your store
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => onChange({
+                                ...formData,
+                                is_featured: !formData.is_featured
+                            })}
+                            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${formData.is_featured ? 'bg-blue-600' : 'bg-gray-200'
+                                }`}
+                            disabled={loading}
+                        >
+                            <span className="sr-only">Featured product</span>
+                            <span
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${formData.is_featured ? 'translate-x-5' : 'translate-x-0'
+                                    }`}
+                            />
+                        </button>
+                    </div>
+                    {formData.is_featured && (
+                        <div className="mt-2 flex items-center gap-2 text-blue-600 text-sm">
+                            <Star size={16} />
+                            <span>This product will be featured on your store</span>
+                        </div>
+                    )}
+                </div>
+            </div>
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Brock</label>
                 <textarea

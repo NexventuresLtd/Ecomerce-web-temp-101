@@ -1,8 +1,9 @@
 import { ChevronLeft, ChevronRight, Edit, Eye, ImageIcon, Package, Plus, Star, Trash2 } from "lucide-react";
+import type { Product } from "../../../../types/Product/NewProductDataDash";
 
 interface ViewModalProps {
     SortIcon: React.FC<{ columnKey: string }>;
-    displayedProducts: any[];
+    displayedProducts: Product[];
     handleSort: (key: string) => void;
     loading: boolean;
     setShowAddForm: React.Dispatch<React.SetStateAction<boolean>>;
@@ -23,10 +24,10 @@ interface ViewModalProps {
 
 const ViewProdTable = ({
     SortIcon, loading, displayedProducts, handleSort, setCurrentPage, setViewingProduct,
-    setEditingProduct, handleDelete, formatRWF, searchTerm, currentPage, 
+    setEditingProduct, handleDelete, formatRWF, searchTerm, currentPage,
     entriesPerPage, totalPages, setShowAddForm, totalCount
 }: ViewModalProps) => {
-    
+
     // Calculate display range for database pagination
     const startIndex = (currentPage - 1) * entriesPerPage + 1;
     const endIndex = Math.min(currentPage * entriesPerPage, totalCount);
@@ -74,6 +75,9 @@ const ViewProdTable = ({
                                             Rating
                                         </th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                            Brock
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                             Category
                                         </th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -104,7 +108,7 @@ const ViewProdTable = ({
                                             </td>
                                         </tr>
                                     ) : (
-                                        displayedProducts.map((product) => {
+                                        displayedProducts.map((product, index) => {
                                             const primaryImage = product.images?.find((img: any) => img.is_primary) || product.images?.[0];
                                             const imageUrl = primaryImage?.url ? `${import.meta.env.VITE_API_BASE_URL}${primaryImage.url}` : '';
 
@@ -115,7 +119,7 @@ const ViewProdTable = ({
                                                 >
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="text-sm font-medium text-gray-900 bg-gray-50 px-3 py-1 rounded-lg inline-block">
-                                                            #{product.id}
+                                                            #{index + 1}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
@@ -207,6 +211,11 @@ const ViewProdTable = ({
                                                             <span className="text-sm text-gray-600 ml-1">
                                                                 ({product.reviews_count || 0})
                                                             </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm text-gray-900 max-w-xs uppercase">
+                                                            <span className="text-gray-400 italic">{product.brock}</span>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
