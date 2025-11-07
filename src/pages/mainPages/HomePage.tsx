@@ -11,12 +11,11 @@ const HomePage = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [latestProducts, setLatestProducts] = useState<Product[]>([]);
   const [topPicks, setTopPicks] = useState<Product[]>([]);
-  const [reusedProducts, setReusedProducts] = useState<Product[]>([]);
 
   const [featuredLoading, setFeaturedLoading] = useState(true);
   const [latestLoading, setLatestLoading] = useState(true);
   const [topPicksLoading, setTopPicksLoading] = useState(true);
-  const [reusedLoading, setReusedLoading] = useState(true);
+
 
   const [error, setError] = useState<string | null>(null);
 
@@ -48,9 +47,9 @@ const HomePage = () => {
       const params = {
         sort_by: 'created_at',
         sort_order: 'desc',
-        limit: '12'
+        limit: '100'
       };
-      const response = await productApi.getProducts(0, 12, params);
+      const response = await productApi.getProducts(0, 100, params);
       const products = response.products || response || [];
       setLatestProducts(products);
     } catch (err: any) {
@@ -69,9 +68,9 @@ const HomePage = () => {
         sort_by: 'rating',
         sort_order: 'desc',
         rating_min: '4',
-        limit: '12'
+        limit: '80'
       };
-      const response = await productApi.getProducts(0, 12, params);
+      const response = await productApi.getProducts(0, 80, params);
       const products = response.products || response || [];
       setTopPicks(products);
     } catch (err: any) {
@@ -82,28 +81,7 @@ const HomePage = () => {
     }
   }, []);
 
-  // Load reused products (filter by condition or category)
-  const loadReusedProducts = useCallback(async () => {
-    try {
-      setReusedLoading(true);
-      const params = {
-        // Adjust these parameters based on how your backend identifies reused products
-        // For example: condition='used', or specific category IDs for reused items
-        // condition: 'used',
-        sort_by: 'created_at',
-        sort_order: 'desc',
-        limit: '12'
-      };
-      const response = await productApi.getProducts(0, 12, params);
-      const products = response.products || response || [];
-      setReusedProducts(products);
-    } catch (err: any) {
-      console.error('Error loading reused products:', err);
-      setError(err.message || "Failed to fetch reused products");
-    } finally {
-      setReusedLoading(false);
-    }
-  }, []);
+
 
   // Load all product sections
   useEffect(() => {
@@ -112,8 +90,7 @@ const HomePage = () => {
         await Promise.all([
           loadFeaturedProducts(),
           loadLatestProducts(),
-          loadTopPicks(),
-          loadReusedProducts()
+          loadTopPicks()
         ]);
       } catch (err: any) {
         console.error('Error loading products:', err);
@@ -122,11 +99,11 @@ const HomePage = () => {
     };
 
     loadAllProducts();
-  }, [loadFeaturedProducts, loadLatestProducts, loadTopPicks, loadReusedProducts]);
+  }, [loadFeaturedProducts, loadLatestProducts, loadTopPicks]);
 
   // Check if any products are still loading
-  const isLoading = featuredLoading || latestLoading || topPicksLoading || reusedLoading;
-
+  const isLoading = featuredLoading || latestLoading || topPicksLoading;
+  console.log("latest", latestProducts.length);
   return (
     <>
       <div className="min-h-screen">
@@ -175,40 +152,18 @@ const HomePage = () => {
               <Offers
                 initialDisplayCount={ 12}
                 bg="bg-slate-100"
+                onLoadMore={() => {}}
                 title="Latest Products"
                 subtitle="Don't miss out on our newest arrivals"
-                showLoadMore={false}
+                showLoadMore={true}
                 products={latestProducts}
               // isLoading={latestLoading}
               />
             )}
 
-            {/* Reused Products Section */}
-            {reusedProducts.length > 0 && (
-              <Offers
-                initialDisplayCount={12}
-                title="Reused Products"
-                subtitle="Quality pre-owned items at great prices"
-                showLoadMore={false}
-                products={reusedProducts}
-              // isLoading={reusedLoading}
-              />
-            )}
 
             {/* Fallback if no specific categories have products but general products exist */}
-            {(featuredProducts.length === 0 && latestProducts.length === 0 &&
-              topPicks.length === 0 && reusedProducts.length === 0 &&
-              !isLoading) && (
-                <Offers
-                  initialDisplayCount={24}
-                  bg="bg-white"
-                  title="All Products"
-                  subtitle="Browse our complete collection"
-                  showLoadMore={true}
-                  products={[...featuredProducts, ...latestProducts, ...topPicks, ...reusedProducts]}
-                // isLoading={false}
-                />
-              )}
+            
           </>
         )}
 
