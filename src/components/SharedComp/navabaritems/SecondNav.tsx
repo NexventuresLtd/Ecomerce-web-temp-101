@@ -49,6 +49,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
         setShowSearchResults(false); // Close search results
         navigateToProduct(product.id.toString());
     };
+    
     const clearSearch = () => {
         setQuery('');
     };
@@ -65,6 +66,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
             setShowSearchResults(false); // Close search results
         }
     };
+
     useEffect(() => {
         if (query.trim() && !loading) {
             setShowSearchResults(true);
@@ -72,6 +74,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
             setShowSearchResults(false);
         }
     }, [query, loading]);
+    
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
@@ -87,9 +90,10 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
     }, []);
     
 
-    // Handle Enter key press in search input
+    // Handle Enter key press in search input - UPDATED
     const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
+            e.preventDefault(); // Prevent any default behavior
             handleSearch();
         }
     };
@@ -118,7 +122,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                         </div>
 
                         {/* Search Bar */}
-                        <div className={`${isMenuOpen ? 'max-xl:hidden' : ''} flex-1 max-w-4xl mx-4`}>
+                        <div className={`${isMenuOpen ? 'max-xl:hidden' : ''} flex-1 max-w-4xl mx-4 search-container`}>
                             <div className="flex gap-2">
                                 <div className="relative flex-1">
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -127,7 +131,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                                         onFocus={() => query.trim() && setShowSearchResults(true)}
                                         value={query}
                                         onChange={(e) => setQuery(e.target.value)}
-                                        onKeyPress={handleKeyPress}
+                                        onKeyDown={handleKeyPress} 
                                         placeholder="Search for products..."
                                         className="w-full pl-10 pr-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-lg"
                                     />
