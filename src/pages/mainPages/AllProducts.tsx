@@ -138,10 +138,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         whileTap={{ scale: 0.98 }}
                         className={`w-full py-3 px-3 rounded-lg text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2 bg-teal-600 hover:bg-primary/90 cursor-pointer
                   `}
-                        onClick={() => handleClickWhatsapp('', '', `${import.meta.env.VITE_API_BASE_URL}/products/share/product/${product.id} 
-                            Hi, I am interested in your product: ${product.title}. 
-                            Price: ${product.price ? RWF.format(product.price) : 'Not available'}.`
-                        )}
+                             onClick={() =>
+                                 handleClickWhatsapp(
+                                     '',
+                                     '',
+                                     `*🛒 Product Inquiry*
+     
+     ━━━━━━━━━━━━━━━━━━━
+     👋 *Hello,*  
+     I'm interested in one of your products listed on your store. Please find the details below 👇  
+     
+     📦 *Product:* ${product.title}
+     💰 *Price:* ${product.price ? RWF.format(product.price) + ' RWF' : 'Not available'}
+     📝 *Description:* ${product.description ? product.description.slice(0, 120) + '...' : 'No description provided.'}
+     🔗 *View Product:* ${import.meta.env.VITE_API_BASE_URL}/products/share/product/${product.id}
+     
+     ━━━━━━━━━━━━━━━━━━━
+     📩 *Kindly get back to me with more details or availability.*
+     Thank you! 🙏`
+                                 )
+                             }
                     >
                         <>
                             <ShoppingCartIcon size={18} />
