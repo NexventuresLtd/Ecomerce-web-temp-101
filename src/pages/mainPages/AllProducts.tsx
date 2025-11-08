@@ -1446,7 +1446,7 @@ const AllProductsPage: React.FC = () => {
                                             {searchQuery
                                                 ? `Search Results for "${searchQuery}"`
                                                 : categoryParam
-                                                    ? `Products in ${getCategoryDisplayName()}`
+                                                    ? `Filtered Products `
                                                     : 'All Products'
                                             }
                                         </h1>
