@@ -138,11 +138,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         whileTap={{ scale: 0.98 }}
                         className={`w-full py-3 px-3 rounded-lg text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2 bg-teal-600 hover:bg-primary/90 cursor-pointer
                   `}
-                             onClick={() =>
-                                 handleClickWhatsapp(
-                                     '',
-                                     '',
-                                     `*🛒 Product Inquiry*
+                        onClick={() =>
+                            handleClickWhatsapp(
+                                '',
+                                '',
+                                `*🛒 Product Inquiry*
      
      ━━━━━━━━━━━━━━━━━━━
      👋 *Hello,*  
@@ -156,8 +156,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
      ━━━━━━━━━━━━━━━━━━━
      📩 *Kindly get back to me with more details or availability.*
      Thank you! 🙏`
-                                 )
-                             }
+                            )
+                        }
                     >
                         <>
                             <ShoppingCartIcon size={18} />
@@ -957,7 +957,7 @@ const AllProductsPage: React.FC = () => {
     const [correctedQuery, setCorrectedQuery] = useState<string>('');
     const limit: number = 100;
     console.log(searchSuggestions, error)
-    
+
     // Default state: no filters, newest first sorting
     const [filters, setFilters] = useState<FilterState>({
         main_categories: [], // Now stores category IDs as numbers
@@ -1417,7 +1417,7 @@ const AllProductsPage: React.FC = () => {
         }
         return 'Category';
     };
-
+    getCategoryDisplayName()
     return (
         <>
             <Navbar />
@@ -1454,7 +1454,7 @@ const AllProductsPage: React.FC = () => {
                                             {searchQuery
                                                 ? `Found ${totalCount} products matching your search`
                                                 : categoryParam
-                                                    ? `Browse ${totalCount} products in ${getCategoryDisplayName()}`
+                                                    ? `Browse ${totalCount} products `
                                                     : 'Discover amazing products from verified sellers'
                                             }
                                         </p>
