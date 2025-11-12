@@ -80,9 +80,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         -{product.discount}%
                     </div>
                 )}
-                {product.is_new && (
+                {product.is_new == "new" && (
                     <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                        NEW
+                        {product.is_new}
                     </div>
                 )}
 
@@ -150,7 +150,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
      
      📦 *Product:* ${product.title}
      💰 *Price:* ${product.price ? RWF.format(product.price) + ' RWF' : 'Not available'}
-     📝 *Description:* ${product.description ? product.description.slice(0, 120) + '...' : 'No description provided.'}
      🔗 *View Product:* ${import.meta.env.VITE_API_BASE_URL}/products/share/product/${product.id}
      
      ━━━━━━━━━━━━━━━━━━━
@@ -691,7 +690,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     categories,
     categoriesLoading
 }) => {
-    const maxPrice = 100000000;
+    const maxPrice = 50000000;
     const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
 
     const updateFilters = (key: keyof FilterState, value: any) => {
@@ -963,7 +962,7 @@ const AllProductsPage: React.FC = () => {
         main_categories: [], // Now stores category IDs as numbers
         sub_categories: [],
         product_categories: [],
-        priceRange: [0, 100000000],
+        priceRange: [0, 50000000],
         minRating: 0,
         inStockOnly: false
     });
@@ -971,7 +970,7 @@ const AllProductsPage: React.FC = () => {
     const [currentSort, setCurrentSort] = useState<SortOption>('newest');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-
+    const [initialSearchTriggered, setInitialSearchTriggered] = useState(false);
     // Get URL parameters
     const [searchParams] = useSearchParams();
     const categoryParam = searchParams.get('category');
@@ -988,19 +987,24 @@ const AllProductsPage: React.FC = () => {
     const searchQueryFromRoute = params.query || params.search || params.term || params.q || '';
 
     // Handle search parameter from route - COMPREHENSIVE FIX
+    // With this:
     useEffect(() => {
-        console.log('🔍 Route parameters analysis:', {
-            allParams: params,
-            extractedQuery: searchQueryFromRoute,
-            currentSearchState: searchQuery
-        });
-
         if (searchQueryFromRoute && searchQueryFromRoute.trim()) {
-            console.log('🎯 Setting search query from URL route:', searchQueryFromRoute);
+            console.log('🎯 Auto-setting search query from URL:', searchQueryFromRoute);
             setSearchQuery(searchQueryFromRoute);
+            setInitialSearchTriggered(true);
         }
     }, [searchQueryFromRoute]);
-
+    // Auto-trigger search when URL has search query
+    useEffect(() => {
+        if (searchQuery.trim() && initialSearchTriggered && !categoriesLoading) {
+            console.log('🚀 Auto-triggering search for:', searchQuery);
+            setAllProducts([]);
+            setHasMore(true);
+            loadProducts(false);
+            setInitialSearchTriggered(false);
+        }
+    }, [searchQuery, initialSearchTriggered, categoriesLoading]);
     // Also handle initial load to ensure search is triggered
     useEffect(() => {
         if (searchQuery && searchQuery.trim()) {
@@ -1279,23 +1283,40 @@ const AllProductsPage: React.FC = () => {
         }
     }, [skip, limit, filters, currentSort, searchQuery, categoryParam]);
 
-    // Initial data load
+    // With this:
     useEffect(() => {
         const initializeData = async () => {
             await loadCategories();
-            await loadProducts(false);
+            // Only load all products if no search query from URL
+            if (!searchQueryFromRoute.trim()) {
+                await loadProducts(false);
+            }
         };
-
         initializeData();
     }, []);
 
     // Reload products when filters, sort, or search change
     useEffect(() => {
         console.log('Filters changed, reloading products:', filters);
+
+        // Only trigger if:
+        // 1. Categories are loaded AND
+        // 2. This is not the initial URL search processing
+        if (categoriesLoading || initialSearchTriggered) return;
+
         setAllProducts([]);
         setHasMore(true);
         loadProducts(false);
-    }, [filters, currentSort, searchQuery]);
+    }, [filters, currentSort, categoriesLoading, initialSearchTriggered]);
+    // Handle manual search changes (user typing)
+useEffect(() => {
+    if (searchQuery.trim() && !initialSearchTriggered && !categoriesLoading) {
+        console.log('Manual search change:', searchQuery);
+        setAllProducts([]);
+        setHasMore(true);
+        loadProducts(false);
+    }
+}, [searchQuery, initialSearchTriggered, categoriesLoading]);
 
     // Load more products
     const handleLoadMore = useCallback(async () => {

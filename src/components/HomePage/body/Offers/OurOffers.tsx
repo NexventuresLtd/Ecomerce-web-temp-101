@@ -53,9 +53,9 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
                         -{product.discount}%
                     </div>
                 )}
-                {product.is_new && (
+                {product.is_new == "new" && (
                     <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                        NEW
+                        {product.is_new}
                     </div>
                 )}
 
@@ -96,7 +96,7 @@ const OfferCard: React.FC<OfferCardProps> = ({ product, index, onProductClick })
                         )}
                     </div>
                 </div>
-                
+
                 <div className={`${(product.instock || 0) < 1 ? 'bg-red-500' : 'bg-primary'} text-white px-2 py-1 rounded-full text-xs w-fit ml-auto mb-2 font-semibold`}>
                     {(product.instock || 0) < 1 ? 'Out of Stock' : `${product.instock} in Stock`}
                 </div>
@@ -125,7 +125,6 @@ I'm interested in one of your products listed on your store. Please find the det
 
 📦 *Product:* ${product.title}
 💰 *Price:* ${product.price ? RWF.format(product.price) + ' RWF' : 'Not available'}
-📝 *Description:* ${product.description ? product.description.slice(0, 120) + '...' : 'No description provided.'}
 🔗 *View Product:* ${import.meta.env.VITE_API_BASE_URL}/products/share/product/${product.id}
 
 ━━━━━━━━━━━━━━━━━━━

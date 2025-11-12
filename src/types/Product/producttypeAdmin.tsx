@@ -8,7 +8,7 @@ export interface Product {
     original_price?: number;
     discount?: number;
     rating?: number;
-    is_new: boolean;
+    is_new: string;
     is_featured: boolean;
     is_active: boolean;
     reviews_count?: number;
