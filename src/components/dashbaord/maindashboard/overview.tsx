@@ -12,7 +12,7 @@ import {
   Shield,
   Layers,
   BarChart4,
-  FileText,
+  // FileText,
   Smartphone
 } from 'lucide-react';
 import {
@@ -30,6 +30,7 @@ import {
 } from 'recharts';
 
 import mainAxios from '../../../Instance/mainAxios';
+import { useAppContext } from '../../../contexts/dashbaord/context';
 
 // Define types based on your backend response
 interface DashboardSummary {
@@ -78,6 +79,8 @@ interface StatCard {
 type ColorType = 'blue' | 'green' | 'orange' | 'purple' | 'pink' | 'indigo' | 'teal';
 
 const umukameziDashboard = () => {
+  const { setCurrentView } = useAppContext();
+  
   const [timeRange, setTimeRange] = useState('7d');
   const [dashboardData, setDashboardData] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -510,14 +513,14 @@ const umukameziDashboard = () => {
               <ShoppingCart className="text-orange-600" size={20} />
               <h3 className="text-lg font-semibold text-gray-900">Shopping Activity</h3>
             </div>
-            <div className="space-y-3">
+            <div onClick={() => setCurrentView?.("carts")}  className="space-y-3">
               <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
                 <span className="text-sm font-medium text-gray-700">Total Carts</span>
                 <span className="text-lg font-bold text-orange-600">
                   {dashboardData?.carts.total.toLocaleString()}
                 </span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-pink-50 rounded-lg">
+              <div onClick={() => setCurrentView?.("wishlists")} className="flex justify-between items-center p-3 bg-pink-50 rounded-lg">
                 <span className="text-sm font-medium text-gray-700">Total Wishlists</span>
                 <span className="text-lg font-bold text-pink-600">
                   {dashboardData?.wishlists.total.toLocaleString()}
@@ -530,15 +533,15 @@ const umukameziDashboard = () => {
           <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="space-y-3">
-              <button className="w-full flex items-center gap-3 p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+              {/* <button className="w-full flex items-center gap-3 p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                 <FileText className="text-blue-600" size={18} />
                 <span className="text-sm font-medium text-gray-700">Generate Report</span>
-              </button>
-              <button className="w-full flex items-center gap-3 p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+              </button> */}
+              <button onClick={() => setCurrentView?.("users")} className="w-full flex items-center gap-3 p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
                 <Users className="text-green-600" size={18} />
                 <span className="text-sm font-medium text-gray-700">View Users</span>
               </button>
-              <button className="w-full flex items-center gap-3 p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+              <button onClick={() => setCurrentView?.("products")} className="w-full flex items-center gap-3 p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
                 <Package className="text-purple-600" size={18} />
                 <span className="text-sm font-medium text-gray-700">Manage Products</span>
               </button>

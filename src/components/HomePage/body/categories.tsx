@@ -81,7 +81,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({
         // alert("clicked category: " + category);
         const categories = [
             { title: 'Photograph', name: 'Camera' },
-            { title: 'Videography', name: 'Lenses' },
+            { title: 'Videography', name: 'Camera' },
             { title: 'Computer', name: 'Computer' },
             { title: 'Pro Audio', name: 'Pro Audio' },
             { title: 'Lighting', name: 'Lighting' },

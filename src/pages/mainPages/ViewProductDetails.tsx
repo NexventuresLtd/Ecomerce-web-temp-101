@@ -264,9 +264,9 @@ const ProductViewPage: React.FC = () => {
 
                                 {/* Badges */}
                                 <div className="absolute top-4 left-4 flex flex-col gap-2">
-                                    {product.is_new && (
+                                    {product.is_new == "new" && (
                                         <span className="px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
-                                            NEW
+                                            {product.is_new}
                                         </span>
                                     )}
                                 </div>
@@ -530,7 +530,7 @@ const ProductViewPage: React.FC = () => {
                     {/* Product Details Tabs */}
                     <div className="mt-16">
                         <div className="border-b border-gray-200">
-                            <nav className="flex space-x-8">
+                            <nav className="grid grid-cols-4 xl:grid-cols-8">
                                 {['description', 'tutorial', 'features', 'condition', 'brock', 'warranty', 'delivery'].map((tab) => (
                                     <button
                                         key={tab}

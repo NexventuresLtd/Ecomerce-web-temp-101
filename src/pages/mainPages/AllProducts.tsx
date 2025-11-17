@@ -1175,7 +1175,7 @@ const AllProductsPage: React.FC = () => {
             // Use search endpoint if search query exists
             if (searchQuery.trim()) {
                 console.log('Using search endpoint for query:', searchQuery);
-                response = await searchProducts(searchQuery, currentSkip, limit);
+                response = await searchProducts(searchQuery.toLowerCase(), currentSkip, limit);
                 setSearchSuggestions(response.suggestions || []);
                 setCorrectedQuery(response.corrected_query || '');
             } else {
