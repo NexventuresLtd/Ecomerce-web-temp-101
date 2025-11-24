@@ -680,6 +680,8 @@ interface FilterSidebarProps {
     onClose: () => void;
     categories: Category[];
     categoriesLoading: boolean;
+    searchQuery: string;
+    onClearSearch: () => void;
 }
 
 const FilterSidebar: React.FC<FilterSidebarProps> = ({
@@ -688,12 +690,18 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     isOpen,
     onClose,
     categories,
-    categoriesLoading
+    categoriesLoading,
+    searchQuery,
+    onClearSearch
 }) => {
     const maxPrice = 50000000;
     const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
 
     const updateFilters = (key: keyof FilterState, value: any) => {
+        // Clear search when applying filters
+        if (searchQuery && (key === 'main_categories' || key === 'sub_categories' || key === 'product_categories')) {
+            onClearSearch();
+        }
         onFiltersChange({ ...filters, [key]: value });
     };
 
@@ -709,6 +717,10 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     };
 
     const handlePriceRangeChange = (range: [number, number]) => {
+        // Clear search when applying price filter
+        if (searchQuery) {
+            onClearSearch();
+        }
         updateFilters('priceRange', range);
     };
 
@@ -718,6 +730,18 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 ? prev.filter(id => id !== categoryId)
                 : [...prev, categoryId]
         );
+    };
+
+    const handleClearAllFilters = () => {
+        onFiltersChange({
+            main_categories: [],
+            sub_categories: [],
+            product_categories: [],
+            priceRange: [0, maxPrice],
+            minRating: 0,
+            inStockOnly: false
+        });
+        setExpandedCategories([]);
     };
 
     const sidebarContent = (
@@ -731,6 +755,15 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     <X className="w-5 h-5" />
                 </button>
             </div>
+
+            {/* Search Warning */}
+            {searchQuery && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800">
+                        <strong>Note:</strong> Applying filters will clear your current search.
+                    </p>
+                </div>
+            )}
 
             {/* Categories */}
             <div>
@@ -842,17 +875,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
             {/* Clear Filters */}
             <button
-                onClick={() => {
-                    onFiltersChange({
-                        main_categories: [],
-                        sub_categories: [],
-                        product_categories: [],
-                        priceRange: [0, maxPrice],
-                        minRating: 0,
-                        inStockOnly: false
-                    });
-                    setExpandedCategories([]);
-                }}
+                onClick={handleClearAllFilters}
                 className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
             >
                 Clear All Filters
@@ -956,7 +979,7 @@ const AllProductsPage: React.FC = () => {
     const [correctedQuery, setCorrectedQuery] = useState<string>('');
     const limit: number = 100;
     console.log(searchSuggestions, error)
-
+    
     // Default state: no filters, newest first sorting
     const [filters, setFilters] = useState<FilterState>({
         main_categories: [], // Now stores category IDs as numbers
@@ -971,11 +994,13 @@ const AllProductsPage: React.FC = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [initialSearchTriggered, setInitialSearchTriggered] = useState(false);
+    const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+    
     // Get URL parameters
     const [searchParams] = useSearchParams();
     const categoryParam = searchParams.get('category');
     const params = useParams(); // Get all route parameters
-
+    
     // Debug: Check what parameters are available
     console.log('🔍 All route parameters:', params);
     console.log('🔍 Search params:', {
@@ -986,37 +1011,34 @@ const AllProductsPage: React.FC = () => {
     // Extract search query from route parameters
     const searchQueryFromRoute = params.query || params.search || params.term || params.q || '';
 
-    // Handle search parameter from route - COMPREHENSIVE FIX
-    // With this:
+    // Handle search parameter from route
     useEffect(() => {
         if (searchQueryFromRoute && searchQueryFromRoute.trim()) {
             console.log('🎯 Auto-setting search query from URL:', searchQueryFromRoute);
             setSearchQuery(searchQueryFromRoute);
             setInitialSearchTriggered(true);
+            
+            // Clear filters when search is applied from URL
+            setFilters({
+                main_categories: [],
+                sub_categories: [],
+                product_categories: [],
+                priceRange: [0, 50000000],
+                minRating: 0,
+                inStockOnly: false
+            });
         }
     }, [searchQueryFromRoute]);
-    // Auto-trigger search when URL has search query
-    useEffect(() => {
-        if (searchQuery.trim() && initialSearchTriggered && !categoriesLoading) {
-            console.log('🚀 Auto-triggering search for:', searchQuery);
-            setAllProducts([]);
-            setHasMore(true);
-            loadProducts(false);
-            setInitialSearchTriggered(false);
-        }
-    }, [searchQuery, initialSearchTriggered, categoriesLoading]);
-    // Also handle initial load to ensure search is triggered
-    useEffect(() => {
-        if (searchQuery && searchQuery.trim()) {
-            console.log('🚀 Initial search query detected, should trigger search:', searchQuery);
-            // The searchQuery change will automatically trigger loadProducts via the useEffect dependency
-        }
-    }, [searchQuery]);
 
     // Handle category parameter from query string - FIXED: ONLY SELECT DEEPEST CATEGORY
     useEffect(() => {
         if (categoryParam) {
             console.log('Category query parameter:', categoryParam);
+
+            // Clear search when category is applied
+            setSearchQuery('');
+            setCorrectedQuery('');
+            setSearchSuggestions([]);
 
             // Check if it's a main category name from navigation
             if (isMainCategory(categoryParam)) {
@@ -1050,7 +1072,7 @@ const AllProductsPage: React.FC = () => {
                         return segment;
                     }
                 });
-
+                
                 console.log('Decoded category segments:', decodedSegments);
 
                 const newFilters: FilterState = {
@@ -1083,7 +1105,7 @@ const AllProductsPage: React.FC = () => {
                     if (!isNaN(mainCategoryId)) {
                         // Check if this ID corresponds to a main category in our mapping
                         const isMainCat = mainCategoryIds.includes(mainCategoryId);
-
+                        
                         if (isMainCat) {
                             // It's a main category - use the ID directly
                             newFilters.main_categories = [mainCategoryId];
@@ -1101,25 +1123,45 @@ const AllProductsPage: React.FC = () => {
                         }
                     }
                 }
-
+                
                 console.log('Setting filters from category path (deepest level only):', newFilters);
                 setFilters(newFilters);
             }
         }
     }, [categoryParam, categories]);
 
+    const clearAll = () => {
+        setFilters({
+            main_categories: [],
+            sub_categories: [],
+            product_categories: [],
+            priceRange: [0, 100000000],
+            minRating: 0,
+            inStockOnly: false
+        });
+        setSearchQuery('');
+        setCorrectedQuery('');
+        setSearchSuggestions([]);
+    }
+
+    const clearSearch = () => {
+        setSearchQuery('');
+        setCorrectedQuery('');
+        setSearchSuggestions([]);
+    }
+
     // Load categories from API with proper hierarchy
     const loadCategories = useCallback(async (): Promise<void> => {
         try {
             setCategoriesLoading(true);
-
+            
             const hierarchy = await categoryApi.getFullHierarchy();
-
+            
             if (hierarchy && hierarchy.length > 0) {
                 setCategories(hierarchy);
             } else {
                 const mainCategories = await categoryApi.getMainCategories();
-
+                
                 if (mainCategories && mainCategories.length > 0) {
                     const hierarchy: Category[] = [];
 
@@ -1158,7 +1200,7 @@ const AllProductsPage: React.FC = () => {
         }
     }, []);
 
-    // Load products from API - FIXED for proper sorting and category filtering
+    // Load products from API - SEPARATED search and filters
     const loadProducts = useCallback(async (loadMore: boolean = false): Promise<void> => {
         try {
             const currentSkip = loadMore ? skip : 0;
@@ -1172,14 +1214,17 @@ const AllProductsPage: React.FC = () => {
 
             let response;
 
-            // Use search endpoint if search query exists
+            // Use search endpoint if search query exists (WITHOUT FILTERS)
             if (searchQuery.trim()) {
-                console.log('Using search endpoint for query:', searchQuery);
+                console.log('🔍 Using search endpoint ONLY for query:', searchQuery);
+                
+                // Search without filters - they are mutually exclusive
                 response = await searchProducts(searchQuery.toLowerCase(), currentSkip, limit);
                 setSearchSuggestions(response.suggestions || []);
                 setCorrectedQuery(response.corrected_query || '');
             } else {
-                // Use regular products endpoint with filters
+                // Use regular products endpoint with filters (NO SEARCH)
+                console.log('📦 Using regular products endpoint with filters');
                 const params: Record<string, any> = {
                     skip: currentSkip.toString(),
                     limit: limit.toString(),
@@ -1244,7 +1289,7 @@ const AllProductsPage: React.FC = () => {
             const newProducts: Product[] = response.products || [];
             const total = response.total_count || 0;
 
-            console.log('API Response with deepest category selection:', {
+            console.log('✅ API Response:', {
                 productsCount: newProducts.length,
                 totalCount: total,
                 hasMore: newProducts.length === limit,
@@ -1283,40 +1328,92 @@ const AllProductsPage: React.FC = () => {
         }
     }, [skip, limit, filters, currentSort, searchQuery, categoryParam]);
 
-    // With this:
+    // Initialize data - FIXED: Only load products after categories are loaded and filters are set
     useEffect(() => {
         const initializeData = async () => {
             await loadCategories();
-            // Only load all products if no search query from URL
-            if (!searchQueryFromRoute.trim()) {
-                await loadProducts(false);
-            }
+            
+            // Mark initial load as complete after categories are loaded
+            setInitialLoadComplete(true);
         };
         initializeData();
     }, []);
 
-    // Reload products when filters, sort, or search change
+    // Load products when initial load is complete and we have URL parameters or default state
     useEffect(() => {
-        console.log('Filters changed, reloading products:', filters);
+        if (initialLoadComplete && !categoriesLoading) {
+            console.log('🚀 Initial load complete, loading products based on current state');
+            setAllProducts([]);
+            setHasMore(true);
+            loadProducts(false);
+        }
+    }, [initialLoadComplete, categoriesLoading]);
+
+    // Auto-trigger search when URL has search query
+    useEffect(() => {
+        if (searchQuery.trim() && initialSearchTriggered && !categoriesLoading && initialLoadComplete) {
+            console.log('🚀 Auto-triggering search for:', searchQuery);
+            setAllProducts([]);
+            setHasMore(true);
+            loadProducts(false);
+            setInitialSearchTriggered(false);
+        }
+    }, [searchQuery, initialSearchTriggered, categoriesLoading, initialLoadComplete]);
+
+    // Handle search input change - CLEAR FILTERS when searching
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearchQuery(value);
+        
+        // Clear filters when user starts typing search
+        if (value.trim() && (filters.main_categories.length > 0 || filters.sub_categories.length > 0 || filters.product_categories.length > 0)) {
+            console.log('🧹 Clearing filters due to search');
+            setFilters({
+                main_categories: [],
+                sub_categories: [],
+                product_categories: [],
+                priceRange: [0, 50000000],
+                minRating: 0,
+                inStockOnly: false
+            });
+        }
+    };
+
+    // Handle manual search submission
+    const handleSearchSubmit = () => {
+        if (searchQuery.trim()) {
+            console.log('🔍 Manual search submitted:', searchQuery);
+            setAllProducts([]);
+            setHasMore(true);
+            loadProducts(false);
+        }
+    };
+
+    // Reload products when filters or search change - SEPARATED LOGIC
+    useEffect(() => {
+        console.log('🔄 Reloading products due to changes:', {
+            filters,
+            currentSort,
+            searchQuery,
+            categoriesLoading,
+            initialSearchTriggered,
+            initialLoadComplete
+        });
 
         // Only trigger if:
         // 1. Categories are loaded AND
-        // 2. This is not the initial URL search processing
-        if (categoriesLoading || initialSearchTriggered) return;
+        // 2. Initial load is complete AND
+        // 3. This is not the initial URL search processing
+        if (categoriesLoading || !initialLoadComplete || initialSearchTriggered) {
+            console.log('⏳ Skipping reload - waiting for categories or initial load');
+            return;
+        }
 
+        console.log('✅ Conditions met, reloading products...');
         setAllProducts([]);
         setHasMore(true);
         loadProducts(false);
-    }, [filters, currentSort, categoriesLoading, initialSearchTriggered]);
-    // Handle manual search changes (user typing)
-useEffect(() => {
-    if (searchQuery.trim() && !initialSearchTriggered && !categoriesLoading) {
-        console.log('Manual search change:', searchQuery);
-        setAllProducts([]);
-        setHasMore(true);
-        loadProducts(false);
-    }
-}, [searchQuery, initialSearchTriggered, categoriesLoading]);
+    }, [filters, currentSort, searchQuery, categoriesLoading, initialSearchTriggered, initialLoadComplete]);
 
     // Load more products
     const handleLoadMore = useCallback(async () => {
@@ -1389,56 +1486,16 @@ useEffect(() => {
             filters.product_categories.length > 0 ||
             filters.minRating > 0 ||
             filters.inStockOnly ||
-            searchQuery ||
             filters.priceRange[1] < 100000000 ||
             filters.priceRange[0] > 0
         );
-    }, [filters, searchQuery]);
+    }, [filters]);
 
-    // Handle search input change
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchQuery(e.target.value);
-    };
+    // Check if search is active
+    const hasSearch = useMemo(() => {
+        return searchQuery.trim().length > 0;
+    }, [searchQuery]);
 
-    // Get category display name for title - SIMPLIFIED
-    const getCategoryDisplayName = () => {
-        if (categoryParam) {
-            // For main categories, just return the name directly
-            if (isMainCategory(categoryParam)) {
-                return categoryParam;
-            }
-
-            // For encoded paths, try to get the display name
-            try {
-                const pathSegments = categoryParam.split('/');
-                const decodedSegments = pathSegments.map(segment => {
-                    try {
-                        return decodeId(segment);
-                    } catch {
-                        return segment;
-                    }
-                });
-
-                // Get category names from your categories data
-                const getCategoryName = (id: number): string => {
-                    const category = categories.find(cat => cat.id === id);
-                    return category?.name || `Category ${id}`;
-                };
-
-                if (decodedSegments.length === 1) {
-                    return getCategoryName(Number(decodedSegments[0]));
-                } else if (decodedSegments.length === 2) {
-                    return `${getCategoryName(Number(decodedSegments[0]))} → ${getCategoryName(Number(decodedSegments[1]))}`;
-                } else if (decodedSegments.length >= 3) {
-                    return `${getCategoryName(Number(decodedSegments[0]))} → ${getCategoryName(Number(decodedSegments[1]))} → ${getCategoryName(Number(decodedSegments[2]))}`;
-                }
-            } catch (error) {
-                console.error('Error getting category display name:', error);
-            }
-        }
-        return 'Category';
-    };
-    getCategoryDisplayName()
     return (
         <>
             <Navbar />
@@ -1453,6 +1510,8 @@ useEffect(() => {
                             onClose={() => setIsFilterOpen(false)}
                             categories={categories}
                             categoriesLoading={categoriesLoading}
+                            searchQuery={searchQuery}
+                            onClearSearch={clearSearch}
                         />
                     </div>
 
@@ -1464,18 +1523,18 @@ useEffect(() => {
                                 <div className="flex items-center justify-between mb-4">
                                     <div>
                                         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
-                                            {searchQuery
+                                            {hasSearch
                                                 ? `Search Results for "${searchQuery}"`
-                                                : categoryParam
-                                                    ? `Filtered Products `
+                                                : hasActiveFilters
+                                                    ? `Filtered Products`
                                                     : 'All Products'
                                             }
                                         </h1>
                                         <p className="text-gray-600 mt-1">
-                                            {searchQuery
+                                            {hasSearch
                                                 ? `Found ${totalCount} products matching your search`
-                                                : categoryParam
-                                                    ? `Browse ${totalCount} products `
+                                                : hasActiveFilters
+                                                    ? `Browse ${totalCount} products matching your filters`
                                                     : 'Discover amazing products from verified sellers'
                                             }
                                         </p>
@@ -1502,6 +1561,11 @@ useEffect(() => {
                                         placeholder="Search products..."
                                         value={searchQuery}
                                         onChange={handleSearchChange}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                handleSearchSubmit();
+                                            }
+                                        }}
                                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     />
                                 </div>
@@ -1515,24 +1579,12 @@ useEffect(() => {
                                     <p className="text-sm text-gray-600">
                                         Showing {filteredAndSortedProducts.length} of {totalCount} products
                                     </p>
-                                    {hasActiveFilters && (
+                                    {(hasActiveFilters || hasSearch) && (
                                         <button
-                                            onClick={() => {
-                                                setFilters({
-                                                    main_categories: [],
-                                                    sub_categories: [],
-                                                    product_categories: [],
-                                                    priceRange: [0, 100000000],
-                                                    minRating: 0,
-                                                    inStockOnly: false
-                                                });
-                                                setSearchQuery('');
-                                                setCorrectedQuery('');
-                                                setSearchSuggestions([]);
-                                            }}
+                                            onClick={clearAll}
                                             className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
                                         >
-                                            Clear all filters
+                                            Clear all
                                         </button>
                                     )}
                                 </div>
@@ -1596,25 +1648,16 @@ useEffect(() => {
                                                 No products found
                                             </h3>
                                             <p className="text-gray-600 mb-6">
-                                                Try adjusting your search or filter criteria to find what you're looking for.
+                                                {hasSearch
+                                                    ? "No products match your search criteria. Try adjusting your search terms."
+                                                    : "No products match your filter criteria. Try adjusting your filters."
+                                                }
                                             </p>
                                             <button
-                                                onClick={() => {
-                                                    setFilters({
-                                                        main_categories: [],
-                                                        sub_categories: [],
-                                                        product_categories: [],
-                                                        priceRange: [0, 100000000],
-                                                        minRating: 0,
-                                                        inStockOnly: false
-                                                    });
-                                                    setSearchQuery('');
-                                                    setCorrectedQuery('');
-                                                    setSearchSuggestions([]);
-                                                }}
+                                                onClick={clearAll}
                                                 className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                                             >
-                                                Clear all filters
+                                                {hasSearch ? "Clear search" : "Clear filters"}
                                             </button>
                                         </div>
                                     </motion.div>

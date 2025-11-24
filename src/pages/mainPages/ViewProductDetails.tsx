@@ -270,6 +270,14 @@ const ProductViewPage: React.FC = () => {
                                         </span>
                                     )}
                                 </div>
+                                {/* Badges */}
+                                <div className="absolute top-4 left-4 flex flex-col gap-2">
+                                    {product.discount !== 0 && (
+                                        <span className="px-3 py-1 bg-red-500 text-white text-xs font-medium rounded-full">
+                                            {product.discount} %
+                                        </span>
+                                    )}
+                                </div>
 
                                 {/* Video Play Button */}
                                 {product.tutorial_video && (
@@ -531,7 +539,7 @@ const ProductViewPage: React.FC = () => {
                     <div className="mt-16">
                         <div className="border-b border-gray-200">
                             <nav className="grid grid-cols-4 xl:grid-cols-8">
-                                {['description', 'tutorial', 'features', 'condition', 'brock', 'warranty', 'delivery'].map((tab) => (
+                                {['description', 'tutorial', 'features', 'condition', 'brock', 'warranty', 'delivery fee','return policy'].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
@@ -601,7 +609,8 @@ const ProductViewPage: React.FC = () => {
                             )}
                             {activeTab === "brock" && (product.brock || "Umukamezi")}
                             {activeTab === "warranty" && (product.warranty || "2 month")}
-                            {activeTab === "delivery" && (product.delivery_fee ? `${product.delivery_fee}` : "1 day")}
+                            {activeTab === "delivery fee" && (product.delivery_fee ? `${product.delivery_fee}` : "")}
+                            {activeTab === "return policy" && (product.returnDay ? `${product.returnDay}` : "")}
                         </div>
                     </div>
                 </div>
