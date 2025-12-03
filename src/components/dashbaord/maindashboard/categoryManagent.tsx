@@ -32,26 +32,51 @@ const CategoriesView: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-            const [mainCats, subCats, productCats] = await Promise.all([
-                categoryApi.getMainCategories(),
-                categoryApi.getSubCategories(),
-                categoryApi.getProductCategories()
-            ]);
+            // Since the API returns nested structure, we need to flatten it
+            const mainCats = await categoryApi.getMainCategories();
+            
+            // Flatten the nested structure
+            const allSubCats: SubCategory[] = [];
+            const allProductCats: ProductCategory[] = [];
+            
+            mainCats.forEach((mainCat: any) => {
+                
+                // Process sub categories
+                if (mainCat.sub_categories && Array.isArray(mainCat.sub_categories)) {
+                    mainCat.sub_categories.forEach((subCat: any) => {
+                        // Add type and main category name to sub category
+                        const enhancedSubCat = {
+                            ...subCat,
+                            type: 'sub' as const,
+                            main_category_id: mainCat.id,
+                            main_category_name: mainCat.name
+                        };
+                        allSubCats.push(enhancedSubCat);
+                        
+                        // Process product categories
+                        if (subCat.product_categories && Array.isArray(subCat.product_categories)) {
+                            subCat.product_categories.forEach((prodCat: any) => {
+                                // Add type and parent names to product category
+                                const enhancedProdCat = {
+                                    ...prodCat,
+                                    type: 'product' as const,
+                                    sub_category_id: subCat.id,
+                                    sub_category_name: subCat.name,
+                                    main_category_id: mainCat.id,
+                                    main_category_name: mainCat.name
+                                };
+                                allProductCats.push(enhancedProdCat);
+                            });
+                        }
+                    });
+                }
+            });
 
-            // Enhance categories with parent names for better display
-            const enhancedSubCats = subCats.map((sub: SubCategory) => ({
-                ...sub,
-                main_category_name: mainCats.find((m: MainCategory) => m.id === sub.main_category_id)?.name || 'Unknown'
-            }));
-
-            const enhancedProductCats = productCats.map((prod: ProductCategory) => ({
-                ...prod,
-                sub_category_name: enhancedSubCats.find((s: SubCategory) => s.id === prod.sub_category_id)?.name || 'Unknown'
-            }));
-
-            setMainCategories(mainCats);
-            setSubCategories(enhancedSubCats);
-            setProductCategories(enhancedProductCats);
+            // Update state with enhanced categories
+            setMainCategories(mainCats.map((cat: any) => ({ ...cat, type: 'main' as const })));
+            setSubCategories(allSubCats);
+            setProductCategories(allProductCats);
+            
         } catch (error) {
             console.error('Failed to load categories:', error);
             setError('Failed to load categories. Please try again.');
@@ -84,15 +109,14 @@ const CategoriesView: React.FC = () => {
     };
 
     const handleDeleteCategory = async (category: Category) => {
-        // alert(activeTab)
         if (!window.confirm(`Are you sure you want to delete "${category.name}"? This action cannot be undone.`)) return;
 
         setLoading(true);
         setError(null);
         try {
-            if (activeTab === 'main') {
+            if (category.type === 'main') {
                 await categoryApi.deleteMainCategory(category.id);
-            } else if (activeTab === 'sub') {
+            } else if (category.type === 'sub') {
                 await categoryApi.deleteSubCategory(category.id);
             } else {
                 await categoryApi.deleteProductCategory(category.id);
@@ -114,9 +138,9 @@ const CategoriesView: React.FC = () => {
         try {
             if (editingCategory) {
                 // Update existing category
-                if (activeTab === 'main') {
+                if (editingCategory.type === 'main') {
                     await categoryApi.updateMainCategory(editingCategory.id, data);
-                } else if (activeTab === 'sub') {
+                } else if (editingCategory.type === 'sub') {
                     await categoryApi.updateSubCategory(editingCategory.id, data);
                 } else {
                     await categoryApi.updateProductCategory(editingCategory.id, data);
@@ -147,15 +171,15 @@ const CategoriesView: React.FC = () => {
         let allCategories: Category[] = [];
 
         if (activeTab === 'main') {
-            allCategories = [...allCategories, ...mainCategories];
+            allCategories = [...mainCategories];
         }
 
         if (activeTab === 'sub') {
-            allCategories = [...allCategories, ...subCategories];
+            allCategories = [...subCategories];
         }
 
         if (activeTab === 'product') {
-            allCategories = [...allCategories, ...productCategories];
+            allCategories = [...productCategories];
         }
 
         if (searchTerm) {
@@ -196,6 +220,7 @@ const CategoriesView: React.FC = () => {
                 onDelete={handleDeleteCategory}
                 subCategories={subCategories}
                 productCategories={productCategories}
+                mainCategories={mainCategories}
                 viewMode={viewMode}
                 loading={loading}
             />
@@ -234,6 +259,7 @@ const CategoriesView: React.FC = () => {
                 onDelete={handleDeleteCategory}
                 subCategories={subCategories}
                 productCategories={productCategories}
+                mainCategories={mainCategories}
                 viewMode={viewMode}
                 loading={loading}
             />
@@ -281,12 +307,6 @@ const CategoriesView: React.FC = () => {
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-6">
                     <div className="flex flex-col md:flex-row gap-4 w-full">
                         <div className="flex gap-2 bg-gray-100 p-1 rounded-md">
-                            {/* <button
-                                onClick={() => setActiveTab('all')}
-                                className={`px-3 py-1 rounded-md text-sm ${activeTab === 'all' ? 'bg-white' : 'text-gray-600'}`}
-                            >
-                                All Categories
-                            </button> */}
                             <button
                                 onClick={() => setActiveTab('main')}
                                 className={`px-3 py-1 rounded-md text-sm ${activeTab === 'main' ? 'bg-white' : 'text-gray-600'}`}

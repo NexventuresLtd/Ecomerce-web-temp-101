@@ -110,17 +110,17 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                         </div>
 
                         {/* Desktop Search Bar - Hidden on mobile */}
-                        <div className={`${isMenuOpen ? 'max-xl:hidden' : ''} hidden md:flex flex-1 max-w-4xl mx-4`}>
-                            <div className="flex gap-2 w-full">
+                        <div className={`${isMenuOpen ? 'max-xl:hidden' : ''} hidden md:flex flex-1 max-w-4xl justify-end mx-4`}>
+                            <div className="flex gap-2  items-center justify-end">
                                 <div className="relative flex-1">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                    {/* <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" /> */}
                                     <input
                                         type="text"
                                         value={query}
                                         onChange={(e) => setQuery(e.target.value)}
                                         onKeyDown={handleKeyPress}
                                         placeholder="Search for products..."
-                                        className="w-full pl-10 pr-10 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-lg"
+                                        className="w-auto  pl-3 pr-3 py-2 text-sm border border-gray-300 rounded-sm focus:ring-1 focus:ring-blue-50 focus:border-transparent outline-none"
                                     />
                                     {query && (
                                         <button
@@ -136,13 +136,14 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                                 <button
                                     onClick={handleSearch}
                                     disabled={!query.trim()}
-                                    className={`px-6 py-3 rounded-lg transition-colors duration-200 flex items-center justify-center ${
+                                    className={`px-6 py-2 text-sm font-semibold rounded-sm transition-colors duration-200 flex items-center justify-center ${
                                         query.trim()
                                             ? 'bg-third cursor-pointer text-white hover:bg-third/90'
-                                            : 'bg-gray-300 cursor-not-allowed text-gray-500'
+                                            : 'bg-third cursor-not-allowed text-white'
                                     }`}
                                 >
-                                    <Search className="w-5 h-5" />
+                                    {/* <Search className="w-5 h-5" /> */}
+                                    search
                                 </button>
                             </div>
                         </div>

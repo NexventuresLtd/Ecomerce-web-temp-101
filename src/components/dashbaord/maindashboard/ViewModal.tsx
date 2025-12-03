@@ -15,7 +15,7 @@ const ViewModal: React.FC<ViewModalProps> = ({
                 <div className="flex justify-between items-center p-6 border-b border-gray-50">
                     <h2 className="text-xl font-semibold text-gray-900">Category Details</h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-                        <X size={24} />
+                        <X size={24} />s
                     </button>
                 </div>
 

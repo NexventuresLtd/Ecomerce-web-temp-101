@@ -12,6 +12,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
     onDelete,
     subCategories,
     productCategories,
+    mainCategories, // Add this prop
     viewMode,
     loading
 }) => {
@@ -44,24 +45,62 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                             </span>
                         }
                     </div>
-                    <div>
-                        <h3 className="font-semibold text-gray-900">{category.name}</h3>
-                        <p className="text-sm text-gray-500">{category.slug}</p>
+                    <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold text-gray-900">{category.name}</h3>
+                            <p className="text-sm text-gray-500">{category.slug}</p>
+                        </div>
+                        
+                        {/* Parent hierarchy display */}
+                        <div className="mt-1">
+                            {category.type === 'main' && (
+                                <div className="text-xs text-gray-600">
+                                    <span className="font-medium">Type:</span> Top Level Category
+                                </div>
+                            )}
+                            
+                            {category.type === 'sub' && (
+                                <div className="text-xs text-gray-600">
+                                    <span className="font-medium">Top Level:</span> {(category as SubCategory).main_category_name || 'N/A'}
+                                </div>
+                            )}
+                            
+                            {category.type === 'product' && (
+                                <div className="text-xs text-gray-600 space-y-1">
+                                    <div>
+                                        <span className="font-medium">Mid Level:</span> {(category as ProductCategory).sub_category_name || 'N/A'}
+                                    </div>
+                                    <div>
+                                        <span className="font-medium">Top Level:</span> {
+                                            // Find the main category through sub category
+                                            (() => {
+                                                const productCat = category as ProductCategory;
+                                                const subCat = subCategories.find(sc => sc.id === productCat.sub_category_id);
+                                                const mainCat = subCat ? mainCategories.find(mc => mc.id === subCat.main_category_id) : null;
+                                                return mainCat?.name || 'N/A';
+                                            })()
+                                        }
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        
                         <div className="flex gap-2 mt-1">
-                            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full capitalize">
+                            {/* <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full capitalize">
                                 {category.type}
                             </span>
                             {category.type === 'sub' && (
-                                <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 rounded-full">
-                                    Main: {(category as SubCategory).main_category_name}
+                                <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                                   {(category as SubCategory).main_category_name || 'N/A'}
                                 </span>
                             )}
                             {category.type === 'product' && (
-                                <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 rounded-full">
-                                    Sub: {(category as ProductCategory).sub_category_name}
+                                <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
+                                    End Level
                                 </span>
-                            )}
+                            )} */}
                         </div>
+                        
                         {category.description && (
                             <p className="text-sm text-gray-600 mt-1 line-clamp-1">{category.description}</p>
                         )}
@@ -113,6 +152,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                                     onDelete={onDelete}
                                     subCategories={subCategories}
                                     productCategories={productCategories}
+                                    mainCategories={mainCategories} // Pass mainCategories down
                                     viewMode={viewMode}
                                     loading={loading}
                                 />
@@ -133,6 +173,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                                     onDelete={onDelete}
                                     subCategories={subCategories}
                                     productCategories={productCategories}
+                                    mainCategories={mainCategories} // Pass mainCategories down
                                     viewMode={viewMode}
                                     loading={loading}
                                 />

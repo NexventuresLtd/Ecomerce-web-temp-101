@@ -55,6 +55,7 @@ export interface CategoryItemProps {
     onView: (category: Category) => void;
     onEdit: (category: Category) => void;
     onDelete: (category: Category) => void;
+    mainCategories: MainCategory[]; // Add this line
     subCategories: SubCategory[];
     productCategories: ProductCategory[];
     viewMode: 'hierarchy' | 'all';
