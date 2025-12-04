@@ -61,7 +61,7 @@ const Hero: React.FC = () => {
         <div className="absolute inset-0 bg-black/50 opacity-100"></div> {/* Overlay */}
       </div>
 
-      <div className="w-full mx-auto px-6 py-12 relative z-10  cursor-pointer min-[500px]" onClick={handleSecondaryClick}>
+      <div className="w-full mx-auto px-6 py-12 relative z-10  cursor-pointer min-[500px]">
         {/* Brand Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -134,14 +134,23 @@ const Hero: React.FC = () => {
                 </motion.p>
                 {/* Stats */}
                 {/* <StatsDisplay stats={currentSlideData.stats} /> */}
-
-                {/* CTA Buttons */}
-                <CTAButtons
-                  primary={currentSlideData.ctaPrimary}
-                  secondary={currentSlideData.ctaSecondary}
-                  onPrimaryClick={handlePrimaryClick}
-                  onSecondaryClick={handleSecondaryClick}
-                />
+                <div>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleSecondaryClick}
+                    className="cursor-pointer hidden text-white px-8 py-3 rounded-2xl font-semibold transition-colors duration-200 border border-slate-600 hover:bg-slate-600"
+                  >
+                    view
+                  </motion.button>
+                  {/* CTA Buttons */}
+                  <CTAButtons
+                    primary={currentSlideData.ctaPrimary}
+                    secondary={currentSlideData.ctaSecondary}
+                    onPrimaryClick={handlePrimaryClick}
+                    onSecondaryClick={handleSecondaryClick}
+                  />
+                </div>
 
               </motion.div>
             </AnimatePresence>

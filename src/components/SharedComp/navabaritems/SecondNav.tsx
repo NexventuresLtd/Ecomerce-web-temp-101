@@ -89,13 +89,13 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
     return (
         <>
             <div className="bg-white border-b border-gray-200" onMouseEnter={() => setActiveDropdown(null)}>
-                <div className="max-w-full md:max-w-11/12 mx-auto px-4 sm:px-6 lg:px-2">
+                <div className="max-w-full md:max-w-11/12 mx-auto md:px-4 sm:px-6 lg:px-2">
                     <div className="flex justify-between items-center h-22">
                         {/* Logo */}
                         <div className="flex-shrink-0 cursor-pointer" onClick={() => window.location.href = "/"}>
-                            <div className="px-4 py-3">
+                            <div className="md:px-4 py-3">
                                 <div className="text-transparent uppercase bg-clip-text bg-black font-extrabold text-3xl leading-tight h-22 w-22 overflow-hidden">
-                                    <img src="/Umukamezilogo.jpg" className='w-full h-full object- scale-120' alt="" />
+                                    <img src="/Umukamezilogo.jpg" className='w-full h-full md:scale-120' alt="" />
                                 </div>
                             </div>
                         </div>
@@ -110,7 +110,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                         </div>
 
                         {/* Desktop Search Bar - Hidden on mobile */}
-                        <div className={`${isMenuOpen ? 'max-xl:hidden' : ''} hidden md:flex flex-1 max-w-4xl justify-end mx-4`}>
+                        <div className={`${isMenuOpen ? 'max-xl:hidden' : ''} flex flex-1 justify-end md:mx-4`}>
                             <div className="flex gap-2  items-center justify-end">
                                 <div className="relative flex-1">
                                     {/* <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" /> */}
@@ -120,7 +120,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                                         onChange={(e) => setQuery(e.target.value)}
                                         onKeyDown={handleKeyPress}
                                         placeholder="Search for products..."
-                                        className="w-auto  pl-3 pr-3 py-2 text-sm border border-gray-300 rounded-sm focus:ring-1 focus:ring-blue-50 focus:border-transparent outline-none"
+                                        className="w-auto max-md:w-full pl-3 pr-3 py-2 text-sm border border-gray-300 rounded-sm focus:ring-1 focus:ring-blue-50 focus:border-transparent outline-none"
                                     />
                                     {query && (
                                         <button
@@ -142,14 +142,16 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                                             : 'bg-third cursor-not-allowed text-white'
                                     }`}
                                 >
-                                    {/* <Search className="w-5 h-5" /> */}
-                                    search
+                                    {/* <Search className="w-5 h-5" />
+                                   <span className="hidden">
+                                    </span> */}
+                                     search
                                 </button>
                             </div>
                         </div>
 
                         {/* Mobile Search Icon - Visible only on mobile */}
-                        <div className="md:hidden flex items-center">
+                        <div className="hidden flex items-center">
                             <button
                                 onClick={openMobileSearch}
                                 className="p-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"

@@ -192,7 +192,7 @@ const ViewProdTable = ({
                                                         <div className="flex flex-col gap-2">
                                                             <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium ${product.is_active
                                                                 ? 'bg-green-100 text-green-800'
-                                                                : 'bg-gray-100 text-gray-800'
+                                                                : 'bg-red-100 text-red-800'
                                                                 }`}>
                                                                 {product.is_active ? 'Active' : 'Inactive'}
                                                             </span>

@@ -1609,7 +1609,7 @@ const AllProductsPage: React.FC = () => {
                                         <motion.div
                                             className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 gap-8"
                                         >
-                                            {filteredAndSortedProducts.map((product, index) => (
+                                            {filteredAndSortedProducts.filter((data:any)=> data.is_active).map((product, index) => (
                                                 <ProductCard
                                                     key={`${product.id}-${index}`}
                                                     product={product}

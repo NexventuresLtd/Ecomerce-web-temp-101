@@ -31,7 +31,7 @@ const HomePage = () => {
       };
       const response = await productApi.getProducts(0, 12, params);
       const products = response.products || response || [];
-      setFeaturedProducts(products);
+      setFeaturedProducts(products.filter((data:any)=> data.is_active));
     } catch (err: any) {
       console.error('Error loading featured products:', err);
       setError(err.message || "Failed to fetch featured products");
@@ -51,7 +51,7 @@ const HomePage = () => {
       };
       const response = await productApi.getProducts(0, 100, params);
       const products = response.products || response || [];
-      setLatestProducts(products);
+      setLatestProducts(products.filter((data:any)=> data.is_active));
     } catch (err: any) {
       console.error('Error loading latest products:', err);
       setError(err.message || "Failed to fetch latest products");
@@ -72,7 +72,7 @@ const HomePage = () => {
       };
       const response = await productApi.getProducts(0, 80, params);
       const products = response.products || response || [];
-      setTopPicks(products);
+      setTopPicks(products.filter((data:any)=> data.is_active));
     } catch (err: any) {
       console.error('Error loading top picks:', err);
       setError(err.message || "Failed to fetch top picks");
@@ -122,7 +122,7 @@ const HomePage = () => {
         ) : (
           <>
             {/* Featured Products Section */}
-            {featuredProducts.length > 0 && (
+            {featuredProducts.filter((data:any)=> data.is_active).length > 0 && (
               <Offers
                 initialDisplayCount={12}
                 bg="bg-white"
@@ -135,7 +135,7 @@ const HomePage = () => {
             )}
 
             {/* Top Picks Section */}
-            {topPicks.length > 0 && (
+            {topPicks.filter((data:any)=> data.is_active).length > 0 && (
               <Offers
                 initialDisplayCount={12}
                 bg="bg-gray-100"
@@ -148,7 +148,7 @@ const HomePage = () => {
             )}
 
             {/* Latest Products Section */}
-            {latestProducts.length > 0 && (
+            {latestProducts.filter((data:any)=> data.is_active).length > 0 && (
               <Offers
                 initialDisplayCount={ 12}
                 bg="bg-slate-100"

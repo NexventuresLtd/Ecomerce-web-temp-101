@@ -35,7 +35,7 @@ const CTAButtons: React.FC<CTAButtonsProps> = ({
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={onSecondaryClick}
-        className="cursor-pointer text-white px-8 py-3 rounded-2xl font-semibold transition-colors duration-200 border border-slate-600 hover:bg-slate-600"
+        className="cursor-pointer hidden text-white px-8 py-3 rounded-2xl font-semibold transition-colors duration-200 border border-slate-600 hover:bg-slate-600"
       >
         view
       </motion.button>

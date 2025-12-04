@@ -177,28 +177,38 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
 
               {/* Product Categories List */}
               <div className="space-y-2">
-                {subCategory.product_categories.map((productCat) => (
-                  <a
-                    key={productCat.id}
-                    href={`#`}
-                    data-category-path={createCategoryPath(currentCategory, subCategory, productCat)}
-                    className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-2 rounded-md hover:bg-blue-50 transition-all duration-150 cursor-pointer font-normal border-l-2 border-transparent hover:border-blue-500"
-                    title={productCat.description || productCat.name}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span>{productCat.name}</span>
-                      <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                        →
-                      </span>
-                    </div>
-                    {productCat.description && (
-                      <p className="text-gray-500 text-xs mt-1 line-clamp-1">
-                        {productCat.description}
-                      </p>
-                    )}
-                  </a>
-                ))}
-                
+                {subCategory.product_categories
+                  .slice() // avoid mutating original
+                  .sort((a, b) => {
+                    if (a.name.toLowerCase() === "others") return 1;
+                    if (b.name.toLowerCase() === "others") return -1;
+                    return 0;
+                  })
+                  .map((productCat) => (
+                    <a
+                      key={productCat.id}
+                      href="#"
+                      data-category-path={createCategoryPath(currentCategory, subCategory, productCat)}
+                      className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-2 rounded-md hover:bg-blue-50 transition-all duration-150 cursor-pointer font-normal border-l-2 border-transparent hover:border-blue-500"
+                      title={productCat.description || productCat.name}
+                    >
+                      <div className="flex items-center justify-between">
+                        {productCat.name.toLowerCase() === "others" ? (
+                          <span className=" text-gray-500">{productCat.name.toLowerCase()}</span>
+                        ) : (
+                          <span>{productCat.name}</span>
+                        )}
+                      </div>
+
+                      {productCat.description && (
+                        <p className="text-gray-500 text-xs mt-1 line-clamp-1">
+                          {productCat.description}
+                        </p>
+                      )}
+                    </a>
+                  ))}
+
+
                 {/* If no product categories, show a message */}
                 {subCategory.product_categories.length === 0 && (
                   <p className="text-gray-400 text-xs italic py-2">
@@ -246,12 +256,12 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
           {itemName} Categories
         </h2>
         <p className="text-gray-500 text-sm">
-          No categories found for "{itemName}". 
+          No categories found for "{itemName}".
           <br />
           Please check the category name or try again later.
         </p>
       </div>
-      
+
       {/* Fallback grid for demonstration */}
       <div className="grid grid-cols-4 gap-6 mt-6">
         {Array.from({ length: 4 }).map((_, colIndex) => (
