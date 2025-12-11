@@ -25,11 +25,11 @@ const HomePage = () => {
       setFeaturedLoading(true);
       const params = {
         is_featured: 'true',
-        limit: '12',
+        limit: '100',
         sort_by: 'created_at',
         sort_order: 'desc'
       };
-      const response = await productApi.getProducts(0, 12, params);
+      const response = await productApi.getProducts(0, 100, params);
       const products = response.products || response || [];
       setFeaturedProducts(products.filter((data:any)=> data.is_active));
     } catch (err: any) {
