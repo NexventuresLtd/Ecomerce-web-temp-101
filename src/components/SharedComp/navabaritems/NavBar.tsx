@@ -9,6 +9,7 @@ const Navbar: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
   const secondNavRef = useRef<HTMLDivElement>(null);
+  const thirdMenuRef = useRef<HTMLDivElement>(null);
 
   // Check screen size
   useEffect(() => {
@@ -22,18 +23,51 @@ const Navbar: React.FC = () => {
   }, []);
 
   // Close dropdown when clicking outside
-  // useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (secondNavRef.current && !secondNavRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      
+      // Check if click is outside third menu
+      const isOutsideThirdMenu = thirdMenuRef.current && !thirdMenuRef.current.contains(target);
+      
+      if (isOutsideThirdMenu) {
         setActiveDropdown(null);
+        if (isMobile) {
+          setIsMenuOpen(false);
+        }
       }
     };
 
-    // document.addEventListener('mousedown', handleClickOutside);
-    // return () => {
-    //   document.removeEventListener('mousedown', handleClickOutside);
-    // };
-  // }, []);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobile]);
+
+  // Handle click outside for desktop dropdown
+  const handleClickOutside = (event: any) => {
+    if (!isMobile) {
+      const target = event.target as Node;
+      const isOutsideThirdMenu = thirdMenuRef.current && !thirdMenuRef.current.contains(target);
+      
+      if (isOutsideThirdMenu) {
+        setActiveDropdown(null);
+      }
+    }
+  };
+
+  // Close dropdown on scroll on mobile
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isMobile && isMenuOpen) {
+        setActiveDropdown(null);
+        setIsMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isMobile, isMenuOpen]);
 
   // Sticky on scroll
   useEffect(() => {
@@ -54,7 +88,7 @@ const Navbar: React.FC = () => {
 
       <div
         ref={secondNavRef}
-        className={`w-full z-50 ${isSticky ? 'fixed top-0 left-0 shadow-sm' : 'relative'}`}
+        className={`w-full z-40 ${isSticky ? 'fixed top-0 left-0 shadow-sm' : 'relative'}`}
       >
         <SecondNav
           isMenuOpen={isMenuOpen}
@@ -63,14 +97,16 @@ const Navbar: React.FC = () => {
         />
       </div>
 
-      <ThirdMenuNav
-        activeDropdown={activeDropdown}
-        handleClickOutside={handleClickOutside}
-        setIsMenuOpen={setIsMenuOpen}
-        isMobile={isMobile}
-        setActiveDropdown={setActiveDropdown}
-        isMenuOpen={isMenuOpen}
-      />
+      <div ref={thirdMenuRef}>
+        <ThirdMenuNav
+          activeDropdown={activeDropdown}
+          handleClickOutside={handleClickOutside}
+          setIsMenuOpen={setIsMenuOpen}
+          isMobile={isMobile}
+          setActiveDropdown={setActiveDropdown}
+          isMenuOpen={isMenuOpen}
+        />
+      </div>
     </nav>
   );
 };

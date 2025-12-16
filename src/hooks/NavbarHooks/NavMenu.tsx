@@ -154,7 +154,7 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-4 2xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6">
           {currentCategory.sub_categories.map((subCategory) => (
             <div key={subCategory.id} className="space-y-4">
               {/* Sub Category Header */}
@@ -263,7 +263,7 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
       </div>
 
       {/* Fallback grid for demonstration */}
-      <div className="grid grid-cols-4 gap-6 mt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6">
         {Array.from({ length: 4 }).map((_, colIndex) => (
           <div key={colIndex} className="space-y-4">
             <div className="pb-3 border-b border-gray-100">
