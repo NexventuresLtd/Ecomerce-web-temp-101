@@ -101,6 +101,7 @@ export default function App() {
               path="/admin-dashboard"
               element={getUserInfo ? getUserInfo.role == "admin" ? <MainContent /> : <NotAuthorized /> : <AnimatedLoginPage />}
             />
+            <Route path="/test" element={<MainContent />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         )}

@@ -64,6 +64,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
             setActiveDropdown(null);
             setIsMenuOpen(false);
             setShowMobileSearch(false);
+            clearSearch();
         }
     };
 

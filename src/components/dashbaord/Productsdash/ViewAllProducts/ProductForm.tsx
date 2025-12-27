@@ -10,6 +10,7 @@ import {
     Package,
     Tag,
     ImageIcon,
+    Save,
 } from 'lucide-react';
 import mainAxios from '../../../../Instance/mainAxios';
 import { categoryApi } from '../../../../app/dashcategory/category';
@@ -35,6 +36,7 @@ const ProductForm: React.FC<{
     const [selectedSub, setSelectedSub] = useState<number | null>(null);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [partialUpdateLoading, setPartialUpdateLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         title: product?.title || '',
@@ -43,7 +45,7 @@ const ProductForm: React.FC<{
         original_price: product?.original_price || '',
         discount: product?.discount || '',
         is_new: product?.is_new || '',
-        is_featured: product?.is_featured || false, // ADDED: is_featured field
+        is_featured: product?.is_featured || false,
         is_active: product?.is_active !== undefined ? product.is_active : true,
         instock: product?.instock || '',
         delivery_fee: product?.delivery_fee || '',
@@ -103,6 +105,97 @@ const ProductForm: React.FC<{
         }
     }, [product]);
 
+    const handlePartialUpdate = async () => {
+        if (!product) return;
+        
+        setPartialUpdateLoading(true);
+        try {
+            const submitData = new FormData();
+            let hasChanges = false;
+
+            // Check and append only the fields from the current step
+            switch(step) {
+                case 1: // Basic Info
+                    submitData.append('title', formData.title);
+                    submitData.append('description', formData.description);
+                    submitData.append('price', formData.price.toString());
+                    submitData.append('instock', formData.instock.toString());
+                    submitData.append('category_id', formData.category_id.toString());
+                    submitData.append('is_new', formData.is_new.toString());
+                    submitData.append('is_featured', formData.is_featured.toString());
+                    submitData.append('is_active', formData.is_active.toString());
+                    
+                    if (formData.original_price) submitData.append('original_price', formData.original_price.toString());
+                    if (formData.discount) submitData.append('discount', formData.discount.toString());
+                    if (formData.delivery_fee) submitData.append('delivery_fee', formData.delivery_fee);
+                    if (formData.brock) submitData.append('brock', formData.brock);
+                    if (formData.returnDay) submitData.append('returnDay', formData.returnDay);
+                    if (formData.warranty) submitData.append('warranty', formData.warranty);
+                    if (formData.tutorial_video) submitData.append('tutorial_video', formData.tutorial_video);
+                    hasChanges = true;
+                    break;
+                    
+                case 2: // Media & Tags
+                    if (formData.tags.length > 0) submitData.append('tags', JSON.stringify(formData.tags));
+                    if (formData.features.length > 0) submitData.append('features', JSON.stringify(formData.features));
+                    hasChanges = formData.tags.length > 0 || formData.features.length > 0;
+                    break;
+                    
+                case 3: // Colors
+                    if (formData.colors.length > 0) submitData.append('colors', JSON.stringify(formData.colors));
+                    hasChanges = formData.colors.length > 0;
+                    break;
+                    
+                case 4: // Images
+                    // Handle new images
+                    if (formData.images && formData.images.length > 0) {
+                        formData.images.forEach((image: File) => {
+                            submitData.append('images', image);
+                        });
+                        hasChanges = true;
+                    }
+                    
+                    // Handle existing images updates (primary image changes)
+                    if (formData.existing_images && formData.existing_images.length > 0) {
+                        const currentPrimaryIndex = formData.existing_images.findIndex((img: ProductImage) => img.is_primary);
+                        const originalPrimaryIndex = originalExistingImages.findIndex((img: ProductImage) => img.is_primary);
+                        
+                        if (currentPrimaryIndex !== -1 && currentPrimaryIndex !== originalPrimaryIndex) {
+                            submitData.append('existing_images_data', JSON.stringify(formData.existing_images));
+                            hasChanges = true;
+                        }
+                    }
+                    break;
+            }
+
+            if (hasChanges) {
+                // Always keep existing images for updates
+                submitData.append('keep_existing_images', 'true');
+
+                // Update the product
+                await mainAxios.put(`/products/${product.id}`, submitData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+
+                // If it's step 4 and primary image changed, update it separately
+                if (step === 4 && formData.existing_images && formData.existing_images.length > 0) {
+                    const currentPrimaryIndex = formData.existing_images.findIndex((img: ProductImage) => img.is_primary);
+                    const originalPrimaryIndex = originalExistingImages.findIndex((img: ProductImage) => img.is_primary);
+                    
+                    if (currentPrimaryIndex !== -1 && currentPrimaryIndex !== originalPrimaryIndex) {
+                        await mainAxios.patch(`/products/${product.id}/images/set-primary?image_index=${currentPrimaryIndex}`);
+                    }
+                }
+
+                onSave();
+            }
+        } catch (error) {
+            console.error('Error partially updating product:', error);
+        } finally {
+            setPartialUpdateLoading(false);
+        }
+    };
+
     const handleSubmit = async () => {
         setLoading(true);
         try {
@@ -115,7 +208,7 @@ const ProductForm: React.FC<{
             submitData.append('instock', formData.instock.toString());
             submitData.append('category_id', formData.category_id.toString());
             submitData.append('is_new', formData.is_new.toString());
-            submitData.append('is_featured', formData.is_featured.toString()); // ADDED: is_featured field
+            submitData.append('is_featured', formData.is_featured.toString());
             submitData.append('is_active', formData.is_active.toString());
 
             // Optional fields
@@ -293,10 +386,31 @@ const ProductForm: React.FC<{
                             Cancel
                         </button>
 
+                        {/* Partial Update Button - Always visible for editing */}
+                        {product && (
+                            <button
+                                onClick={handlePartialUpdate}
+                                disabled={partialUpdateLoading || loading}
+                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors font-medium"
+                            >
+                                {partialUpdateLoading ? (
+                                    <>
+                                        <Loader className="animate-spin" size={20} />
+                                        Updating...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save size={20} />
+                                        Update This Step
+                                    </>
+                                )}
+                            </button>
+                        )}
+
                         {step < 4 ? (
                             <button
                                 onClick={() => setStep(step + 1)}
-                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
                             >
                                 Next
                                 <ChevronRight size={20} />
@@ -315,7 +429,7 @@ const ProductForm: React.FC<{
                                 ) : (
                                     <>
                                         <Check size={20} />
-                                        {product ? 'Update Product' : 'Create Product'}
+                                        {product ? 'Save All Changes' : 'Create Product'}
                                     </>
                                 )}
                             </button>

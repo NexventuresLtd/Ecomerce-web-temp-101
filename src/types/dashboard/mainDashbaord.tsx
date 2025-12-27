@@ -8,7 +8,8 @@ export type ViewType =
   | "vlog"
   | "report"
   | "wishlists"
-  | "carts";
+  | "carts"
+  | "slide";
 
 // Context
 export interface AppContextType {

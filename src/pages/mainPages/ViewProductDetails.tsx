@@ -263,7 +263,7 @@ const ProductViewPage: React.FC = () => {
                                 )}
 
                                 {/* Badges */}
-                                <div className="absolute top-4 left-4 flex flex-col gap-2">
+                                <div className="absolute top-4 right-4 flex flex-col gap-2">
                                     {product.is_new == "new" && (
                                         <span className="px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
                                             {product.is_new}

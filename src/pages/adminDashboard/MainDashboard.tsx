@@ -11,6 +11,7 @@ import Overview from '../../components/dashbaord/maindashboard/overview';
 import VlogManager from '../../components/dashbaord/vlog/Vlog';
 import DashboardReport from '../../components/dashbaord/maindashboard/DashbaordReport';
 import UsersManagement from '../../components/dashbaord/UsersManagement';
+import HeroSliderManager from '../../components/dashbaord/slider/sliderManage';
 
 // Main Content Component
 const MainContent: React.FC = () => {
@@ -34,6 +35,8 @@ const MainContent: React.FC = () => {
                 return <WishlistAdmin />;
             case "carts":
                 return <CartAdmin />;
+            case "slide":
+                return <HeroSliderManager/>
             default:
                 return <Overview />;
         }

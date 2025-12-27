@@ -9,6 +9,7 @@ import {
     // Sliders,
     Video,
     Users,
+    Sliders,
     // Dock,
 } from 'lucide-react';
 import type { ViewType } from '../../../types/dashboard/mainDashbaord';
@@ -31,6 +32,7 @@ export const Sidebar: React.FC = () => {
         { id: 'carts' as ViewType, label: 'Carts', icon: ShoppingBag },
         // { id: 'FAQ' as ViewType, label: 'FAQ', icon: FileQuestion },
         { id: 'vlog' as ViewType, label: 'Vlog', icon: Video },
+        { id: 'slide' as ViewType, label: 'Slider', icon: Sliders },
     ]:
     [
         { id: 'dashboard' as ViewType, label: 'Dashboard', icon: LayoutDashboard },
