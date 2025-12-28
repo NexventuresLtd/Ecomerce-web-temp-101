@@ -32,8 +32,8 @@ interface FooterColumnProps {
 // Data
 const quickLinks: LinkItem[] = [
   { label: 'Home', href: '/' },
-  { label: 'Shop', href: '/shop' },
-  { label: 'Categories', href: '/categories' },
+  { label: 'Shop', href: '/products' },
+  // { label: 'Categories', href: '/products' },
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' }
 ];
