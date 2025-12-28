@@ -1,5 +1,5 @@
 import axios from "axios";
-import { refreshToken, token } from "../app/Localstorage";
+import { refreshToken, clearAuthData } from "../app/Localstorage";
 
 // Create Axios instance
 const mainAxios = axios.create({
@@ -24,6 +24,31 @@ const processQueue = (error: any, token: string | null = null) => {
     }
   });
   failedQueue = [];
+};
+
+// Helper function to logout user
+const logoutUser = (redirectToLogin = true) => {
+  // Clear auth data from storage
+  clearAuthData();
+  
+  // Clear any ongoing refresh attempts
+  isRefreshing = false;
+  failedQueue = [];
+  
+  // Redirect to login page if needed
+  if (redirectToLogin && typeof window !== 'undefined') {
+    // Store current path for redirect after login
+    localStorage.setItem("redirectPath", window.location.pathname);
+    
+    // Option 1: Redirect to login page
+    window.location.href = '/login'; // Adjust path as needed
+    
+    // Option 2: If using React Router, you could use:
+    // router.navigate('/login');
+    
+    // Option 3: Reload the page to clear any application state
+    // window.location.reload();
+  }
 };
 
 /* 
@@ -83,53 +108,84 @@ mainAxios.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
 
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      (!originalRequest.url?.includes("auth/") &&
-        !originalRequest.url?.includes("login/"))
-    ) {
-      originalRequest._retry = true;
+    // Check for 401 Unauthorized (session expired)
+    if (error.response?.status === 401) {
+      const isAuthEndpoint = originalRequest.url?.includes("auth/") || 
+                           originalRequest.url?.includes("login/");
+      
+      // If it's a non-auth endpoint and we haven't retried yet, try to refresh
+      if (!isAuthEndpoint && !originalRequest._retry) {
+        originalRequest._retry = true;
+        console.log("Attempting token refresh...");
 
-      if (isRefreshing) {
-        return new Promise(function (resolve, reject) {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(token => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return mainAxios(originalRequest);
+        if (isRefreshing) {
+          return new Promise(function (resolve, reject) {
+            failedQueue.push({ resolve, reject });
           })
-          .catch(err => Promise.reject(err));
-      }
+            .then(token => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              return mainAxios(originalRequest);
+            })
+            .catch(err => {
+              logoutUser();
+              return Promise.reject(err);
+            });
+        }
 
-      isRefreshing = true;
+        isRefreshing = true;
 
-      try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}login/refresh/?refresh_token=${refreshToken}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
+        try {
+          // Check if we have a refresh token
+          if (!refreshToken) {
+            throw new Error("No refresh token available");
           }
-        );
 
-        const newAccessToken = response.data.access;
-        localStorage.setItem("authToken", newAccessToken);
-        processQueue(null, newAccessToken);
+          const response = await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}login/refresh/`,
+            { refresh: refreshToken }, // Send as body (standard JWT refresh flow)
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+            }
+          );
 
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return mainAxios(originalRequest);
-      } catch (err) {
-        processQueue(err, null);
-        localStorage.setItem("redirectPath", window.location.pathname);
-        return Promise.reject(err);
-      } finally {
-        isRefreshing = false;
+          const newAccessToken = response.data.access;
+          // Update the stored token
+          localStorage.setItem("authToken", newAccessToken);
+          
+          // If a new refresh token is provided, update it too
+          if (response.data.refresh) {
+            localStorage.setItem("refreshToken", response.data.refresh);
+          }
+          
+          processQueue(null, newAccessToken);
+
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return mainAxios(originalRequest);
+        } catch (err) {
+          // Refresh failed - logout user
+          console.error("Token refresh failed, logging out:", err);
+          processQueue(err, null);
+          logoutUser();
+          return Promise.reject(err);
+        } finally {
+          isRefreshing = false;
+        }
+      } else if (!isAuthEndpoint) {
+        // Already tried to refresh or it's an auth endpoint - logout
+        console.log("Authentication failed, logging out");
+        logoutUser();
       }
     }
-
+    
+    // Handle other specific error cases
+    if (error.response?.status === 403) {
+      console.error("Forbidden - insufficient permissions");
+      // Optionally handle 403 errors differently
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -137,8 +193,10 @@ mainAxios.interceptors.response.use(
 // REQUEST INTERCEPTOR
 mainAxios.interceptors.request.use(
   config => {
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Get fresh token from storage for each request
+    const currentToken = localStorage.getItem("authToken");
+    if (currentToken) {
+      config.headers.Authorization = `Bearer ${currentToken}`;
     }
     return config;
   },

@@ -6,3 +6,11 @@ export const isLoggedIn = !!token;
 
 const user = localStorage.getItem("userInfo") || sessionStorage.getItem("userInfo");
 export const getUserInfo = user ? JSON.parse(user) : null;
+// Localstorage.ts
+export const clearAuthData = () => {
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("refreshToken");
+  // Remove any other auth-related items
+  localStorage.removeItem("userData");
+  localStorage.removeItem("sessionExpiry");
+};
