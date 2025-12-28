@@ -247,7 +247,7 @@ const Footer: React.FC = () => {
                   className="hover:text-white text-red-500 transition-colors font-bold"
                 >
                   {/* <img src="https://www.nexventures.net/assets/Icon-ueBx2e_P.png" alt="NexVentures Logo" srcSet="" className='h-5' /> */}
-                  NexVentures
+                  Nexventures Ltd
                 </a>
               </span>
             </div>
