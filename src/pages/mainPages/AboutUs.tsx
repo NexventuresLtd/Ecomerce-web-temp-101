@@ -178,7 +178,7 @@ const aboutData = {
             role: "Photographer",
             content: "I purchased the Canon EOS R10 with the 18–45mm lens from Umukamezi. Image quality is sharp, autofocus is fast, and it performs exceptionally well for both photography and video. Delivery was prompt and the packaging was secure.",
             rating: 5,
-            avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=face"
+            avatar: "/Umukamezilogo.jpg"
         },
         {
             id: 2,
@@ -186,7 +186,7 @@ const aboutData = {
             role: "Hobby Photographer",
             content: "The Sony ZV-E10 camera I bought is perfect for vlogging and YouTube content. Excellent low-light performance, clean HDMI output, and solid build quality. The product was genuine and exactly as described.",
             rating: 5,
-            avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&crop=face"
+            avatar: "/Umukamezilogo.jpg"
         },
         {
             id: 3,
@@ -194,7 +194,7 @@ const aboutData = {
             role: "Hobby Photographer",
             content: "I ordered a Nikon D7500 along with a 50mm f/1.8 lens. The camera handles fast motion very well and the lens produces beautiful background blur. I’m extremely satisfied with the purchase.",
             rating: 5,
-            avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop&crop=face"
+            avatar: "/Umukamezilogo.jpg"
         }
     ] as Testimonial[]
 };
