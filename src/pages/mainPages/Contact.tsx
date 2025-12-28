@@ -13,7 +13,9 @@ import {
     Github,
     ChevronDown,
     // ChevronUp,
-    X
+    X,
+    Youtube,
+    Music2Icon
 } from 'lucide-react';
 import Footer from '../../components/SharedComp/footer';
 import Navbar from '../../components/SharedComp/navabaritems/NavBar';
@@ -55,30 +57,26 @@ const ContactPage: React.FC = () => {
         },
         {
             platform: 'Facebook',
-            url: 'https://facebook.com/yourpage',
+            url: 'https://www.facebook.com/profile.php?id=61555679100920',
             icon: <Facebook className="w-5 h-5" />
         },
         {
-            platform: 'Twitter',
-            url: 'https://twitter.com/yourhandle',
-            icon: <Twitter className="w-5 h-5" />
+            platform: 'TikTok',
+            url: 'https://www.tiktok.com/@umukamezishop',
+            icon: <Music2Icon className="w-5 h-5" />
         },
         {
             platform: 'Instagram',
-            url: 'https://instagram.com/yourprofile',
+            url: 'https://www.instagram.com/umukamezi250/',
             icon: <Instagram className="w-5 h-5" />
         },
         {
-            platform: 'LinkedIn',
-            url: 'https://linkedin.com/company/yourcompany',
-            icon: <Linkedin className="w-5 h-5" />
-        },
-        {
-            platform: 'GitHub',
-            url: 'https://github.com/yourusername',
-            icon: <Github className="w-5 h-5" />
+            platform: 'YouTube',
+            url: 'https://www.youtube.com/@UMUKAMEZISHOP',
+            icon: <Youtube className="w-5 h-5" />
         }
     ];
+
 
     const faqs: FAQ[] = [
         {
@@ -193,9 +191,9 @@ const ContactPage: React.FC = () => {
                                         />
                                     </div>
                                 </div>
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    
-</div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                                </div>
                                 <div>
                                     <label htmlFor="subject" className="block text-sm font-semibold text-gray-900 mb-3">
                                         Subject
@@ -436,6 +434,7 @@ const ContactPage: React.FC = () => {
                         transition={{ duration: 0.6, delay: 1.6 }}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
+                        onClick={()=>window.location.href = "/authentication"}
                         className="bg-white text-primary px-8 py-4 rounded-xl font-semibold hover:bg-blue-50 transition-colors"
                     >
                         Join Our Community
