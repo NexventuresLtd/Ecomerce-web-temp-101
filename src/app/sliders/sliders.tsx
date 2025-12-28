@@ -1,6 +1,6 @@
 // app/sliders/sliders.ts
 import mainAxios from "../../Instance/mainAxios";
-import type { HeroSlider, HeroSliderCreate } from "../../types/sliders";
+import type { HeroSlider } from "../../types/sliders";
 
 export const heroSliderService = {
   // Get all hero sliders

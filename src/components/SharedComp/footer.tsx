@@ -232,10 +232,24 @@ const Footer: React.FC = () => {
         variants={itemVariants}
         className="border-t border-white/10"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-11/12 mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
-            <div className="text-white/60 text-sm text-center sm:text-left">
-              © {currentYear} Umukamezi. All rights reserved.
+            {/* Copyright & Dev Credit */}
+            <div className="text-white/60 text-sm text-center sm:text-left flex flex-col sm:flex-row gap-1 sm:gap-2 items-center sm:items-baseline">
+              <span>© {currentYear} Umukamezi. All rights reserved.</span>
+              <span className="hidden sm:inline">|</span>
+              <span>
+                Developed by{' '}
+                <a
+                  href="https://www.nexventures.net/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white text-red-500 transition-colors font-bold"
+                >
+                  {/* <img src="https://www.nexventures.net/assets/Icon-ueBx2e_P.png" alt="NexVentures Logo" srcSet="" className='h-5' /> */}
+                  NexVentures
+                </a>
+              </span>
             </div>
 
             {/* Payment Methods */}

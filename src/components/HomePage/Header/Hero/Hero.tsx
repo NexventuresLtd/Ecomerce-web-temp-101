@@ -1,7 +1,7 @@
 // components/Hero.tsx
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, ChevronLeft, ChevronRight } from 'lucide-react';
+import {  ChevronLeft, ChevronRight } from 'lucide-react';
 import type { HeroSlider } from '../../../../types/sliders';
 import { heroSliderService } from '../../../../app/sliders/sliders';
 
