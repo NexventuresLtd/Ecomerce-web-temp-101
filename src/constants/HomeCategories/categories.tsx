@@ -24,8 +24,8 @@ export const categoriesData: Category[] = [
         stats: {
             productCount: 1247,
         },
-        bgImage: "https://older.umukamezi.com/assets/uploads/service-7.png",
-        overlayImage: "https://older.umukamezi.com/assets/uploads/service-7.png"
+        bgImage: "/CAMERAS PNG.png",
+        overlayImage: "/CAMERAS PNG.png"
     },
     {
         id: 2,
@@ -40,8 +40,8 @@ export const categoriesData: Category[] = [
         stats: {
             productCount: 2847,
         },
-        bgImage: "https://older.umukamezi.com/assets/uploads/service-8.jpg",
-        overlayImage: "https://older.umukamezi.com/assets/uploads/service-8.jpg"
+        bgImage: "/VIDEOGRAPHY PNG.png",
+        overlayImage: "/VIDEOGRAPHY PNG.png"
     },
     {
         id: 3,
@@ -57,8 +57,8 @@ export const categoriesData: Category[] = [
             productCount: 856,
             discount: 10
         },
-        bgImage: "https://older.umukamezi.com/assets/uploads/service-11.png",
-        overlayImage: "https://older.umukamezi.com/assets/uploads/service-11.png"
+        bgImage: "/PRO-AUDIO PNG1.png",
+        overlayImage: "/PRO-AUDIO PNG1.png"
     },
     {
         id: 4,
@@ -73,8 +73,8 @@ export const categoriesData: Category[] = [
         stats: {
             productCount: 1247
         },
-        bgImage: "https://older.umukamezi.com/assets/uploads/service-12.png",
-        overlayImage: "https://older.umukamezi.com/assets/uploads/service-12.png"
+        bgImage: "/COMPUTERS PNG.png",
+        overlayImage: "/COMPUTERS PNG.png"
     },
     {
         id: 6,
@@ -89,8 +89,8 @@ export const categoriesData: Category[] = [
         stats: {
             productCount: 567
         },
-        bgImage: "https://older.umukamezi.com/assets/uploads/service-9.jpg",
-        overlayImage: "https://older.umukamezi.com/assets/uploads/service-9.jpg"
+        bgImage: "/LIGHTING PNG.png",
+        overlayImage: "/LIGHTING PNG.png"
     },
     {
         id: 8,
@@ -105,7 +105,7 @@ export const categoriesData: Category[] = [
         stats: {
             productCount: 3456
         },
-        bgImage: "https://older.umukamezi.com/assets/uploads/service-13.png",
-        overlayImage: "https://older.umukamezi.com/assets/uploads/service-13.png"
+        bgImage: "/OTHER ACCESSORIES PNG.png",
+        overlayImage: "/OTHER ACCESSORIES PNG.png"
     }
 ];
