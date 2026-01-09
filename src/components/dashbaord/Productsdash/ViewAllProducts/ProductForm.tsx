@@ -44,7 +44,7 @@ const ProductForm: React.FC<{
         price: product?.price || '',
         original_price: product?.original_price || '',
         discount: product?.discount || '',
-        is_new: product?.is_new || '',
+        is_new: product?.is_new || 'new',
         is_featured: product?.is_featured || false,
         is_active: product?.is_active !== undefined ? product.is_active : true,
         instock: product?.instock || '',

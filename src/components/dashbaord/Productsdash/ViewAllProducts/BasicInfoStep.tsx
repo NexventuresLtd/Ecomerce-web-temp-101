@@ -234,6 +234,7 @@ const BasicInfoStep: React.FC<{
                                     className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                                     disabled={loading}
                                 >
+                                    <option value="">Select Product State</option>
                                     <option value="new">New</option>
                                     <option value="used">Used</option>
                                     <option value="Used like new">Used like new</option>
