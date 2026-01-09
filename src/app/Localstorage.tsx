@@ -10,7 +10,9 @@ export const getUserInfo = user ? JSON.parse(user) : null;
 export const clearAuthData = () => {
   localStorage.removeItem("authToken");
   localStorage.removeItem("refreshToken");
+  localStorage.removeItem("userInfo");
   // Remove any other auth-related items
-  localStorage.removeItem("userData");
-  localStorage.removeItem("sessionExpiry");
+  sessionStorage.removeItem("authToken");
+  sessionStorage.removeItem("refreshToken");
+  sessionStorage.removeItem("userInfo");
 };

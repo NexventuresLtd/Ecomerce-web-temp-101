@@ -37,11 +37,13 @@ const logoutUser = (redirectToLogin = true) => {
   
   // Redirect to login page if needed
   if (redirectToLogin && typeof window !== 'undefined') {
+    
     // Store current path for redirect after login
     localStorage.setItem("redirectPath", window.location.pathname);
     
     // Option 1: Redirect to login page
     window.location.href = '/authentication'; // Adjust path as needed
+
     
     // Option 2: If using React Router, you could use:
     // router.navigate('/authentication');
