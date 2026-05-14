@@ -243,7 +243,7 @@ const InvoiceVerifier = () => {
 
 type TabType = 'pending' | 'completed';
 
-const AdminDeliveries = () => {
+const AdminDeliveries = ({ deliveryTypeFilter = 'all' }: { deliveryTypeFilter?: 'delivery' | 'pickup' | 'all' }) => {
     const [tab, setTab] = useState<TabType>('pending');
     const [items, setItems] = useState<DeliveryItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -255,7 +255,7 @@ const AdminDeliveries = () => {
         setLoading(true); setError('');
         try {
             const ds = t === 'pending' ? 'PENDING_DELIVERY' : 'DELIVERED';
-            const data = await paymentService.getPendingDeliveries(ds);
+            const data = await paymentService.getPendingDeliveries(ds, deliveryTypeFilter);
             setItems(data.deliveries || []);
         } catch (e: any) {
             setError(e?.response?.data?.detail || 'Failed to load deliveries');
@@ -294,8 +294,12 @@ const AdminDeliveries = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Deliveries</h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage order fulfillment and verify invoices</p>
+                    <h1 className="text-2xl font-bold text-gray-900">
+                        {deliveryTypeFilter === 'pickup' ? 'Pickup Requests' : deliveryTypeFilter === 'delivery' ? 'Delivery Requests' : 'Deliveries'}
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-1">
+                        {deliveryTypeFilter === 'pickup' ? 'Customers coming to pick up their orders' : deliveryTypeFilter === 'delivery' ? 'Orders to be delivered to customers' : 'Manage order fulfillment and verify invoices'}
+                    </p>
                 </div>
                 <button onClick={() => loadDeliveries(tab)}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"

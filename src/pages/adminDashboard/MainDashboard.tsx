@@ -40,7 +40,9 @@ const MainContent: React.FC = () => {
             case "orders":
                 return <AdminOrders />;
             case "deliveries":
-                return <AdminDeliveries />;
+                return <AdminDeliveries deliveryTypeFilter="delivery" />;
+            case "pickups":
+                return <AdminDeliveries deliveryTypeFilter="pickup" />;
             case "slide":
                 return <HeroSliderManager/>
             default:

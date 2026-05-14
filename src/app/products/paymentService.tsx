@@ -156,8 +156,8 @@ export const paymentService = {
     return unwrap(r.data);
   },
 
-  async getPendingDeliveries(deliveryStatus = "PENDING_DELIVERY"): Promise<{ deliveries: DeliveryItem[]; count: number }> {
-    const r = await mainAxios.get("/payment/admin/deliveries", { params: { delivery_status: deliveryStatus } });
+  async getPendingDeliveries(deliveryStatus = "PENDING_DELIVERY", deliveryType = "all"): Promise<{ deliveries: DeliveryItem[]; count: number }> {
+    const r = await mainAxios.get("/payment/admin/deliveries", { params: { delivery_status: deliveryStatus, delivery_type: deliveryType } });
     return unwrap(r.data);
   },
 

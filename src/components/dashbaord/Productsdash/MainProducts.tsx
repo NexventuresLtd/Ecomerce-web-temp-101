@@ -14,11 +14,14 @@ import ProductForm from './ViewAllProducts/ProductForm';
 import ProductDetailView from './ViewAllProducts/ProductDetailView';
 
 // Filter Types
+type StockStatus = 'all' | 'active' | 'inactive' | 'in_stock' | 'out_of_stock';
+
 interface FilterState {
     categories: string[];
     priceRange: [number, number];
     minRating: number;
     inStockOnly: boolean;
+    stockStatus: StockStatus;
 }
 
 // Sort Types
@@ -45,7 +48,8 @@ const ProductManagement: React.FC = () => {
         categories: [],
         priceRange: [0, 100000000],
         minRating: 0,
-        inStockOnly: false
+        inStockOnly: false,
+        stockStatus: 'all' as StockStatus,
     });
 
     const [currentSort, setCurrentSort] = useState<SortOption>('newest');
@@ -91,10 +95,12 @@ const ProductManagement: React.FC = () => {
                 queryParams.append('price_max', filters.priceRange[1].toString());
             }
 
-            // Add in-stock filter
-            if (filters.inStockOnly) {
-                queryParams.append('instock_min', '1');
-            }
+            // Stock status filter
+            if (filters.stockStatus === 'active')       queryParams.append('is_active', 'true');
+            else if (filters.stockStatus === 'inactive') queryParams.append('is_active', 'false');
+            else if (filters.stockStatus === 'in_stock') queryParams.append('instock_min', '1');
+            else if (filters.stockStatus === 'out_of_stock') { queryParams.append('instock_min', '0'); queryParams.append('instock_max', '0'); }
+            else if (filters.inStockOnly)                queryParams.append('instock_min', '1');
 
             // Add rating filter (keep it in query but it's hidden in UI)
             if (filters.minRating > 0) {
@@ -205,7 +211,8 @@ const ProductManagement: React.FC = () => {
     const hasActiveFilters = filters.categories.length > 0 ||
         filters.minRating > 0 ||
         filters.inStockOnly ||
-        filters.priceRange[1] < 100000000;
+        filters.priceRange[1] < 100000000 ||
+        filters.stockStatus !== 'all';
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
@@ -213,6 +220,29 @@ const ProductManagement: React.FC = () => {
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Management</h1>
                 <p className="text-gray-600">Manage your product inventory and listings</p>
+            </div>
+
+            {/* Stock Status Filter Chips */}
+            <div className="mb-4 flex flex-wrap gap-2">
+                {([
+                    { label: 'All', value: 'all' },
+                    { label: 'Active', value: 'active' },
+                    { label: 'Inactive', value: 'inactive' },
+                    { label: 'In Stock', value: 'in_stock' },
+                    { label: 'Out of Stock', value: 'out_of_stock' },
+                ] as { label: string; value: StockStatus }[]).map(opt => (
+                    <button
+                        key={opt.value}
+                        onClick={() => { setFilters(f => ({ ...f, stockStatus: opt.value })); setCurrentPage(1); }}
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                            filters.stockStatus === opt.value
+                                ? 'bg-gray-900 text-white border-gray-900'
+                                : 'bg-white text-gray-600 border-gray-300 hover:border-gray-500'
+                        }`}
+                    >
+                        {opt.label}
+                    </button>
+                ))}
             </div>
 
             {/* Controls Bar */}
@@ -246,7 +276,8 @@ const ProductManagement: React.FC = () => {
                                         categories: [],
                                         priceRange: [0, 100000000],
                                         minRating: 0,
-                                        inStockOnly: false
+                                        inStockOnly: false,
+                                        stockStatus: 'all',
                                     });
                                     setCurrentPage(1);
                                 }}

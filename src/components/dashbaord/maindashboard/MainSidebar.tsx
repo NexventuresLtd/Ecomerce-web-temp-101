@@ -10,6 +10,7 @@ import {
     Sliders,
     Receipt,
     Truck,
+    Building2,
 } from 'lucide-react';
 import type { ViewType } from '../../../types/dashboard/mainDashbaord';
 import { useAppContext } from '../../../contexts/dashbaord/context';
@@ -32,6 +33,7 @@ export const Sidebar: React.FC = () => {
         { id: 'carts' as ViewType, label: 'Carts', icon: ShoppingBag },
         { id: 'orders' as ViewType, label: 'Transactions', icon: Receipt },
         { id: 'deliveries' as ViewType, label: 'Deliveries', icon: Truck },
+        { id: 'pickups' as ViewType, label: 'Pickups', icon: Building2 },
         { id: 'vlog' as ViewType, label: 'Vlog', icon: Video },
         { id: 'slide' as ViewType, label: 'Slider', icon: Sliders },
     ]:
