@@ -16,8 +16,8 @@ const DeliveryBadge = ({ type }: { type: string }) =>
 const StatusBadge = ({ status }: { status: string }) => {
     const cfg: Record<string, { cls: string; icon: ReactNode }> = {
         PENDING_DELIVERY: { cls: 'bg-yellow-50 text-yellow-700 border-yellow-200', icon: <Clock className="w-3 h-3" /> },
-        DELIVERED:        { cls: 'bg-green-50 text-green-700 border-green-200',  icon: <CheckCircle className="w-3 h-3" /> },
-        PICKED_UP:        { cls: 'bg-teal-50 text-teal-700 border-teal-200',     icon: <CheckCircle className="w-3 h-3" /> },
+        DELIVERED: { cls: 'bg-green-50 text-green-700 border-green-200', icon: <CheckCircle className="w-3 h-3" /> },
+        PICKED_UP: { cls: 'bg-teal-50 text-teal-700 border-teal-200', icon: <CheckCircle className="w-3 h-3" /> },
     };
     const c = cfg[status] ?? cfg.PENDING_DELIVERY;
     return (

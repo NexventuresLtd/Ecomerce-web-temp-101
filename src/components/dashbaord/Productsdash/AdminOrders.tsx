@@ -93,8 +93,8 @@ const OrderRow = ({ order }: { order: AdminOrder }) => {
                             onClick={handleResend}
                             disabled={resending}
                             className={`flex items-center gap-1 text-xs font-medium whitespace-nowrap transition-colors ${resendMsg === 'Sent' ? 'text-green-600' :
-                                    resendMsg === 'Failed' ? 'text-red-500' :
-                                        'text-orange-600 hover:text-orange-800'
+                                resendMsg === 'Failed' ? 'text-red-500' :
+                                    'text-orange-600 hover:text-orange-800'
                                 } disabled:opacity-50`}
                             title="Resend invoice email + WhatsApp to customer"
                         >

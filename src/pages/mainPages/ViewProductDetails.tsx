@@ -45,37 +45,33 @@ const ProductViewPage: React.FC = () => {
     const [success, setesucess] = useState<string | null>(null);
 
     const handleAddToCart = async (id: any, quantity: any, color: any, delivery: any) => {
-        console.log(color, delivery)
         try {
             setLoading(true);
             const response = await cartApi.addToCart(id, quantity, color, delivery);
             if (response.status == 200) {
-                setesucess("cart created sucessfull")
-                window.location.href = "/shopping-cart"
+                setesucess("Added to cart!");
+                // notify navbar to refresh count
+                window.dispatchEvent(new CustomEvent('cartUpdated'));
             }
-            // you can also add toast/notification here
         } catch (error: any) {
-            seterroring(error?.response?.data?.detail)
-            console.error("Error adding to cart:", error?.response?.data?.detail);
+            seterroring(error?.response?.data?.detail);
         } finally {
             setLoading(false);
         }
     };
+
     const handleAddToWish = async (id: any, quantity?: any, color?: any, delivery?: any) => {
-        console.log(color, delivery)
         try {
             setLoading(true);
             const response: any = await wishlistService.addToWishlist(id, quantity, color, delivery);
-            // console.log(response)
             if (response.status == 200) {
-                setIsWishlisted(isWishlisted)
-                setesucess("wishList added sucessfull")
-                window.location.href = "/wish-list"
+                setIsWishlisted(true);   // turn heart red
+                setesucess("Added to wishlist!");
+                // notify navbar to refresh count
+                window.dispatchEvent(new CustomEvent('wishlistUpdated'));
             }
-            // you can also add toast/notification here
         } catch (error: any) {
-            seterroring(error?.response?.data?.detail)
-            console.error("Error adding to cart:", error?.response?.data?.detail);
+            seterroring(error?.response?.data?.detail);
         } finally {
             setLoading(false);
         }

@@ -595,27 +595,25 @@ const PaymentModal: React.FC<{
 
                 {/* Stage: success */}
                 {stage === 'success' && (
-                    <div className="text-center py-4 space-y-3">
+                    <div className="text-center py-4 space-y-4">
                         <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
                         <div>
                             <p className="text-xl font-bold text-gray-900 mb-1">Payment Successful!</p>
-                            <p className="text-sm text-gray-600">{statusMsg}</p>
+                            <p className="text-sm text-gray-500">Your order is confirmed. An invoice has been sent to your email.</p>
                             {invoiceNumber && <p className="text-xs text-gray-400 mt-1 font-mono">{invoiceNumber}</p>}
                         </div>
                         {invoiceNumber && (
-                            <a
-                                href={paymentService.getInvoiceViewUrl(invoiceNumber)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block w-full py-2.5 rounded-lg font-medium text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
+                            <a href={paymentService.getInvoiceViewUrl(invoiceNumber)}
+                                target="_blank" rel="noopener noreferrer"
+                                className="block w-full py-2.5 rounded-lg font-medium text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
                                 View Invoice
                             </a>
                         )}
-                        <button onClick={() => { onClose(); window.location.href = '/profile'; }}
-                            className="w-full py-2.5 rounded-lg font-medium text-white text-sm transition-colors"
+                        <button
+                            onClick={() => { onClose(); window.location.href = '/products'; }}
+                            className="w-full py-3 rounded-lg font-bold text-white text-sm transition-colors"
                             style={{ backgroundColor: '#1d293d' }}>
-                            My Orders
+                            Okay
                         </button>
                     </div>
                 )}

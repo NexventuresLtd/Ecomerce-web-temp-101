@@ -1,7 +1,7 @@
-import { Heart,  Menu, ShoppingCart, User, X } from "lucide-react";
-// import LanguageDropdown from "./LanguageChanger";
-import { getUserInfo } from "../../../app/Localstorage";
-// import { logout } from "../../../app/utils/HandelLogout";
+import { Heart, Menu, ShoppingCart, User, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { getUserInfo, token } from "../../../app/Localstorage";
+import mainAxios from "../../../Instance/mainAxios";
 
 interface SecondNavProps {
     isMenuOpen: boolean
@@ -9,22 +9,60 @@ interface SecondNavProps {
     setActiveDropdown: React.Dispatch<React.SetStateAction<string | null>>
     showMenu?: boolean
 }
+
 export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown, showMenu }: SecondNavProps) {
+    const [cartCount, setCartCount] = useState(0);
+    const [wishCount, setWishCount] = useState(0);
+
+    const fetchCounts = async () => {
+        if (!token) return;
+        try {
+            const [cartRes, wishRes] = await Promise.all([
+                mainAxios.get('/cart/my-cart'),
+                mainAxios.get('/wishlist/my-wishlist'),
+            ]);
+            setCartCount(cartRes.data?.total_items ?? 0);
+            setWishCount(wishRes.data?.total_items ?? 0);
+        } catch {
+            // silently ignore — user may not be logged in
+        }
+    };
+
+    useEffect(() => {
+        fetchCounts();
+        window.addEventListener('cartUpdated', fetchCounts);
+        window.addEventListener('wishlistUpdated', fetchCounts);
+        return () => {
+            window.removeEventListener('cartUpdated', fetchCounts);
+            window.removeEventListener('wishlistUpdated', fetchCounts);
+        };
+    }, []);
+
     return (
         <>
             <div className="flex items-center space-x-6">
 
-                {/* Cart */}
+                {/* Cart & Wishlist icons with count badges */}
                 <div className={`${showMenu ? 'hidden xl:flex' : 'flex xl:hidden'} items-center space-x-1 gap-2`}>
-                    <div onClick={() =>
-                        window.location.href = '/shopping-cart'
-                    } className="flex flex-col items-start sm:items-center curorsor-pointer">
+                    <div onClick={() => window.location.href = '/shopping-cart'}
+                        className="relative flex flex-col items-start sm:items-center cursor-pointer">
                         <ShoppingCart className="w-6 h-6 text-gray-600" />
+                        {cartCount > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                                {cartCount > 99 ? '99+' : cartCount}
+                            </span>
+                        )}
                         <span className="hidden sm:inline text-xs">My Cart</span>
                     </div>
-                    <div onClick={() => window.location.href = '/wish-list'} className="flex cursor-pointer flex-col items-start sm:items-center">
+                    <div onClick={() => window.location.href = '/wish-list'}
+                        className="relative flex cursor-pointer flex-col items-start sm:items-center">
                         <Heart className="w-6 h-6 text-gray-600" />
-                        <span className="hidden sm:inline text-xs ">Wishlist</span>
+                        {wishCount > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                                {wishCount > 99 ? '99+' : wishCount}
+                            </span>
+                        )}
+                        <span className="hidden sm:inline text-xs">Wishlist</span>
                     </div>
                 </div>
                 <div className={`${showMenu ? 'hidden xl:flex' : 'flex xl:hidden'}  items-center space-x-2`}>
