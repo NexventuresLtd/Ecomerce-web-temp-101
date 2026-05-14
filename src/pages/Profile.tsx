@@ -14,13 +14,24 @@ import {
     Edit,
     LogOut,
     Eye,
-    X
+    X,
+    ShoppingBag,
+    Package,
+    Clock,
+    AlertCircle,
+    Receipt,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-react';
 import Footer from '../components/SharedComp/footer';
 import Navbar from '../components/SharedComp/navabaritems/NavBar';
 import { billingService, type BillingRecord, type BillingData } from '../app/userProfile/billingService';
+import { paymentService, type Order } from '../app/products/paymentService';
+import { FileText } from 'lucide-react';
 import { getUserInfo } from '../app/Localstorage';
 import { logout } from '../app/utils/HandelLogout';
+
+const RWF = new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', minimumFractionDigits: 0 });
 
 interface BillingFormData {
     fullName: string;
@@ -38,7 +49,137 @@ interface BillingFormData {
 }
 
 
+type ProfileTab = 'billing' | 'orders';
+type OrderStatusFilter = 'all' | 'done' | 'pending' | 'failed';
+
+const StatusBadge = ({ status }: { status: string }) => {
+    const map: Record<string, { cls: string; label: string }> = {
+        SUCCESSFUL: { cls: 'bg-green-50 text-green-700 border-green-200',  label: 'Paid' },
+        FAILED:     { cls: 'bg-red-50 text-red-600 border-red-200',        label: 'Failed' },
+        PENDING:    { cls: 'bg-yellow-50 text-yellow-700 border-yellow-200', label: 'Pending' },
+    };
+    const c = map[status] ?? map.PENDING;
+    return (
+        <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full border ${c.cls}`}>
+            {c.label}
+        </span>
+    );
+};
+
+const FulfillmentBadge = ({ type, dStatus }: { type?: string; dStatus?: string }) => {
+    // delivery_status: PENDING_DELIVERY | DELIVERED | PICKED_UP
+    if (!type) return null;
+    if (type === 'delivery') {
+        const done = dStatus === 'DELIVERED';
+        return (
+            <div className="flex flex-col gap-0.5">
+                <span className="text-xs text-blue-700 font-medium">Home Delivery</span>
+                <span className={`text-xs font-semibold ${done ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {done ? 'Delivered' : 'Awaiting delivery'}
+                </span>
+            </div>
+        );
+    }
+    const done = dStatus === 'PICKED_UP';
+    return (
+        <div className="flex flex-col gap-0.5">
+            <span className="text-xs text-purple-700 font-medium">Office Pickup</span>
+            <span className={`text-xs font-semibold ${done ? 'text-green-600' : 'text-yellow-600'}`}>
+                {done ? 'Picked up' : 'Ready for pickup'}
+            </span>
+        </div>
+    );
+};
+
+const OrderRow = ({ order }: { order: Order }) => {
+    const [expanded, setExpanded] = useState(false);
+    const primaryImg = (item: any) =>
+        (item.images || []).find((i: any) => i.is_primary)?.url || item.images?.[0]?.url || null;
+
+    return (
+        <>
+            <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                {/* Invoice / Date */}
+                <td className="px-4 py-3 max-w-[140px]">
+                    <div className="text-xs font-mono text-gray-800 truncate" title={order.invoice_number || order.external_id}>
+                        {order.invoice_number || order.external_id}
+                    </div>
+                    <div className="text-gray-400 text-xs mt-0.5">
+                        {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </div>
+                </td>
+
+                {/* Items count */}
+                <td className="px-4 py-3 text-sm text-gray-700 text-center">{order.items_count}</td>
+
+                {/* Amount */}
+                <td className="px-4 py-3 font-semibold text-gray-900 text-sm whitespace-nowrap">
+                    {RWF.format(order.total_amount)}
+                </td>
+
+                {/* Fulfillment — type + status in one cell */}
+                <td className="px-4 py-3">
+                    <FulfillmentBadge type={order.delivery_type} dStatus={order.delivery_status} />
+                </td>
+
+                {/* Payment status */}
+                <td className="px-4 py-3"><StatusBadge status={order.status} /></td>
+
+                {/* Actions */}
+                <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1.5">
+                        {order.invoice_number && (
+                            <a href={paymentService.getInvoiceViewUrl(order.invoice_number)}
+                                target="_blank" rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium whitespace-nowrap">
+                                <FileText className="w-3 h-3" />
+                                View Invoice
+                            </a>
+                        )}
+                        <button onClick={() => setExpanded(!expanded)}
+                            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap">
+                            {expanded ? 'Hide' : 'Items'}
+                            {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </button>
+                    </div>
+                </td>
+            </tr>
+
+            {expanded && (
+                <tr>
+                    <td colSpan={6} className="bg-gray-50 border-b border-gray-100 px-4 py-3">
+                        <div className="space-y-2">
+                            {order.items?.map((item, i) => {
+                                const img = primaryImg(item);
+                                return (
+                                    <div key={i} className="flex items-center gap-3 bg-white border border-gray-100 rounded-lg p-2">
+                                        {img
+                                            ? <img src={`${import.meta.env.VITE_API_BASE_URL}${img}`} alt={item.product_name} className="w-10 h-10 object-cover rounded flex-shrink-0" />
+                                            : <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center flex-shrink-0"><Package className="w-4 h-4 text-gray-400" /></div>
+                                        }
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-900 truncate">{item.product_name}</p>
+                                            <p className="text-xs text-gray-500">Qty {item.quantity} × {RWF.format(item.price)}</p>
+                                        </div>
+                                        <span className="text-sm font-semibold text-gray-900 flex-shrink-0">{RWF.format(item.item_total)}</span>
+                                    </div>
+                                );
+                            })}
+                            {order.delivery_type === 'delivery' && order.delivery_address && (
+                                <p className="text-xs text-blue-700 bg-blue-50 rounded px-3 py-2">
+                                    Delivery address: <strong>{order.delivery_address}</strong>
+                                </p>
+                            )}
+                        </div>
+                    </td>
+                </tr>
+            )}
+        </>
+    );
+};
+
 const UserDashboard = () => {
+    const [activeTab, setActiveTab] = useState<ProfileTab>('orders');
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoggedIn, setIsLoggedIn] = useState(true);
     const [billingData, setBillingData] = useState<BillingFormData>({
@@ -64,6 +205,13 @@ const UserDashboard = () => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [selectedBilling, setSelectedBilling] = useState<BillingRecord | null>(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [ordersSummary, setOrdersSummary] = useState({ total_spent: 0, total_orders: 0, successful_orders: 0 });
+    const [ordersLoading, setOrdersLoading] = useState(false);
+    const [ordersPage, setOrdersPage] = useState(1);
+    const [ordersPagination, setOrdersPagination] = useState({ page: 1, limit: 6, total_items: 0, total_pages: 0, has_prev: false, has_next: false });
+    const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatusFilter>('all');
+    const [billingOriginalReference, setBillingOriginalReference] = useState('');
 
     // Check if user is logged in and load billings
     useEffect(() => {
@@ -73,6 +221,7 @@ const UserDashboard = () => {
             return;
         }
         loadUserBillings();
+        loadOrders(1, orderStatusFilter);
     }, []);
 
     const loadUserBillings = async () => {
@@ -85,6 +234,25 @@ const UserDashboard = () => {
             setApiError('Failed to load billing information');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadOrders = async (page = ordersPage, status = orderStatusFilter) => {
+        try {
+            setOrdersLoading(true);
+            const response = await paymentService.getMyOrdersPaged(page, 6, status);
+            setOrders(response.orders || []);
+            setOrdersSummary({
+                total_spent: response.summary.total_spent || 0,
+                total_orders: response.summary.total_orders || 0,
+                successful_orders: response.summary.successful_orders || 0,
+            });
+            setOrdersPagination(response.pagination || { page: 1, limit: 6, total_items: 0, total_pages: 0, has_prev: false, has_next: false });
+            setOrdersPage(response.pagination?.page || page);
+        } catch (error) {
+            console.error('Error loading orders:', error);
+        } finally {
+            setOrdersLoading(false);
         }
     };
 
@@ -117,6 +285,19 @@ const UserDashboard = () => {
         setShowDetailsModal(false);
         setSelectedBilling(null);
         setShowLogoutModal(false);
+    };
+
+    const statusFilterButtons: Array<{ label: string; value: OrderStatusFilter }> = [
+        { label: 'All', value: 'all' },
+        { label: 'Done', value: 'done' },
+        { label: 'Pending', value: 'pending' },
+        { label: 'Completed', value: 'completed' },
+    ];
+
+    const handleOrderStatusChange = (value: OrderStatusFilter) => {
+        setOrderStatusFilter(value);
+        setOrdersPage(1);
+        loadOrders(1, value);
     };
 
     // Validation functions
@@ -276,6 +457,7 @@ const UserDashboard = () => {
                 zipCode: '',
                 country: ''
             });
+            setBillingOriginalReference('');
             setCurrentStep(1);
             setIsEditing(null);
             loadUserBillings();
@@ -308,15 +490,19 @@ const UserDashboard = () => {
         switch (billing.billing_type) {
             case 'card':
                 formData.cardNumber = billing.card_number || '';
+                setBillingOriginalReference(billing.card_number || '');
                 break;
             case 'phone':
                 formData.phoneNumber = billing.card_number || '';
+                setBillingOriginalReference(billing.card_number || '');
                 break;
             case 'bank_transfer':
                 formData.accountNumber = billing.card_number || '';
+                setBillingOriginalReference(billing.card_number || '');
                 break;
             case 'paypal':
                 formData.paypalEmail = billing.card_number || '';
+                setBillingOriginalReference(billing.card_number || '');
                 break;
         }
 
@@ -362,6 +548,23 @@ const UserDashboard = () => {
         // Clear all errors when changing billing type
         setErrors({});
     };
+
+    const getBillingReferenceValue = () => {
+        switch (billingData.billingType) {
+            case 'card':
+                return billingData.cardNumber.replace(/\s/g, '');
+            case 'phone':
+                return billingData.phoneNumber.replace(/\D/g, '');
+            case 'bank_transfer':
+                return billingData.accountNumber.replace(/\s/g, '');
+            case 'paypal':
+                return billingData.paypalEmail.trim();
+            default:
+                return '';
+        }
+    };
+
+    const hasBillingReferenceChanged = Boolean(isEditing) && getBillingReferenceValue() !== billingOriginalReference;
 
     // Format card number input
     const formatCardNumber = (value: string) => {
@@ -469,6 +672,11 @@ const UserDashboard = () => {
                             />
                         </div>
                         {errors.phoneNumber && <p className="text-red-600 text-sm mt-1">{errors.phoneNumber}</p>}
+                        {hasBillingReferenceChanged && (
+                            <p className="text-amber-600 text-xs mt-2">
+                                Changing this billing number will also update the saved billing method.
+                            </p>
+                        )}
                     </div>
                 );
 
@@ -616,6 +824,119 @@ const UserDashboard = () => {
                         </div>
                     </div>
 
+                    {/* Tab Navigation */}
+                    <div className="flex gap-1 bg-white border border-gray-200 rounded-lg p-1 mb-6 w-fit">
+                        <button
+                            onClick={() => setActiveTab('orders')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'orders' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900'}`}
+                        >
+                            <ShoppingBag className="w-4 h-4" />
+                            My Orders
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('billing')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'billing' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900'}`}
+                        >
+                            <CreditCard className="w-4 h-4" />
+                            Billing
+                        </button>
+                    </div>
+
+                    {/* Transactions Tab */}
+                    {activeTab === 'orders' && (
+                        <div className="space-y-5">
+                            {/* Summary Cards */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div className="bg-white border border-gray-200 rounded-xl p-4">
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Spent</p>
+                                    <p className="text-xl font-bold text-gray-900">{RWF.format(ordersSummary.total_spent)}</p>
+                                </div>
+                                <div className="bg-white border border-green-200 rounded-xl p-4">
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Confirmed</p>
+                                    <p className="text-xl font-bold text-green-600">{ordersSummary.successful_orders}</p>
+                                </div>
+                                <div className="bg-white border border-gray-200 rounded-xl p-4">
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">All Transactions</p>
+                                    <p className="text-xl font-bold text-gray-900">{ordersSummary.total_orders}</p>
+                                </div>
+                            </div>
+
+                            {/* Filter tabs */}
+                            <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit flex-wrap">
+                                {statusFilterButtons.map(btn => (
+                                    <button key={btn.value} onClick={() => handleOrderStatusChange(btn.value)}
+                                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${orderStatusFilter === btn.value ? 'bg-white text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
+                                        {btn.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Table */}
+                            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                                {ordersLoading ? (
+                                    <div className="flex justify-center py-12">
+                                        <div className="w-7 h-7 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
+                                    </div>
+                                ) : orders.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <ShoppingBag className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                                        <p className="text-gray-500 text-sm font-medium">No transactions found</p>
+                                        <button onClick={() => window.location.href = '/products'}
+                                            className="mt-4 px-5 py-2 rounded-lg text-white text-sm font-medium"
+                                            style={{ backgroundColor: '#1d293d' }}>
+                                            Browse Products
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full">
+                                                <thead>
+                                                    <tr className="bg-gray-50 border-b border-gray-200">
+                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Invoice / Date</th>
+                                                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Items</th>
+                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Amount</th>
+                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Fulfillment</th>
+                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Payment</th>
+                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {orders.map(order => (
+                                                        <OrderRow key={order.id} order={order} />
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {/* Pagination */}
+                                        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+                                            <p className="text-xs text-gray-500">
+                                                Page {ordersPagination.page} of {ordersPagination.total_pages || 1} · {ordersPagination.total_items} transactions
+                                            </p>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => { const p = Math.max(1, ordersPage - 1); setOrdersPage(p); loadOrders(p, orderStatusFilter); }}
+                                                    disabled={!ordersPagination.has_prev || ordersLoading}
+                                                    className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs font-medium disabled:opacity-40">
+                                                    Previous
+                                                </button>
+                                                <button
+                                                    onClick={() => { const p = ordersPage + 1; setOrdersPage(p); loadOrders(p, orderStatusFilter); }}
+                                                    disabled={!ordersPagination.has_next || ordersLoading}
+                                                    className="px-3 py-1.5 rounded-lg text-white text-xs font-medium disabled:opacity-40"
+                                                    style={{ backgroundColor: '#1d293d' }}>
+                                                    Next
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Billing Tab */}
+                    {activeTab === 'billing' && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Account Information */}
                         <div className="lg:col-span-1">
@@ -855,6 +1176,7 @@ const UserDashboard = () => {
                             </div>
                         </div>
                     </div>
+                    )}
                 </div>
             </div>
             <Footer />

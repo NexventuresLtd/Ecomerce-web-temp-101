@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, X, MessageCircle, Loader } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, X, Loader, Smartphone, CheckCircle, AlertCircle, Clock, CreditCard } from 'lucide-react';
 import Footer from '../../components/SharedComp/footer';
 import Navbar from '../../components/SharedComp/navabaritems/NavBar';
 import { RWF } from '../../app/priceConver';
 import { useNavigation } from '../../hooks/product/useNavigation';
 import mainAxios from "../../Instance/mainAxios";
+import { paymentService } from '../../app/products/paymentService';
+import { billingService } from '../../app/userProfile/billingService';
 
 // Interfaces based on API response
 interface Color {
@@ -24,11 +26,19 @@ interface CartItem {
     quantity: number;
     cart_color: { color: Color }[];
     product_color: Color[];
-    delivery: string;
+    delivery: string;       // user's selected option: "free" | "2000" | "5000" | "0"
+    delivery_fee: string;   // product's own delivery note set by admin (e.g. "Free" or custom text)
     item_total: number;
     in_stock: number;
     max_available: number;
 }
+
+/** Parse the user's selected delivery option into an RWF amount. */
+const parseDeliveryFee = (delivery: string): number => {
+    if (!delivery || delivery === 'free') return 0;
+    const n = parseInt(delivery, 10);
+    return isNaN(n) ? 0 : n;
+};
 
 interface CartResponse {
     cart_id: number;
@@ -40,8 +50,601 @@ interface CartResponse {
     created_at: string;
 }
 
-// Payment method types
-type PaymentMethod = 'momo' | 'card' | 'whatsapp';
+type PaymentStage = 'method' | 'delivery' | 'input' | 'processing' | 'card-pending' | 'success' | 'failed';
+type PaymentMethod = 'momo' | 'card';
+
+const PaymentModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    total: number;
+    onSuccess: () => void;
+}> = ({ isOpen, onClose, total, onSuccess }) => {
+    const [stage, setStage] = useState<PaymentStage>('method');
+    const [method, setMethod] = useState<PaymentMethod>('momo');
+    const [phone, setPhone] = useState('');
+    const [phoneError, setPhoneError] = useState('');
+    const [billings, setBillings] = useState<any[]>([]);
+    const [selectedBillingId, setSelectedBillingId] = useState<number | null>(null);
+    const [updateBillingChecked, setUpdateBillingChecked] = useState(false);
+    const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+    const pendingBillingUpdateRef = useRef<{ billingId: number; digits: string } | null>(null);
+    const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+    const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('pickup');
+    const [deliveryAddress, setDeliveryAddress] = useState('');
+    const [deliveryAddressError, setDeliveryAddressError] = useState('');
+    const [selectedDeliveryBillingId, setSelectedDeliveryBillingId] = useState<number | null>(null);
+    const [updateAddressChecked, setUpdateAddressChecked] = useState(false);
+    const pendingAddressUpdateRef = useRef<{ billingId: number; address: string } | null>(null);
+    const [externalId, setExternalId] = useState('');
+    const [invoiceNumber, setInvoiceNumber] = useState('');
+    const [statusMsg, setStatusMsg] = useState('');
+    const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const pollCount = useRef(0);
+
+    const stopPolling = () => {
+        if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    };
+
+    useEffect(() => {
+        if (!isOpen) {
+            stopPolling();
+            setStage('method');
+            setMethod('momo');
+            setPhone('');
+            setBillings([]);
+            setSelectedBillingId(null);
+            setUpdateBillingChecked(false);
+            setPhoneError('');
+            setDeliveryType('pickup');
+            setDeliveryAddress('');
+            setDeliveryAddressError('');
+            setSelectedDeliveryBillingId(null);
+            setUpdateAddressChecked(false);
+            pendingAddressUpdateRef.current = null;
+            setExternalId('');
+            setInvoiceNumber('');
+            setStatusMsg('');
+            pollCount.current = 0;
+        }
+        if (isOpen) {
+            (async () => {
+                try {
+                    const resp = await billingService.getMyBillings();
+                    const list = resp.billings || [];
+                    setBillings(list);
+                    if (list.length > 0) {
+                        // Phone: prefer a phone-type billing
+                        const phoneBilling = list.find((b: any) => b.billing_type === 'phone') || list[0];
+                        setSelectedBillingId(phoneBilling.id);
+                        setPhone(formatPhoneInput(String(phoneBilling.card_number || '')));
+
+                        // Address: prefer a billing that has a saved address
+                        const addrBilling = list.find((b: any) => b.address) || list[0];
+                        if (addrBilling) {
+                            setSelectedDeliveryBillingId(addrBilling.id);
+                            setDeliveryAddress(formatBillingAddress(addrBilling));
+                        }
+                    }
+                } catch (e) { /* ignore */ }
+            })();
+        }
+    }, [isOpen]);
+
+    const formatBillingAddress = (b: any): string =>
+        [b.address, b.city, b.zip_code, b.country].filter(Boolean).join(', ');
+
+    const validatePhone = (value: string) => {
+        const digits = value.replace(/\D/g, '');
+        if (!digits) return 'Phone number is required';
+        if (digits.length < 9 || digits.length > 13) return 'Enter a valid Rwanda phone number (e.g. 0788123456)';
+        return '';
+    };
+
+    const formatPhoneInput = (value: string) => {
+        const digits = String(value || '').replace(/\D/g, '');
+        if (!digits) return '';
+        if (digits.startsWith('250') && digits.length >= 12) {
+            return `+250 ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9, 12)}`;
+        }
+        if (digits.startsWith('0') && digits.length === 10) {
+            return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+        }
+        if (digits.length <= 4) return digits;
+        if (digits.length <= 7) return `${digits.slice(0, 4)} ${digits.slice(4)}`;
+        return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 10)}`;
+    };
+
+    const getFriendlyPaymentError = (error: any, fallback: string) => {
+        const statusCode = error?.response?.status;
+        const backendDetail = String(error?.response?.data?.detail || '').trim();
+
+        const mappedErrors: Record<number, string> = {
+            400: 'The phone number looks invalid. Please check it and try again.',
+            401: 'Payment authorization failed. Please try again later.',
+            403: 'The payment provider blocked this request. Please try again or use the hosted checkout.',
+            404: 'The payment session could not be found. Please try again.',
+            409: 'The payment was canceled or declined on the phone prompt. If you still want to pay, please try again.',
+            422: 'The payment details could not be validated. Please check the phone number and amount.',
+        };
+
+        if (statusCode && mappedErrors[statusCode]) {
+            return mappedErrors[statusCode];
+        }
+
+        if (backendDetail && !backendDetail.toLowerCase().includes('payment gateway error')) {
+            return backendDetail;
+        }
+
+        return fallback;
+    };
+
+    const startPolling = (extId: string) => {
+        pollRef.current = setInterval(async () => {
+            pollCount.current += 1;
+            if (pollCount.current > 30) {
+                stopPolling();
+                setStage('failed');
+                setStatusMsg('Payment timed out. Please try again.');
+                return;
+            }
+            try {
+                const res = await paymentService.getPaymentStatus(extId);
+                if (res.status === 'SUCCESSFUL') {
+                    stopPolling(); setStage('success');
+                    setStatusMsg('Payment confirmed! Check your email for your invoice.');
+                    if (res.invoice_number) setInvoiceNumber(res.invoice_number);
+                    onSuccess();
+                    // Update phone billing if requested
+                    if (pendingBillingUpdateRef.current) {
+                        const p = pendingBillingUpdateRef.current; pendingBillingUpdateRef.current = null;
+                        try {
+                            await billingService.updateBilling(p.billingId, { card_number: p.digits });
+                            setAlert({ message: 'Saved billing phone updated.', type: 'success' });
+                        } catch (e) {
+                            setAlert({ message: 'Could not update saved billing. Update later from your profile.', type: 'error' });
+                        }
+                    }
+                    // Update delivery address billing if requested
+                    if (pendingAddressUpdateRef.current) {
+                        const a = pendingAddressUpdateRef.current; pendingAddressUpdateRef.current = null;
+                        const parts = a.address.split(',').map((s: string) => s.trim());
+                        try {
+                            await billingService.updateBilling(a.billingId, {
+                                address:  parts[0] || a.address,
+                                city:     parts[1] || undefined,
+                                zip_code: parts[2] || undefined,
+                                country:  parts[3] || undefined,
+                            });
+                            setAlert({ message: 'Saved billing address updated.', type: 'success' });
+                        } catch (e) {
+                            setAlert({ message: 'Could not update saved billing address. Update later from your profile.', type: 'error' });
+                        }
+                    }
+                } else if (res.status === 'FAILED') {
+                    stopPolling(); setStage('failed');
+                    setStatusMsg('Payment was declined. Please try again.');
+                }
+            } catch { /* ignore transient errors */ }
+        }, 4000);
+    };
+
+    const handleMomoSubmit = async () => {
+        const err = validatePhone(phone);
+        if (err) { setPhoneError(err); return; }
+        setStage('processing');
+        setStatusMsg('Sending payment request to your phone…');
+        pollCount.current = 0;
+        try {
+            const digits = phone.replace(/\D/g, '');
+            if (selectedBillingId && updateBillingChecked) {
+                pendingBillingUpdateRef.current = { billingId: selectedBillingId, digits };
+            } else {
+                pendingBillingUpdateRef.current = null;
+            }
+            if (deliveryType === 'delivery' && selectedDeliveryBillingId && updateAddressChecked && deliveryAddress.trim()) {
+                pendingAddressUpdateRef.current = { billingId: selectedDeliveryBillingId, address: deliveryAddress.trim() };
+            } else {
+                pendingAddressUpdateRef.current = null;
+            }
+            const resp = await paymentService.initiatePayment(digits, deliveryType, deliveryAddress);
+            setExternalId(resp.external_id);
+            if (resp.checkout_url) {
+                window.open(resp.checkout_url, '_blank');
+                setStage('card-pending');
+                setStatusMsg('V-Pay required checkout instead of direct MoMo. Complete the payment in the new tab.');
+                startPolling(resp.external_id);
+                return;
+            }
+            if (resp.status === 'SUCCESSFUL') {
+                setStage('success'); setStatusMsg('Payment confirmed!');
+                if (resp.invoice_number) setInvoiceNumber(resp.invoice_number);
+                onSuccess();
+                if (pendingBillingUpdateRef.current) {
+                    const p = pendingBillingUpdateRef.current; pendingBillingUpdateRef.current = null;
+                    try { await billingService.updateBilling(p.billingId, { card_number: p.digits }); setAlert({ message: 'Saved billing updated.', type: 'success' }); } catch (e) { setAlert({ message: 'Could not update saved billing. Update later from your profile.', type: 'error' }); }
+                }
+                return;
+            }
+            if (resp.status === 'FAILED') {
+                setStage('failed'); setStatusMsg('Payment was declined. Please try again.'); return;
+            }
+            setStatusMsg('Waiting for you to approve the USSD prompt on your phone…');
+            startPolling(resp.external_id);
+        } catch (e: any) {
+            setStage('failed');
+            setStatusMsg(getFriendlyPaymentError(e, 'Payment initiation failed. Please try again.'));
+        }
+    };
+
+    const handleCardSubmit = async () => {
+        const err = validatePhone(phone);
+        if (err) { setPhoneError(err); return; }
+        setStage('processing');
+        setStatusMsg('Opening secure checkout…');
+        pollCount.current = 0;
+        try {
+            const digits = phone.replace(/\D/g, '');
+            if (selectedBillingId && updateBillingChecked) {
+                pendingBillingUpdateRef.current = { billingId: selectedBillingId, digits };
+            } else {
+                pendingBillingUpdateRef.current = null;
+            }
+            if (deliveryType === 'delivery' && selectedDeliveryBillingId && updateAddressChecked && deliveryAddress.trim()) {
+                pendingAddressUpdateRef.current = { billingId: selectedDeliveryBillingId, address: deliveryAddress.trim() };
+            } else {
+                pendingAddressUpdateRef.current = null;
+            }
+            const redirectUrl = `${window.location.origin}/profile`;
+            const resp = await paymentService.initiateCheckout(digits, redirectUrl, deliveryType, deliveryAddress);
+            setExternalId(resp.external_id);
+            // Open the V-Pay hosted checkout in a new tab
+            window.open(resp.checkout_url, '_blank');
+            setStage('card-pending');
+            setStatusMsg('Complete your payment in the checkout tab, then check back here.');
+            startPolling(resp.external_id);
+        } catch (e: any) {
+            setStage('failed');
+            setStatusMsg(getFriendlyPaymentError(e, 'Could not open checkout. Please try again.'));
+        }
+    };
+
+    if (!isOpen) return null;
+
+    const canClose = stage === 'method' || stage === 'input' || stage === 'success' || stage === 'failed' || stage === 'card-pending';
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                className="bg-white rounded-xl max-w-md w-full p-6">
+
+                {/* Header */}
+                <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-lg font-semibold text-gray-900">Checkout</h3>
+                    {canClose && (
+                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+                            <X className="w-5 h-5" />
+                        </button>
+                    )}
+                </div>
+
+                {/* Amount */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-5 flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Amount to Pay</span>
+                    <span className="font-bold text-gray-900 text-lg">{RWF.format(total)}</span>
+                </div>
+
+                {/* Stage: method selection */}
+                {stage === 'method' && (
+                    <div className="space-y-3">
+                        <p className="text-sm text-gray-600 mb-3">Select your payment method</p>
+                        <button
+                            onClick={() => { setMethod('momo'); setStage('delivery'); }}
+                            className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-gray-900 transition-colors text-left"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center flex-shrink-0">
+                                <Smartphone className="w-5 h-5 text-yellow-600" />
+                            </div>
+                            <div>
+                                <p className="font-semibold text-gray-900 text-sm">MTN Mobile Money</p>
+                                <p className="text-xs text-gray-500">USSD push to your phone</p>
+                            </div>
+                        </button>
+                        {/* Card payment — hidden until enabled */}
+                        {false && (
+                        <button
+                            onClick={() => { setMethod('card'); setStage('delivery'); }}
+                            className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-gray-900 transition-colors text-left"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                <CreditCard className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                                <p className="font-semibold text-gray-900 text-sm">Card / Hosted Checkout</p>
+                                <p className="text-xs text-gray-500">Visa, Mastercard and more — secure hosted page</p>
+                            </div>
+                        </button>
+                        )}
+                    </div>
+                )}
+
+                {/* Stage: delivery / pickup choice */}
+                {stage === 'delivery' && (
+                    <div className="space-y-4">
+                        <p className="text-sm text-gray-600">How would you like to receive your order?</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                onClick={() => setDeliveryType('pickup')}
+                                className={`flex flex-col items-center gap-2 p-4 border-2 rounded-xl transition-colors ${deliveryType === 'pickup' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-400'}`}
+                            >
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${deliveryType === 'pickup' ? 'bg-gray-900' : 'bg-gray-100'}`}>
+                                    <svg className={`w-5 h-5 ${deliveryType === 'pickup' ? 'text-white' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                </div>
+                                <div className="text-center">
+                                    <p className="font-semibold text-gray-900 text-sm">Office Pickup</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">Free · Come to our office</p>
+                                </div>
+                            </button>
+                            <button
+                                onClick={() => setDeliveryType('delivery')}
+                                className={`flex flex-col items-center gap-2 p-4 border-2 rounded-xl transition-colors ${deliveryType === 'delivery' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-400'}`}
+                            >
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${deliveryType === 'delivery' ? 'bg-gray-900' : 'bg-gray-100'}`}>
+                                    <svg className={`w-5 h-5 ${deliveryType === 'delivery' ? 'text-white' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                                </div>
+                                <div className="text-center">
+                                    <p className="font-semibold text-gray-900 text-sm">Home Delivery</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">Delivered to your address</p>
+                                </div>
+                            </button>
+                        </div>
+                        {deliveryType === 'delivery' && (
+                            <div className="space-y-3">
+                                {/* Billing address selector — same UX as phone billing picker */}
+                                {billings.length > 0 && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Use saved billing address</label>
+                                        <select
+                                            value={selectedDeliveryBillingId ?? ''}
+                                            onChange={e => {
+                                                const id = Number(e.target.value) || null;
+                                                setSelectedDeliveryBillingId(id);
+                                                const sel = billings.find((b: any) => b.id === id);
+                                                if (sel) {
+                                                    setDeliveryAddress(formatBillingAddress(sel));
+                                                    setDeliveryAddressError('');
+                                                }
+                                            }}
+                                            className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="">(none)</option>
+                                            {billings.map((b: any) => (
+                                                <option key={b.id} value={b.id}>
+                                                    {b.full_name} — {formatBillingAddress(b) || b.billing_type}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {selectedDeliveryBillingId && (
+                                            <label className="inline-flex items-center gap-2 text-xs text-gray-600 mt-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={updateAddressChecked}
+                                                    onChange={e => setUpdateAddressChecked(e.target.checked)}
+                                                />
+                                                Save updated address back to this billing after payment
+                                            </label>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Address textarea — pre-filled from billing, freely editable */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
+                                    <textarea
+                                        value={deliveryAddress}
+                                        onChange={e => { setDeliveryAddress(e.target.value); setDeliveryAddressError(''); }}
+                                        rows={2}
+                                        placeholder="Street, district, city…"
+                                        className={`w-full px-3 py-2 border rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${deliveryAddressError ? 'border-red-500' : 'border-gray-300'}`}
+                                    />
+                                    {deliveryAddressError && <p className="text-red-600 text-xs mt-1">{deliveryAddressError}</p>}
+                                </div>
+                            </div>
+                        )}
+                        <div className="flex gap-3 pt-1">
+                            <button onClick={() => setStage('method')}
+                                className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm">
+                                Back
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (deliveryType === 'delivery' && !deliveryAddress.trim()) {
+                                        setDeliveryAddressError('Please enter a delivery address'); return;
+                                    }
+                                    setStage('input');
+                                }}
+                                className="flex-1 py-3 rounded-lg font-medium text-white text-sm transition-colors"
+                                style={{ backgroundColor: '#1d293d' }}>
+                                Continue
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Stage: phone input */}
+                {stage === 'input' && (
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            {method === 'momo'
+                                ? <Smartphone className="w-4 h-4 text-yellow-600" />
+                                : <CreditCard className="w-4 h-4 text-blue-600" />}
+                            <span className="text-sm font-medium text-gray-700">
+                                {method === 'momo' ? 'MTN Mobile Money' : 'Card / Hosted Checkout'}
+                            </span>
+                        </div>
+                        <div>
+                            {billings.length > 0 && (
+                                <div className="mb-3">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Use saved billing</label>
+                                    <select
+                                        value={selectedBillingId ?? ''}
+                                        onChange={e => {
+                                            const id = Number(e.target.value) || null;
+                                            setSelectedBillingId(id);
+                                            const sel = billings.find(b => b.id === id);
+                                            if (sel) setPhone(formatPhoneInput(String(sel.card_number || '')));
+                                        }}
+                                        className="w-full p-2 border rounded-lg"
+                                    >
+                                        <option value="">(none)</option>
+                                        {billings.map(b => (
+                                            <option key={b.id} value={b.id}>{b.billing_type}: {formatPhoneInput(String(b.card_number ?? '')) || String(b.card_number ?? '').slice(-8)}</option>
+                                        ))}
+                                    </select>
+                                    {selectedBillingId && (
+                                        <label className="inline-flex items-center gap-2 text-xs text-gray-600 mt-2">
+                                            <input type="checkbox" checked={updateBillingChecked} onChange={e => setUpdateBillingChecked(e.target.checked)} />
+                                            Update this billing with the phone entered (will be updated after successful payment)
+                                        </label>
+                                    )}
+                                </div>
+                            )}
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <div className="relative">
+                                <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input type="tel" value={phone}
+                                    onChange={e => { setPhone(formatPhoneInput(e.target.value)); setPhoneError(''); }}
+                                    placeholder="e.g. 0788123456"
+                                    className={`w-full pl-10 pr-4 py-3 border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 ${phoneError ? 'border-red-500' : 'border-gray-300'}`}
+                                    onKeyDown={e => e.key === 'Enter' && (method === 'momo' ? handleMomoSubmit() : handleCardSubmit())}
+                                />
+                            </div>
+                            {phoneError && <p className="text-red-600 text-sm mt-1">{phoneError}</p>}
+                            <p className="text-xs text-gray-500 mt-2">
+                                {method === 'momo'
+                                    ? 'You will receive a USSD prompt. Approve it to complete payment.'
+                                    : 'Used for the payment receipt. A secure checkout page will open in a new tab.'}
+                            </p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button onClick={() => setStage('delivery')}
+                                className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                                Back
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (selectedBillingId && updateBillingChecked) {
+                                        setShowUpdateConfirm(true);
+                                    } else {
+                                        (method === 'momo' ? handleMomoSubmit() : handleCardSubmit());
+                                    }
+                                }}
+                                className="flex-1 py-3 rounded-lg font-medium text-white transition-colors"
+                                style={{ backgroundColor: '#1d293d' }}>
+                                {method === 'momo' ? 'Pay Now' : 'Open Checkout'}
+                            </button>
+                        </div>
+                        <ConfirmationDialog
+                            isOpen={showUpdateConfirm}
+                            title="Update saved billing?"
+                            message="We'll update your saved billing with the phone you entered after a successful payment. Continue?"
+                            onConfirm={() => { setShowUpdateConfirm(false); (method === 'momo' ? handleMomoSubmit() : handleCardSubmit()); }}
+                            onCancel={() => { setShowUpdateConfirm(false); setUpdateBillingChecked(false); (method === 'momo' ? handleMomoSubmit() : handleCardSubmit()); }}
+                            confirmText="Yes, update after success"
+                            cancelText="No, proceed without update"
+                        />
+                        {alert && <CustomAlert message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
+                    </div>
+                )}
+
+                {/* Stage: processing */}
+                {stage === 'processing' && (
+                    <div className="text-center py-4 space-y-4">
+                        <div className="flex justify-center">
+                            <div className="w-14 h-14 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" />
+                        </div>
+                        <div>
+                            <p className="font-semibold text-gray-900 mb-1">Processing</p>
+                            <p className="text-sm text-gray-600">{statusMsg}</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Stage: card pending (tab opened, polling) */}
+                {stage === 'card-pending' && (
+                    <div className="text-center py-4 space-y-4">
+                        <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto">
+                            <CreditCard className="w-7 h-7 text-blue-600" />
+                        </div>
+                        <div>
+                            <p className="font-semibold text-gray-900 mb-1">Complete Payment in the New Tab</p>
+                            <p className="text-sm text-gray-600">{statusMsg}</p>
+                            {externalId && <p className="text-xs text-gray-400 mt-1">Ref: {externalId}</p>}
+                        </div>
+                        <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <Clock className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                            <p className="text-xs text-blue-700">
+                                This page will update automatically once payment is confirmed.
+                            </p>
+                        </div>
+                        <button onClick={onClose}
+                            className="w-full border border-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50">
+                            I'll check my orders later
+                        </button>
+                    </div>
+                )}
+
+                {/* Stage: success */}
+                {stage === 'success' && (
+                    <div className="text-center py-4 space-y-3">
+                        <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
+                        <div>
+                            <p className="text-xl font-bold text-gray-900 mb-1">Payment Successful!</p>
+                            <p className="text-sm text-gray-600">{statusMsg}</p>
+                            {invoiceNumber && <p className="text-xs text-gray-400 mt-1 font-mono">{invoiceNumber}</p>}
+                        </div>
+                        {invoiceNumber && (
+                            <a
+                                href={paymentService.getInvoiceViewUrl(invoiceNumber)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block w-full py-2.5 rounded-lg font-medium text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                                View Invoice
+                            </a>
+                        )}
+                        <button onClick={() => { onClose(); window.location.href = '/profile'; }}
+                            className="w-full py-2.5 rounded-lg font-medium text-white text-sm transition-colors"
+                            style={{ backgroundColor: '#1d293d' }}>
+                            My Orders
+                        </button>
+                    </div>
+                )}
+
+                {/* Stage: failed */}
+                {stage === 'failed' && (
+                    <div className="text-center py-4 space-y-4">
+                        <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
+                        <div>
+                            <p className="text-xl font-bold text-gray-900 mb-1">Payment Failed</p>
+                            <p className="text-sm text-gray-600">{statusMsg}</p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button onClick={onClose}
+                                className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                                Close
+                            </button>
+                            <button onClick={() => { setStage('method'); setStatusMsg(''); setPhoneError(''); }}
+                                className="flex-1 py-3 rounded-lg font-medium text-white transition-colors"
+                                style={{ backgroundColor: '#1d293d' }}>
+                                Try Again
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </motion.div>
+        </div>
+    );
+};
 
 // Custom alert component
 const CustomAlert: React.FC<{
@@ -116,69 +719,6 @@ const ConfirmationDialog: React.FC<{
     );
 };
 
-// Payment Method Modal
-const PaymentMethodModal: React.FC<{
-    isOpen: boolean;
-    onClose: () => void;
-    onSelect: (method: PaymentMethod) => void;
-    total: number;
-}> = ({ isOpen, onClose, onSelect, total }) => {
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-lg max-w-md w-full p-6"
-            >
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">Select Payment Method</h3>
-                <p className="text-gray-600 mb-6">Total: {RWF.format(total)}</p>
-
-                <div className="space-y-3 mb-6">
-                    <button
-                        onClick={() => onSelect('momo')}
-                        className="w-full p-4 border border-gray-300 rounded-lg text-left hover:bg-gray-50 transition-colors"
-                        disabled
-                    >
-                        <div className="flex items-center justify-between">
-                            <span>Mobile Money (Momo)</span>
-                            <span className="text-gray-400 text-sm">Coming soon</span>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => onSelect('card')}
-                        className="w-full p-4 border border-gray-300 rounded-lg text-left hover:bg-gray-50 transition-colors"
-                        disabled
-                    >
-                        <div className="flex items-center justify-between">
-                            <span>Credit/Debit Card</span>
-                            <span className="text-gray-400 text-sm">Coming soon</span>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => onSelect('whatsapp')}
-                        className="w-full p-4 border border-green-300 rounded-lg text-left hover:bg-green-50 transition-colors flex items-center justify-between"
-                    >
-                        <span>WhatsApp</span>
-                        <MessageCircle className="w-5 h-5 text-green-600" />
-                    </button>
-                </div>
-
-                <div className="flex justify-end space-x-3">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </motion.div>
-        </div>
-    );
-};
 
 // Color Selection Component
 const ColorSelection: React.FC<{
@@ -460,6 +1000,9 @@ const CartSummary: React.FC<{
     onCheckout: () => void;
     isLoading?: boolean;
 }> = ({ items, totalPrice, onCheckout, isLoading = false }) => {
+    const totalDelivery = items.reduce((sum, item) => sum + parseDeliveryFee(item.delivery), 0);
+    const grandTotal = totalPrice + totalDelivery;
+
     return (
         <div className="bg-white p-6 pt-20 rounded-lg border border-gray-200 sticky top-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Order Summary</h3>
@@ -469,16 +1012,42 @@ const CartSummary: React.FC<{
                     <span className="text-gray-600">Items ({items.length})</span>
                     <span className="font-medium">{RWF.format(totalPrice)}</span>
                 </div>
-                <div className="flex justify-between">
-                    <span className="text-gray-600">Delivery</span>
-                    {/* <span className="font-medium">{RWF.format(items.delve)}</span> */}
+
+                {/* Per-item delivery fees */}
+                {items.map(item => {
+                    const fee = parseDeliveryFee(item.delivery);
+                    const label = item.delivery === 'free' || item.delivery === ''
+                        ? 'Free'
+                        : item.delivery === '0'
+                            ? 'Negotiable'
+                            : RWF.format(fee);
+                    return (
+                        <div key={item.cart_item_id} className="flex justify-between text-sm">
+                            <span className="text-gray-500 truncate max-w-[55%]">
+                                Delivery · {item.product_name.slice(0, 20)}{item.product_name.length > 20 ? '…' : ''}
+                                {item.delivery_fee ? <span className="text-xs text-blue-600 ml-1">({item.delivery_fee})</span> : null}
+                            </span>
+                            <span className={fee === 0 && item.delivery !== '0' ? 'text-green-600 font-medium' : 'font-medium'}>
+                                {label}
+                            </span>
+                        </div>
+                    );
+                })}
+
+                <hr className="my-2" />
+
+                <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Total Delivery</span>
+                    <span className={totalDelivery === 0 ? 'text-green-600 font-semibold' : 'font-semibold'}>
+                        {totalDelivery === 0 ? 'Free' : RWF.format(totalDelivery)}
+                    </span>
                 </div>
 
-                <hr className="my-4" />
+                <hr className="my-2" />
 
-                <div className="flex justify-between text-lg font-semibold">
-                    <span>Total</span>
-                    <span>{RWF.format(totalPrice)}</span>
+                <div className="flex justify-between text-lg font-bold">
+                    <span>Grand Total</span>
+                    <span>{RWF.format(grandTotal)}</span>
                 </div>
             </div>
 
@@ -611,14 +1180,8 @@ const ShoppingCartPage: React.FC = () => {
         setShowPaymentModal(true);
     };
 
-    const handlePaymentSelect = (method: PaymentMethod) => {
-        if (method === 'whatsapp') {
-            // Redirect to WhatsApp with order details
-            const message = `Hello! I would like to place an order. Order ID: ${cartData?.cart_id}, Total: ${RWF.format(cartData?.total_price || 0)}`;
-            const encodedMessage = encodeURIComponent(message);
-            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
-        }
-        setShowPaymentModal(false);
+    const handlePaymentSuccess = () => {
+        fetchCart();
     };
 
     const showAlert = (message: string, type: 'success' | 'error' | 'info') => {
@@ -718,12 +1281,12 @@ const ShoppingCartPage: React.FC = () => {
             </div>
             <Footer />
 
-            {/* Payment Method Modal */}
-            <PaymentMethodModal
+            {/* Payment Modal */}
+            <PaymentModal
                 isOpen={showPaymentModal}
                 onClose={() => setShowPaymentModal(false)}
-                onSelect={handlePaymentSelect}
                 total={cartData.total_price}
+                onSuccess={handlePaymentSuccess}
             />
 
             {/* Delete Confirmation Dialog */}

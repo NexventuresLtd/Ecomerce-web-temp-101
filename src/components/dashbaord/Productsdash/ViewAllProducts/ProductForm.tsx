@@ -37,6 +37,7 @@ const ProductForm: React.FC<{
     const [categoriesLoading, setCategoriesLoading] = useState(true);
     const [loading, setLoading] = useState(false);
     const [partialUpdateLoading, setPartialUpdateLoading] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({
         title: product?.title || '',
@@ -47,7 +48,7 @@ const ProductForm: React.FC<{
         is_new: product?.is_new || 'new',
         is_featured: product?.is_featured || false,
         is_active: product?.is_active !== undefined ? product.is_active : true,
-        instock: product?.instock || '',
+        instock: product?.instock ?? 0,
         delivery_fee: product?.delivery_fee || '',
         brock: product?.brock || '',
         returnDay: product?.returnDay || '',
@@ -189,8 +190,12 @@ const ProductForm: React.FC<{
 
                 onSave();
             }
-        } catch (error) {
-            console.error('Error partially updating product:', error);
+        } catch (error: any) {
+            const detail = error?.response?.data?.detail;
+            const msg = Array.isArray(detail)
+                ? detail.map((d: any) => `${d.loc?.slice(-1)[0]}: ${d.msg}`).join(' · ')
+                : detail || error?.message || 'Failed to save product';
+            setSaveError(msg);
         } finally {
             setPartialUpdateLoading(false);
         }
@@ -276,8 +281,12 @@ const ProductForm: React.FC<{
             }
 
             onSave();
-        } catch (error) {
-            console.error('Error saving product:', error);
+        } catch (error: any) {
+            const detail = error?.response?.data?.detail;
+            const msg = Array.isArray(detail)
+                ? detail.map((d: any) => `${d.loc?.slice(-1)[0]}: ${d.msg}`).join(' · ')
+                : detail || error?.message || 'Failed to save product';
+            setSaveError(msg);
         } finally {
             setLoading(false);
         }
@@ -367,6 +376,14 @@ const ProductForm: React.FC<{
                         )}
                     </div>
                 </div>
+
+                {saveError && (
+                    <div className="mx-6 mb-2 px-4 py-3 bg-red-50 border border-red-300 rounded-lg flex items-start gap-2">
+                        <span className="text-red-600 font-medium text-sm flex-shrink-0">Error:</span>
+                        <span className="text-red-700 text-sm">{saveError}</span>
+                        <button onClick={() => setSaveError(null)} className="ml-auto text-red-400 hover:text-red-600 flex-shrink-0 text-lg leading-none">&times;</button>
+                    </div>
+                )}
 
                 <div className="flex justify-between items-center p-6 border-t border-gray-200 bg-white">
                     <button

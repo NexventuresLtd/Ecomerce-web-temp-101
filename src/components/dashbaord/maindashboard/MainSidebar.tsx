@@ -5,23 +5,23 @@ import {
     Tag,
     Heart,
     ShoppingBag,
-    // FileQuestion,
-    // Sliders,
     Video,
     Users,
     Sliders,
-    // Dock,
+    Receipt,
+    Truck,
 } from 'lucide-react';
 import type { ViewType } from '../../../types/dashboard/mainDashbaord';
 import { useAppContext } from '../../../contexts/dashbaord/context';
-import { getUserInfo } from '../../../app/Localstorage';
+import { useCurrentUser } from '../../../hooks/useCurrentUser';
 
 // Sidebar Component
 export const Sidebar: React.FC = () => {
     const { currentView, setCurrentView, isSidebarOpen, setSidebarOpen } = useAppContext();
+    const { role } = useCurrentUser();
 
     const menuItems =
-    getUserInfo.role === "admin" ?
+    role === "admin" ?
     [
         { id: 'dashboard' as ViewType, label: 'Dashboard', icon: LayoutDashboard },
         { id: 'products' as ViewType, label: 'Products', icon: Package },
@@ -30,7 +30,8 @@ export const Sidebar: React.FC = () => {
         { id: 'users' as ViewType, label: 'Users', icon: Users },
         { id: 'wishlists' as ViewType, label: 'Wishlists', icon: Heart },
         { id: 'carts' as ViewType, label: 'Carts', icon: ShoppingBag },
-        // { id: 'FAQ' as ViewType, label: 'FAQ', icon: FileQuestion },
+        { id: 'orders' as ViewType, label: 'Transactions', icon: Receipt },
+        { id: 'deliveries' as ViewType, label: 'Deliveries', icon: Truck },
         { id: 'vlog' as ViewType, label: 'Vlog', icon: Video },
         { id: 'slide' as ViewType, label: 'Slider', icon: Sliders },
     ]:

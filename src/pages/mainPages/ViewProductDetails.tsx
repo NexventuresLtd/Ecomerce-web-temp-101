@@ -496,8 +496,8 @@ const ProductViewPage: React.FC = () => {
                                             <p className="font-medium">Delivery</p>
                                             <select onChange={(e) => setselectedDelivery(e.target.value)} className="text-gray-600 py-2 w-fit border-0 outline-0 cursor-pointer">
                                                 <option value={"free"}>City Center → Free</option>
-                                                <option value={2000}>In Kigali → 2,000 RFW</option>
-                                                <option value={5000}>Out of Kigali → 5,000 RFW</option>
+                                                <option value={2000}>In Kigali → 2,000 RWF</option>
+                                                <option value={5000}>Out of Kigali → 5,000 RWF</option>
                                                 <option value={0}>Outside Rwanda → Negotiable</option>
                                             </select>
                                         </div>
@@ -521,7 +521,7 @@ const ProductViewPage: React.FC = () => {
 
                             {/* Tags */}
                             {product.tags && product.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-2 hidden">
+                                <div className="hidden flex-wrap gap-2">
                                     {product.tags.map((tag, index) => (
                                         <span
                                             key={index}

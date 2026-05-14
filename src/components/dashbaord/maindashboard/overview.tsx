@@ -12,8 +12,12 @@ import {
   Shield,
   Layers,
   BarChart4,
-  // FileText,
-  Smartphone
+  Smartphone,
+  TrendingUp,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Truck,
 } from 'lucide-react';
 import {
 
@@ -31,6 +35,7 @@ import {
 
 import mainAxios from '../../../Instance/mainAxios';
 import { useAppContext } from '../../../contexts/dashbaord/context';
+import { paymentService } from '../../../app/products/paymentService';
 
 // Define types based on your backend response
 interface DashboardSummary {
@@ -60,6 +65,13 @@ interface DashboardSummary {
     inactive: number;
   };
   billings: number;
+  purchases: {
+    total: number;
+    successful: number;
+    pending: number;
+    failed: number;
+    total_revenue: number;
+  };
   logs: {
     total_logins: number;
     active_devices: number;
@@ -76,7 +88,7 @@ interface StatCard {
   description?: string;
 }
 
-type ColorType = 'blue' | 'green' | 'orange' | 'purple' | 'pink' | 'indigo' | 'teal';
+type ColorType = 'blue' | 'green' | 'orange' | 'purple' | 'pink' | 'indigo' | 'teal' | 'red' | 'yellow';
 
 const umukameziDashboard = () => {
   const { setCurrentView } = useAppContext();
@@ -85,6 +97,14 @@ const umukameziDashboard = () => {
   const [dashboardData, setDashboardData] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Transaction summary — loaded from the same endpoint AdminOrders uses (proven correct)
+  const [txSummary, setTxSummary] = useState({
+    total_orders: 0,
+    total_revenue: 0,
+    successful_orders: 0,
+    pending_orders: 0,
+    failed_orders: 0,
+  });
   const [animatedValues, setAnimatedValues] = useState({
     totalUsers: 0,
     totalProducts: 0,
@@ -93,7 +113,12 @@ const umukameziDashboard = () => {
     activeWishlists: 0,
     verifiedUsers: 0,
     featuredProducts: 0,
-    mainCategories: 0
+    mainCategories: 0,
+    totalRevenue: 0,
+    successfulOrders: 0,
+    failedOrders: 0,
+    pendingOrders: 0,
+    totalOrders: 0,
   });
 
   // Fetch data from backend
@@ -101,11 +126,26 @@ const umukameziDashboard = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await mainAxios.get('/dashboard/summary');
-      setDashboardData(response.data);
 
-      // Start animation with actual data
-      animateValues(response.data);
+      // Run both requests in parallel
+      const [response, txData] = await Promise.all([
+        mainAxios.get('/dashboard/summary'),
+        paymentService.getAllOrders(1, 1, 'all'),   // same call AdminOrders makes
+      ]);
+
+      const data = response.data;
+      setDashboardData(data);
+
+      // Use the summary that AdminOrders already proves is correct
+      setTxSummary({
+        total_orders:      txData.summary.total_orders      || 0,
+        total_revenue:     txData.summary.total_revenue     || 0,
+        successful_orders: txData.summary.successful_orders || 0,
+        pending_orders:    txData.summary.pending_orders    || 0,
+        failed_orders:     txData.summary.failed_orders     || 0,
+      });
+
+      animateValues(data, txData.summary);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError('Failed to load dashboard data');
@@ -115,16 +155,22 @@ const umukameziDashboard = () => {
   };
 
   // Animate values from 0 to actual values
-  const animateValues = (data: DashboardSummary) => {
+  const animateValues = (data: DashboardSummary, tx?: any) => {
     const targets = {
-      totalUsers: data.users.total,
-      totalProducts: data.products.total,
-      activeCarts: data.carts.active,
-      totalBillings: data.billings,
+      totalUsers:      data.users.total,
+      totalProducts:   data.products.total,
+      activeCarts:     data.carts.active,
+      totalBillings:   data.billings,
       activeWishlists: data.wishlists.active,
-      verifiedUsers: data.users.verified,
+      verifiedUsers:   data.users.verified,
       featuredProducts: data.products.featured,
-      mainCategories: data.categories.main
+      mainCategories:  data.categories.main,
+      // Transaction counts — use the proven AdminOrders summary when available
+      totalRevenue:     Math.round(Number(tx?.total_revenue     ?? data.purchases?.total_revenue)     || 0),
+      successfulOrders: Number(tx?.successful_orders ?? data.purchases?.successful) || 0,
+      failedOrders:     Number(tx?.failed_orders     ?? data.purchases?.failed)     || 0,
+      pendingOrders:    Number(tx?.pending_orders    ?? data.purchases?.pending)    || 0,
+      totalOrders:      Number(tx?.total_orders      ?? data.purchases?.total)      || 0,
     };
 
     const duration = 1200;
@@ -137,14 +183,19 @@ const umukameziDashboard = () => {
       const progress = step / steps;
 
       setAnimatedValues({
-        totalUsers: Math.floor(targets.totalUsers * progress),
-        totalProducts: Math.floor(targets.totalProducts * progress),
-        activeCarts: Math.floor(targets.activeCarts * progress),
-        totalBillings: Math.floor(targets.totalBillings * progress),
-        activeWishlists: Math.floor(targets.activeWishlists * progress),
-        verifiedUsers: Math.floor(targets.verifiedUsers * progress),
-        featuredProducts: Math.floor(targets.featuredProducts * progress),
-        mainCategories: Math.floor(targets.mainCategories * progress)
+        totalUsers:        Math.floor(targets.totalUsers * progress),
+        totalProducts:     Math.floor(targets.totalProducts * progress),
+        activeCarts:       Math.floor(targets.activeCarts * progress),
+        totalBillings:     Math.floor(targets.totalBillings * progress),
+        activeWishlists:   Math.floor(targets.activeWishlists * progress),
+        verifiedUsers:     Math.floor(targets.verifiedUsers * progress),
+        featuredProducts:  Math.floor(targets.featuredProducts * progress),
+        mainCategories:    Math.floor(targets.mainCategories * progress),
+        totalRevenue:      Math.floor(targets.totalRevenue * progress),
+        successfulOrders:  Math.floor(targets.successfulOrders * progress),
+        failedOrders:      Math.floor(targets.failedOrders * progress),
+        pendingOrders:     Math.floor(targets.pendingOrders * progress),
+        totalOrders:       Math.floor(targets.totalOrders * progress),
       });
 
       if (step >= steps) {
@@ -170,6 +221,8 @@ const umukameziDashboard = () => {
     if (change.startsWith('-')) return 'decrease';
     return 'neutral';
   };
+
+  const RWF = new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', minimumFractionDigits: 0 });
 
   // Generate stats cards from dashboard data
   const stats: StatCard[] = dashboardData ? [
@@ -244,7 +297,52 @@ const umukameziDashboard = () => {
       changeType: getChangeType(calculateChange(dashboardData.products.featured, dashboardData.products.featured * 0.80)),
       color: 'orange',
       description: `${Math.round((dashboardData.products.featured / dashboardData.products.total) * 100)}% of total products`
-    }
+    },
+  ] : [];
+
+  // ── Revenue & sales cards (separate — rendered as a highlighted row) ──
+  // Revenue & Sales row — sourced from txSummary (same data as AdminOrders, always correct)
+  const salesCards = dashboardData ? [
+    {
+      label: 'Total Revenue',
+      displayValue: RWF.format(txSummary.total_revenue),
+      icon: TrendingUp,
+      bg: 'bg-green-50',
+      iconColor: 'text-green-600',
+      border: 'border-green-200',
+      badge: null as null | string,
+    },
+    {
+      label: 'Successful',
+      displayValue: String(txSummary.successful_orders),
+      icon: CheckCircle2,
+      bg: 'bg-emerald-50',
+      iconColor: 'text-emerald-600',
+      border: 'border-emerald-200',
+      badge: txSummary.total_orders
+        ? `${Math.round((txSummary.successful_orders / txSummary.total_orders) * 100)}% success rate`
+        : null,
+    },
+    {
+      label: 'Pending',
+      displayValue: String(txSummary.pending_orders),
+      icon: Clock,
+      bg: 'bg-yellow-50',
+      iconColor: 'text-yellow-600',
+      border: 'border-yellow-200',
+      badge: null,
+    },
+    {
+      label: 'Failed',
+      displayValue: String(txSummary.failed_orders),
+      icon: XCircle,
+      bg: 'bg-red-50',
+      iconColor: 'text-red-500',
+      border: 'border-red-200',
+      badge: txSummary.total_orders
+        ? `${Math.round((txSummary.failed_orders / txSummary.total_orders) * 100)}% of total`
+        : null,
+    },
   ] : [];
 
 
@@ -293,7 +391,9 @@ const umukameziDashboard = () => {
       purple: { bg: 'bg-purple-100', text: 'text-purple-600', border: 'border-purple-200' },
       pink: { bg: 'bg-rose-100', text: 'text-rose-600', border: 'border-rose-200' },
       indigo: { bg: 'bg-indigo-100', text: 'text-indigo-600', border: 'border-indigo-200' },
-      teal: { bg: 'bg-teal-100', text: 'text-teal-600', border: 'border-teal-200' }
+      teal:   { bg: 'bg-teal-100',   text: 'text-teal-600',   border: 'border-teal-200' },
+      red:    { bg: 'bg-red-100',    text: 'text-red-600',    border: 'border-red-200' },
+      yellow: { bg: 'bg-yellow-100', text: 'text-yellow-600', border: 'border-yellow-200' },
     };
     return colorMap[color];
   };
@@ -354,7 +454,7 @@ const umukameziDashboard = () => {
               </select>
               <button
                 onClick={downloadReport}
-                className="flex items-center hidden justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto"
+                className="hidden gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto"
                 aria-label="Export report"
               >
                 <Download size={16} />
@@ -371,6 +471,70 @@ const umukameziDashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* ── Revenue & Sales highlight row ── */}
+        {salesCards.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="w-4 h-4 text-green-600" />
+              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Revenue & Sales</h2>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {salesCards.map((card, i) => {
+                const Icon = card.icon;
+                return (
+                  <div key={i} className={`bg-white rounded-xl border ${card.border} p-4 md:p-5`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`p-2 ${card.bg} rounded-lg`}>
+                        <Icon className={`${card.iconColor} w-5 h-5`} />
+                      </div>
+                      <p className="text-sm text-gray-500">{card.label}</p>
+                    </div>
+                    <p className="text-xl md:text-2xl font-bold text-gray-900 mb-1">{card.displayValue}</p>
+                    {card.badge && (
+                      <p className="text-xs text-gray-400">{card.badge}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Total Orders summary strip ── */}
+        {txSummary.total_orders > 0 && (
+          <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Truck className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-semibold text-gray-700">Total Transactions</span>
+              <span className="text-lg font-bold text-gray-900">{txSummary.total_orders.toLocaleString()}</span>
+            </div>
+            <div className="flex flex-wrap gap-3 flex-1">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                <span className="text-xs text-gray-600">Successful: <strong>{txSummary.successful_orders}</strong></span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                <span className="text-xs text-gray-600">Pending: <strong>{txSummary.pending_orders}</strong></span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                <span className="text-xs text-gray-600">Failed: <strong>{txSummary.failed_orders}</strong></span>
+              </div>
+            </div>
+            <div className="w-full sm:w-48 flex-shrink-0">
+              <div className="flex rounded-full overflow-hidden h-2">
+                <div className="bg-green-500 transition-all"
+                  style={{ width: `${(txSummary.successful_orders / txSummary.total_orders) * 100}%` }} />
+                <div className="bg-yellow-400 transition-all"
+                  style={{ width: `${(txSummary.pending_orders / txSummary.total_orders) * 100}%` }} />
+                <div className="bg-red-400 transition-all"
+                  style={{ width: `${(txSummary.failed_orders / txSummary.total_orders) * 100}%` }} />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-6">

@@ -3,6 +3,7 @@ import HomePage from "./pages/mainPages/HomePage";
 import ScrollToHash from "./hooks/ScrollController";
 import AnimatedLoginPage from "./pages/Authentication/LoginPage";
 import { getUserInfo } from "./app/Localstorage";
+import { useCurrentUser } from "./hooks/useCurrentUser";
 import ViewProductDetails from "./pages/mainPages/ViewProductDetails";
 import AllProducts from "./pages/mainPages/AllProducts";
 import AboutPage from "./pages/mainPages/AboutUs";
@@ -20,9 +21,10 @@ import { categoryApi } from "./app/dashcategory/category";
 import NotAuthorized from "./pages/mainPages/NotAuthorized";
 
 export default function App() {
+  const { role: liveRole } = useCurrentUser();
   const [currentView, setCurrentView] = useState<ViewType>("dashboard");
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true); // 🔹 Loader state
+  const [loading, setLoading] = useState(true);
 
   // Load saved view from memory + categories on mount
   useEffect(() => {
@@ -99,7 +101,7 @@ export default function App() {
             />
             <Route
               path="/admin-dashboard"
-              element={getUserInfo ? getUserInfo.role == "admin" ? <MainContent /> : <NotAuthorized /> : <AnimatedLoginPage />}
+              element={getUserInfo ? liveRole === "admin" ? <MainContent /> : <NotAuthorized /> : <AnimatedLoginPage />}
             />
             <Route path="/test" element={<MainContent />} />
             <Route path="*" element={<NotFound />} />
