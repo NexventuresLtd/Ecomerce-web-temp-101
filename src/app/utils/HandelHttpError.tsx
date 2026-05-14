@@ -22,7 +22,7 @@ export const handleApiError = (error: any): string => {
             return error?.response?.data.detail
         }
 
-        return apiError.detail || apiError.message || 'An error occurred during the request.';
+        return apiError.message || 'An error occurred during the request.';
     } else if (error.request) {
         // The request was made but no response was received
         return 'Network error. Please check your internet connection.';

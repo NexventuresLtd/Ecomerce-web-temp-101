@@ -17,9 +17,6 @@ import {
     X,
     ShoppingBag,
     Package,
-    Clock,
-    AlertCircle,
-    Receipt,
     ChevronDown,
     ChevronUp
 } from 'lucide-react';
@@ -291,7 +288,7 @@ const UserDashboard = () => {
         { label: 'All', value: 'all' },
         { label: 'Done', value: 'done' },
         { label: 'Pending', value: 'pending' },
-        { label: 'Completed', value: 'completed' },
+        { label: 'Failed', value: 'failed' },
     ];
 
     const handleOrderStatusChange = (value: OrderStatusFilter) => {

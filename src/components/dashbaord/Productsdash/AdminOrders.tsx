@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import {
     ShoppingBag,
     Search,
@@ -21,7 +21,7 @@ const RWF = new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF',
 type StatusFilter = 'ALL' | 'SUCCESSFUL' | 'PENDING' | 'FAILED';
 
 const StatusBadge = ({ status }: { status: string }) => {
-    const map: Record<string, { icon: JSX.Element; cls: string }> = {
+    const map: Record<string, { icon: ReactNode; cls: string }> = {
         SUCCESSFUL: { icon: <CheckCircle className="w-3 h-3" />, cls: 'bg-green-50 text-green-700 border-green-200' },
         PENDING: { icon: <Clock className="w-3 h-3" />, cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
         FAILED: { icon: <AlertCircle className="w-3 h-3" />, cls: 'bg-red-50 text-red-700 border-red-200' },
@@ -300,7 +300,7 @@ const AdminOrders = () => {
                     <div className="text-center py-16">
                         <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
                         <p className="text-gray-600 font-medium">{error}</p>
-                        <button onClick={loadOrders} className="mt-4 px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-700">Retry</button>
+                        <button onClick={() => loadOrders()} className="mt-4 px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-700">Retry</button>
                     </div>
                 ) : filtered.length === 0 ? (
                     <div className="text-center py-16">
