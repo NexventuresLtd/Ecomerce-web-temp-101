@@ -210,10 +210,10 @@ const PaymentModal: React.FC<{
                         const parts = a.address.split(',').map((s: string) => s.trim());
                         try {
                             await billingService.updateBilling(a.billingId, {
-                                address:  parts[0] || a.address,
-                                city:     parts[1] || undefined,
+                                address: parts[0] || a.address,
+                                city: parts[1] || undefined,
                                 zip_code: parts[2] || undefined,
-                                country:  parts[3] || undefined,
+                                country: parts[3] || undefined,
                             });
                             setAlert({ message: 'Saved billing address updated.', type: 'success' });
                         } catch (e) {
@@ -351,18 +351,18 @@ const PaymentModal: React.FC<{
                         </button>
                         {/* Card payment — hidden until enabled */}
                         {false && (
-                        <button
-                            onClick={() => { setMethod('card'); setStage('delivery'); }}
-                            className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-gray-900 transition-colors text-left"
-                        >
-                            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                                <CreditCard className="w-5 h-5 text-blue-600" />
-                            </div>
-                            <div>
-                                <p className="font-semibold text-gray-900 text-sm">Card / Hosted Checkout</p>
-                                <p className="text-xs text-gray-500">Visa, Mastercard and more — secure hosted page</p>
-                            </div>
-                        </button>
+                            <button
+                                onClick={() => { setMethod('card'); setStage('delivery'); }}
+                                className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-gray-900 transition-colors text-left"
+                            >
+                                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                    <CreditCard className="w-5 h-5 text-blue-600" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-gray-900 text-sm">Card / Hosted Checkout</p>
+                                    <p className="text-xs text-gray-500">Visa, Mastercard and more — secure hosted page</p>
+                                </div>
+                            </button>
                         )}
                     </div>
                 )}
@@ -765,8 +765,8 @@ const ColorSelection: React.FC<{
                         onClick={() => handleColorChange(color)}
                         disabled={isLoading || color.stock === 0}
                         className={`w-8 h-8 rounded-full border-2 relative ${selectedColor?.name === color.name
-                                ? 'border-gray-800 ring-2 ring-offset-1 ring-gray-300'
-                                : 'border-gray-300'
+                            ? 'border-gray-800 ring-2 ring-offset-1 ring-gray-300'
+                            : 'border-gray-300'
                             } ${color.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         style={{ backgroundColor: color.hex }}
                         title={`${color.name} ${color.stock === 0 ? '(Out of stock)' : `(${color.stock} available)`}`}

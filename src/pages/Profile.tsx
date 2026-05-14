@@ -54,9 +54,9 @@ type OrderStatusFilter = 'all' | 'done' | 'pending' | 'failed';
 
 const StatusBadge = ({ status }: { status: string }) => {
     const map: Record<string, { cls: string; label: string }> = {
-        SUCCESSFUL: { cls: 'bg-green-50 text-green-700 border-green-200',  label: 'Paid' },
-        FAILED:     { cls: 'bg-red-50 text-red-600 border-red-200',        label: 'Failed' },
-        PENDING:    { cls: 'bg-yellow-50 text-yellow-700 border-yellow-200', label: 'Pending' },
+        SUCCESSFUL: { cls: 'bg-green-50 text-green-700 border-green-200', label: 'Paid' },
+        FAILED: { cls: 'bg-red-50 text-red-600 border-red-200', label: 'Failed' },
+        PENDING: { cls: 'bg-yellow-50 text-yellow-700 border-yellow-200', label: 'Pending' },
     };
     const c = map[status] ?? map.PENDING;
     return (
@@ -937,245 +937,245 @@ const UserDashboard = () => {
 
                     {/* Billing Tab */}
                     {activeTab === 'billing' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Account Information */}
-                        <div className="lg:col-span-1">
-                            <div className="bg-white p-6 rounded-lg mb-6">
-                                <h2 className="text-xl font-semibold text-gray-800 mb-4">Account Information</h2>
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <Mail className="w-5 h-5 text-gray-500" />
-                                        <div>
-                                            <p className="text-sm text-gray-600">Email</p>
-                                            <p className="text-gray-800">{getUserInfo?.email}</p>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Account Information */}
+                            <div className="lg:col-span-1">
+                                <div className="bg-white p-6 rounded-lg mb-6">
+                                    <h2 className="text-xl font-semibold text-gray-800 mb-4">Account Information</h2>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <Mail className="w-5 h-5 text-gray-500" />
+                                            <div>
+                                                <p className="text-sm text-gray-600">Email</p>
+                                                <p className="text-gray-800">{getUserInfo?.email}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Phone className="w-5 h-5 text-gray-500" />
-                                        <div>
-                                            <p className="text-sm text-gray-600">Phone</p>
-                                            <p className="text-gray-800">{getUserInfo?.phone}</p>
+                                        <div className="flex items-center gap-3">
+                                            <Phone className="w-5 h-5 text-gray-500" />
+                                            <div>
+                                                <p className="text-sm text-gray-600">Phone</p>
+                                                <p className="text-gray-800">{getUserInfo?.phone}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Calendar className="w-5 h-5 text-gray-500" />
-                                        <div>
-                                            <p className="text-sm text-gray-600">Member Since</p>
-                                            <p className="text-gray-800">{formatDate(getUserInfo?.created_at)}</p>
+                                        <div className="flex items-center gap-3">
+                                            <Calendar className="w-5 h-5 text-gray-500" />
+                                            <div>
+                                                <p className="text-sm text-gray-600">Member Since</p>
+                                                <p className="text-gray-800">{formatDate(getUserInfo?.created_at)}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Saved Billing Methods */}
-                            <div className="bg-white p-6 rounded-lg mb-6">
-                                <h2 className="text-xl font-semibold text-gray-800 mb-4">Saved Billing Methods</h2>
-                                {loading ? (
-                                    <div className="text-center py-4">Loading...</div>
-                                ) : userBillings.length === 0 ? (
-                                    <p className="text-gray-600 text-center py-4">No billing methods saved</p>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {userBillings.map((billing) => (
-                                            <div key={billing.id} className="bg-gray-50 p-3 rounded">
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <div>
-                                                        <p className="font-medium text-gray-800">{billing.full_name}</p>
-                                                        <p className="text-sm text-gray-600 capitalize">{billing.billing_type}</p>
-                                                        {renderBillingIdentifier(billing)}
+                                {/* Saved Billing Methods */}
+                                <div className="bg-white p-6 rounded-lg mb-6">
+                                    <h2 className="text-xl font-semibold text-gray-800 mb-4">Saved Billing Methods</h2>
+                                    {loading ? (
+                                        <div className="text-center py-4">Loading...</div>
+                                    ) : userBillings.length === 0 ? (
+                                        <p className="text-gray-600 text-center py-4">No billing methods saved</p>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {userBillings.map((billing) => (
+                                                <div key={billing.id} className="bg-gray-50 p-3 rounded">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div>
+                                                            <p className="font-medium text-gray-800">{billing.full_name}</p>
+                                                            <p className="text-sm text-gray-600 capitalize">{billing.billing_type}</p>
+                                                            {renderBillingIdentifier(billing)}
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => handleViewDetails(billing)}
+                                                                className="text-green-600 hover:text-green-800"
+                                                                title="View Details"
+                                                            >
+                                                                <Eye className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleEditBilling(billing)}
+                                                                className="text-blue-600 hover:text-blue-800"
+                                                                title="Edit"
+                                                            >
+                                                                <Edit className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteBilling(billing.id)}
+                                                                className="text-red-600 hover:text-red-800"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => handleViewDetails(billing)}
-                                                            className="text-green-600 hover:text-green-800"
-                                                            title="View Details"
-                                                        >
-                                                            <Eye className="w-4 h-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleEditBilling(billing)}
-                                                            className="text-blue-600 hover:text-blue-800"
-                                                            title="Edit"
-                                                        >
-                                                            <Edit className="w-4 h-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteBilling(billing.id)}
-                                                            className="text-red-600 hover:text-red-800"
-                                                            title="Delete"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
+                                                    <p className="text-xs text-gray-500">
+                                                        {billing.city}, {billing.country}
+                                                    </p>
                                                 </div>
-                                                <p className="text-xs text-gray-500">
-                                                    {billing.city}, {billing.country}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Billing Information Form */}
-                        <div className="lg:col-span-2">
-                            <div className="bg-white p-6 rounded-lg">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-xl font-semibold text-gray-800">
-                                        {isEditing ? 'Edit Billing Method' : 'Add Billing Method'}
-                                    </h2>
-                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <span className={`w-2 h-2 rounded-full ${currentStep >= 1 ? 'bg-gray-800' : 'bg-gray-300'}`}></span>
-                                        <span>Payment</span>
-                                        <span className={`w-2 h-2 rounded-full ${currentStep >= 2 ? 'bg-gray-800' : 'bg-gray-300'}`}></span>
-                                        <span>Address</span>
-                                    </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
+                            </div>
 
-                                {apiError && (
-                                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                                        {apiError}
+                            {/* Billing Information Form */}
+                            <div className="lg:col-span-2">
+                                <div className="bg-white p-6 rounded-lg">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-xl font-semibold text-gray-800">
+                                            {isEditing ? 'Edit Billing Method' : 'Add Billing Method'}
+                                        </h2>
+                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                            <span className={`w-2 h-2 rounded-full ${currentStep >= 1 ? 'bg-gray-800' : 'bg-gray-300'}`}></span>
+                                            <span>Payment</span>
+                                            <span className={`w-2 h-2 rounded-full ${currentStep >= 2 ? 'bg-gray-800' : 'bg-gray-300'}`}></span>
+                                            <span>Address</span>
+                                        </div>
                                     </div>
-                                )}
 
-                                {currentStep === 1 && (
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm text-gray-700 mb-2">Billing Type</label>
-                                            <select
-                                                value={billingData.billingType}
-                                                onChange={(e) => handleBillingTypeChange(e.target.value as BillingFormData['billingType'])}
-                                                className="w-full bg-white text-gray-800 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            >
-                                                <option value="card">Credit Card</option>
-                                                <option value="phone">Phone</option>
-                                                <option value="paypal">PayPal</option>
-                                                <option value="bank_transfer">Bank Transfer</option>
-                                                <option value="Other">Other</option>
-                                            </select>
+                                    {apiError && (
+                                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                                            {apiError}
                                         </div>
+                                    )}
 
-                                        <div>
-                                            <label className="block text-sm text-gray-700 mb-2">Full Name</label>
-                                            <input
-                                                type="text"
-                                                value={billingData.fullName}
-                                                onChange={(e) => handleInputChange('fullName', e.target.value)}
-                                                className={`w-full bg-white text-gray-800 p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.fullName ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'
-                                                    }`}
-                                                placeholder="Enter your full name"
-                                            />
-                                            {errors.fullName && <p className="text-red-600 text-sm mt-1">{errors.fullName}</p>}
-                                        </div>
-
-                                        {renderPaymentField()}
-
-                                        <button
-                                            onClick={handleNextStep}
-                                            className="w-full bg-primary hover:bg-blue-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
-                                        >
-                                            Next Step
-                                            <ChevronRight className="w-5 h-5" />
-                                        </button>
-                                    </div>
-                                )}
-
-                                {currentStep === 2 && (
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm text-gray-700 mb-2">Address</label>
-                                            <div className="relative">
-                                                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                                <input
-                                                    type="text"
-                                                    value={billingData.address}
-                                                    onChange={(e) => handleInputChange('address', e.target.value)}
-                                                    className={`w-full bg-white text-gray-800 p-3 pl-12 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.address ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'
-                                                        }`}
-                                                    placeholder="123 Main Street"
-                                                />
-                                            </div>
-                                            {errors.address && <p className="text-red-600 text-sm mt-1">{errors.address}</p>}
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
+                                    {currentStep === 1 && (
+                                        <div className="space-y-4">
                                             <div>
-                                                <label className="block text-sm text-gray-700 mb-2">City</label>
-                                                <input
-                                                    type="text"
-                                                    value={billingData.city}
-                                                    onChange={(e) => handleInputChange('city', e.target.value)}
-                                                    className={`w-full bg-white text-gray-800 p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.city ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'
-                                                        }`}
-                                                    placeholder="New York"
-                                                />
-                                                {errors.city && <p className="text-red-600 text-sm mt-1">{errors.city}</p>}
+                                                <label className="block text-sm text-gray-700 mb-2">Billing Type</label>
+                                                <select
+                                                    value={billingData.billingType}
+                                                    onChange={(e) => handleBillingTypeChange(e.target.value as BillingFormData['billingType'])}
+                                                    className="w-full bg-white text-gray-800 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                >
+                                                    <option value="card">Credit Card</option>
+                                                    <option value="phone">Phone</option>
+                                                    <option value="paypal">PayPal</option>
+                                                    <option value="bank_transfer">Bank Transfer</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
                                             </div>
 
                                             <div>
-                                                <label className="block text-sm text-gray-700 mb-2">ZIP Code</label>
+                                                <label className="block text-sm text-gray-700 mb-2">Full Name</label>
                                                 <input
                                                     type="text"
-                                                    value={billingData.zipCode}
-                                                    onChange={(e) => handleInputChange('zipCode', e.target.value)}
-                                                    className={`w-full bg-white text-gray-800 p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.zipCode ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'
+                                                    value={billingData.fullName}
+                                                    onChange={(e) => handleInputChange('fullName', e.target.value)}
+                                                    className={`w-full bg-white text-gray-800 p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.fullName ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'
                                                         }`}
-                                                    placeholder="12345"
+                                                    placeholder="Enter your full name"
                                                 />
-                                                {errors.zipCode && <p className="text-red-600 text-sm mt-1">{errors.zipCode}</p>}
+                                                {errors.fullName && <p className="text-red-600 text-sm mt-1">{errors.fullName}</p>}
+                                            </div>
+
+                                            {renderPaymentField()}
+
+                                            <button
+                                                onClick={handleNextStep}
+                                                className="w-full bg-primary hover:bg-blue-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
+                                            >
+                                                Next Step
+                                                <ChevronRight className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {currentStep === 2 && (
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm text-gray-700 mb-2">Address</label>
+                                                <div className="relative">
+                                                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                    <input
+                                                        type="text"
+                                                        value={billingData.address}
+                                                        onChange={(e) => handleInputChange('address', e.target.value)}
+                                                        className={`w-full bg-white text-gray-800 p-3 pl-12 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.address ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'
+                                                            }`}
+                                                        placeholder="123 Main Street"
+                                                    />
+                                                </div>
+                                                {errors.address && <p className="text-red-600 text-sm mt-1">{errors.address}</p>}
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm text-gray-700 mb-2">City</label>
+                                                    <input
+                                                        type="text"
+                                                        value={billingData.city}
+                                                        onChange={(e) => handleInputChange('city', e.target.value)}
+                                                        className={`w-full bg-white text-gray-800 p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.city ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'
+                                                            }`}
+                                                        placeholder="New York"
+                                                    />
+                                                    {errors.city && <p className="text-red-600 text-sm mt-1">{errors.city}</p>}
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm text-gray-700 mb-2">ZIP Code</label>
+                                                    <input
+                                                        type="text"
+                                                        value={billingData.zipCode}
+                                                        onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                                                        className={`w-full bg-white text-gray-800 p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.zipCode ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'
+                                                            }`}
+                                                        placeholder="12345"
+                                                    />
+                                                    {errors.zipCode && <p className="text-red-600 text-sm mt-1">{errors.zipCode}</p>}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm text-gray-700 mb-2">Country</label>
+                                                <select
+                                                    value={billingData.country}
+                                                    onChange={(e) => handleInputChange('country', e.target.value)}
+                                                    className={`w-full bg-white text-gray-800 p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.country ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'
+                                                        }`}
+                                                >
+                                                    <option value="">Select Country</option>
+                                                    <option value="Rwanda">Rwanda</option>
+                                                    <option value="United States">United States</option>
+                                                    <option value="Canada">Canada</option>
+                                                    <option value="United Kingdom">United Kingdom</option>
+                                                    <option value="Australia">Australia</option>
+                                                </select>
+                                                {errors.country && <p className="text-red-600 text-sm mt-1">{errors.country}</p>}
+                                            </div>
+
+                                            <div className="flex gap-4">
+                                                <button
+                                                    onClick={handlePrevStep}
+                                                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
+                                                >
+                                                    <ChevronLeft className="w-5 h-5" />
+                                                    Previous
+                                                </button>
+                                                <button
+                                                    onClick={handleSubmit}
+                                                    disabled={isSubmitting}
+                                                    className="flex-1 bg-primary hover:bg-blue-700 disabled:opacity-50 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
+                                                >
+                                                    {isSubmitting ? (
+                                                        <>
+                                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                            {isEditing ? 'Updating...' : 'Saving...'}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <CheckCircle className="w-5 h-5" />
+                                                            {isEditing ? 'Update Billing' : 'Save Billing Method'}
+                                                        </>
+                                                    )}
+                                                </button>
                                             </div>
                                         </div>
-
-                                        <div>
-                                            <label className="block text-sm text-gray-700 mb-2">Country</label>
-                                            <select
-                                                value={billingData.country}
-                                                onChange={(e) => handleInputChange('country', e.target.value)}
-                                                className={`w-full bg-white text-gray-800 p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.country ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'
-                                                    }`}
-                                            >
-                                                <option value="">Select Country</option>
-                                                <option value="Rwanda">Rwanda</option>
-                                                <option value="United States">United States</option>
-                                                <option value="Canada">Canada</option>
-                                                <option value="United Kingdom">United Kingdom</option>
-                                                <option value="Australia">Australia</option>
-                                            </select>
-                                            {errors.country && <p className="text-red-600 text-sm mt-1">{errors.country}</p>}
-                                        </div>
-
-                                        <div className="flex gap-4">
-                                            <button
-                                                onClick={handlePrevStep}
-                                                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
-                                            >
-                                                <ChevronLeft className="w-5 h-5" />
-                                                Previous
-                                            </button>
-                                            <button
-                                                onClick={handleSubmit}
-                                                disabled={isSubmitting}
-                                                className="flex-1 bg-primary hover:bg-blue-700 disabled:opacity-50 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
-                                            >
-                                                {isSubmitting ? (
-                                                    <>
-                                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                        {isEditing ? 'Updating...' : 'Saving...'}
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <CheckCircle className="w-5 h-5" />
-                                                        {isEditing ? 'Update Billing' : 'Save Billing Method'}
-                                                    </>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
                     )}
                 </div>
             </div>

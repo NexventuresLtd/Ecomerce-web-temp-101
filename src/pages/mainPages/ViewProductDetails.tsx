@@ -539,7 +539,7 @@ const ProductViewPage: React.FC = () => {
                     <div className="mt-16">
                         <div className="border-b border-gray-200">
                             <nav className="grid grid-cols-4 xl:grid-cols-8">
-                                {['description', 'tutorial', 'features', 'condition', 'brock', 'warranty', 'delivery fee','return policy'].map((tab) => (
+                                {['description', 'tutorial', 'features', 'condition', 'brock', 'warranty', 'delivery fee', 'return policy'].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}

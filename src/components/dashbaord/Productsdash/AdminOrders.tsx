@@ -92,11 +92,10 @@ const OrderRow = ({ order }: { order: AdminOrder }) => {
                         <button
                             onClick={handleResend}
                             disabled={resending}
-                            className={`flex items-center gap-1 text-xs font-medium whitespace-nowrap transition-colors ${
-                                resendMsg === 'Sent' ? 'text-green-600' :
-                                resendMsg === 'Failed' ? 'text-red-500' :
-                                'text-orange-600 hover:text-orange-800'
-                            } disabled:opacity-50`}
+                            className={`flex items-center gap-1 text-xs font-medium whitespace-nowrap transition-colors ${resendMsg === 'Sent' ? 'text-green-600' :
+                                    resendMsg === 'Failed' ? 'text-red-500' :
+                                        'text-orange-600 hover:text-orange-800'
+                                } disabled:opacity-50`}
                             title="Resend invoice email + WhatsApp to customer"
                         >
                             {resending
@@ -200,10 +199,10 @@ const AdminOrders = () => {
     });
 
     const filterButtons: Array<{ label: string; value: StatusFilter }> = [
-        { label: 'All',        value: 'ALL' },
+        { label: 'All', value: 'ALL' },
         { label: 'Successful', value: 'SUCCESSFUL' },
-        { label: 'Pending',    value: 'PENDING' },
-        { label: 'Failed',     value: 'FAILED' },
+        { label: 'Pending', value: 'PENDING' },
+        { label: 'Failed', value: 'FAILED' },
     ];
 
     return (

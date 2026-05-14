@@ -53,7 +53,7 @@ export interface AdminOrder extends Order {
   buyer_email: string;
 }
 
-export interface DeliveryItem extends AdminOrder {}
+export interface DeliveryItem extends AdminOrder { }
 
 export interface OrdersSummary {
   total_spent?: number;
@@ -198,8 +198,8 @@ export const paymentService = {
     const digits = payerPhone.replace(/\D/g, '');
     const international = digits.startsWith('250') ? digits
       : digits.startsWith('0') ? `250${digits.slice(1)}`
-      : digits.startsWith('7') ? `250${digits}`
-      : digits;
+        : digits.startsWith('7') ? `250${digits}`
+          : digits;
 
     const first = (payerName || 'Customer').split(' ')[0];
     const message =
