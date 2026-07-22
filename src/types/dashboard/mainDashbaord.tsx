@@ -11,7 +11,8 @@ export type ViewType =
   | "report"
   | "wishlists"
   | "carts"
-  | "slide";
+  | "slide"
+  | "announcements";
 
 // Context
 export interface AppContextType {

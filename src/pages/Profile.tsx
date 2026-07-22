@@ -27,6 +27,7 @@ import { paymentService, type Order } from '../app/products/paymentService';
 import { FileText } from 'lucide-react';
 import { getUserInfo } from '../app/Localstorage';
 import { logout } from '../app/utils/HandelLogout';
+import mainAxios from '../Instance/mainAxios';
 
 const RWF = new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', minimumFractionDigits: 0 });
 
@@ -209,6 +210,49 @@ const UserDashboard = () => {
     const [ordersPagination, setOrdersPagination] = useState({ page: 1, limit: 6, total_items: 0, total_pages: 0, has_prev: false, has_next: false });
     const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatusFilter>('all');
     const [billingOriginalReference, setBillingOriginalReference] = useState('');
+
+    // Edit-profile (name + photo) state
+    const [showEditProfile, setShowEditProfile] = useState(false);
+    const [editFname, setEditFname] = useState(getUserInfo?.fname || '');
+    const [editLname, setEditLname] = useState(getUserInfo?.lname || '');
+    const [editPhotoPreview, setEditPhotoPreview] = useState<string | undefined>(getUserInfo?.profile_pic || undefined);
+    const [savingProfile, setSavingProfile] = useState(false);
+    const [profileEditError, setProfileEditError] = useState('');
+
+    const openEditProfile = () => {
+        setEditFname(getUserInfo?.fname || '');
+        setEditLname(getUserInfo?.lname || '');
+        setEditPhotoPreview(getUserInfo?.profile_pic || undefined);
+        setProfileEditError('');
+        setShowEditProfile(true);
+    };
+
+    const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => setEditPhotoPreview(reader.result as string);
+        reader.readAsDataURL(file);
+    };
+
+    const handleSaveProfile = async () => {
+        if (!getUserInfo?.id) return;
+        setSavingProfile(true);
+        setProfileEditError('');
+        try {
+            const payload: Record<string, string> = { fname: editFname, lname: editLname };
+            if (editPhotoPreview) payload.profile_pic = editPhotoPreview;
+            const res = await mainAxios.put(`/auth/users/${getUserInfo.id}`, payload);
+            const store = localStorage.getItem('authToken') ? localStorage : sessionStorage;
+            store.setItem('userInfo', JSON.stringify({ ...getUserInfo, ...res.data.user }));
+            setShowEditProfile(false);
+            window.location.reload();
+        } catch (error: any) {
+            setProfileEditError(error?.response?.data?.detail || 'Could not update profile. Please try again.');
+        } finally {
+            setSavingProfile(false);
+        }
+    };
 
     // Check if user is logged in and load billings
     useEffect(() => {
@@ -803,9 +847,18 @@ const UserDashboard = () => {
                             <div className="text-center md:text-left flex-1">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <h1 className="text-2xl font-semibold text-gray-800 mb-1">
-                                            {getUserInfo?.fname} {getUserInfo?.lname}
-                                        </h1>
+                                        <div className="flex items-center gap-2 justify-center md:justify-start">
+                                            <h1 className="text-2xl font-semibold text-gray-800 mb-1">
+                                                {getUserInfo?.fname} {getUserInfo?.lname}
+                                            </h1>
+                                            <button
+                                                onClick={openEditProfile}
+                                                title="Edit name & photo"
+                                                className="text-gray-400 hover:text-gray-700 transition-colors"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                         <p className="text-gray-600 capitalize mb-2">{getUserInfo?.role}</p>
                                         <p className="text-gray-700">{getUserInfo?.email}</p>
                                     </div>
@@ -1203,6 +1256,73 @@ const UserDashboard = () => {
                                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
                             >
                                 Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Profile Modal — name + photo */}
+            {showEditProfile && (
+                <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg max-w-md w-full p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">Edit Profile</h3>
+                            <button onClick={() => setShowEditProfile(false)} className="text-gray-400 hover:text-gray-600">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col items-center mb-4">
+                            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200 mb-2">
+                                {editPhotoPreview ? (
+                                    <img src={editPhotoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="w-8 h-8 text-gray-400" />
+                                )}
+                            </div>
+                            <label className="text-sm text-primary cursor-pointer hover:underline">
+                                Change photo (optional)
+                                <input type="file" accept="image/*" className="hidden" onChange={handleProfilePhotoChange} />
+                            </label>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                <input
+                                    type="text"
+                                    value={editFname}
+                                    onChange={(e) => setEditFname(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                <input
+                                    type="text"
+                                    value={editLname}
+                                    onChange={(e) => setEditLname(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                        </div>
+
+                        {profileEditError && <p className="text-sm text-red-600 mt-3">{profileEditError}</p>}
+
+                        <div className="flex gap-3 justify-end mt-6">
+                            <button
+                                onClick={() => setShowEditProfile(false)}
+                                className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveProfile}
+                                disabled={savingProfile || !editFname.trim()}
+                                className="px-4 py-2 bg-primary hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg font-medium"
+                            >
+                                {savingProfile ? 'Saving...' : 'Save Changes'}
                             </button>
                         </div>
                     </div>

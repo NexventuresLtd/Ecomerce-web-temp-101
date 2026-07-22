@@ -25,7 +25,6 @@ import { wishlistService } from '../../app/products/wishlistService';
 import { toEmbedUrl } from '../../app/dashcategory/getUrl';
 
 import Suggestions from './Suggestions';
-import { isLoggedIn } from '../../app/Localstorage';
 
 const ProductViewPage: React.FC = () => {
 
@@ -63,13 +62,11 @@ const ProductViewPage: React.FC = () => {
     const handleAddToWish = async (id: any, quantity?: any, color?: any, delivery?: any) => {
         try {
             setLoading(true);
-            const response: any = await wishlistService.addToWishlist(id, quantity, color, delivery);
-            if (response.status == 200) {
-                setIsWishlisted(true);   // turn heart red
-                setesucess("Added to wishlist!");
-                // notify navbar to refresh count
-                window.dispatchEvent(new CustomEvent('wishlistUpdated'));
-            }
+            const response = await wishlistService.toggleWishlist(id, quantity, delivery, color);
+            setIsWishlisted(response.wishlisted);   // red when added, outline when removed
+            setesucess(response.wishlisted ? "Added to wishlist!" : "Removed from wishlist");
+            // notify navbar to refresh count
+            window.dispatchEvent(new CustomEvent('wishlistUpdated'));
         } catch (error: any) {
             seterroring(error?.response?.data?.detail);
         } finally {
@@ -84,6 +81,14 @@ const ProductViewPage: React.FC = () => {
         if (product && product.colors && product.colors.length > 0) {
             setSelectedColor(product.colors[0]);
         }
+    }, [product]);
+
+    // Initialize the heart icon from the user's existing wishlist
+    useEffect(() => {
+        if (!product) return;
+        wishlistService.getMyWishlistedProductIds()
+            .then(ids => setIsWishlisted(ids.includes(product.id)))
+            .catch(() => { /* not logged in — leave heart outline */ });
     }, [product]);
 
     // Handle quantity change
@@ -420,19 +425,11 @@ const ProductViewPage: React.FC = () => {
                                     onClick={() => {
                                         handleAddToCart(product.id, quantity, selectedColor, selecteddelivery)
                                     }}
-                                    disabled={!isLoggedIn || load || (product.instock || 0) === 0}
+                                    disabled={load || (product.instock || 0) === 0}
                                     className="flex-1 bg-primary text-white px-6 py-3 rounded-lg font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 relative group"
                                 >
                                     <ShoppingCart className="w-5 h-5" />
                                     {load ? "Loading" : "Add to Cart"}
-
-                                    {/* Conditional Tooltip */}
-                                    {!isLoggedIn && (
-                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                                            Login First
-                                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                                        </div>
-                                    )}
 
                                     {(product.instock || 0) === 0 && (
                                         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-red-600 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">

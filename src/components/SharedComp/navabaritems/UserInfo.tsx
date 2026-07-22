@@ -2,6 +2,7 @@ import { Heart, Menu, ShoppingCart, User, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getUserInfo, token } from "../../../app/Localstorage";
 import mainAxios from "../../../Instance/mainAxios";
+import { getGuestCartId } from "../../../app/utils/guestCart";
 
 interface SecondNavProps {
     isMenuOpen: boolean
@@ -10,21 +11,26 @@ interface SecondNavProps {
     showMenu?: boolean
 }
 
-export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown, showMenu }: SecondNavProps) {
+export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown }: SecondNavProps) {
     const [cartCount, setCartCount] = useState(0);
     const [wishCount, setWishCount] = useState(0);
 
     const fetchCounts = async () => {
-        if (!token) return;
         try {
+            if (!token) {
+                // Guests still have a cart (no wishlist without an account)
+                const cartRes = await mainAxios.get(`/cart/my-cart?guest_id=${getGuestCartId()}`, { skipAuthRedirect: true } as any);
+                setCartCount(cartRes.data?.total_items ?? 0);
+                return;
+            }
             const [cartRes, wishRes] = await Promise.all([
-                mainAxios.get('/cart/my-cart'),
-                mainAxios.get('/wishlist/my-wishlist'),
+                mainAxios.get('/cart/my-cart', { skipAuthRedirect: true } as any),
+                mainAxios.get('/wishlist/my-wishlist', { skipAuthRedirect: true } as any),
             ]);
             setCartCount(cartRes.data?.total_items ?? 0);
             setWishCount(wishRes.data?.total_items ?? 0);
         } catch {
-            // silently ignore — user may not be logged in
+            // silently ignore — network hiccup
         }
     };
 
@@ -42,8 +48,8 @@ export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown,
         <>
             <div className="flex items-center space-x-6">
 
-                {/* Cart & Wishlist icons with count badges */}
-                <div className={`${showMenu ? 'hidden xl:flex' : 'flex xl:hidden'} items-center space-x-1 gap-2`}>
+                {/* Cart & Wishlist icons with count badges — always visible, including mobile */}
+                <div className="flex items-center space-x-1 gap-2">
                     <div onClick={() => window.location.href = '/shopping-cart'}
                         className="relative flex flex-col items-start sm:items-center cursor-pointer">
                         <ShoppingCart className="w-6 h-6 text-gray-600" />
@@ -65,7 +71,7 @@ export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown,
                         <span className="hidden sm:inline text-xs">Wishlist</span>
                     </div>
                 </div>
-                <div className={`${showMenu ? 'hidden xl:flex' : 'flex xl:hidden'}  items-center space-x-2`}>
+                <div className="hidden sm:flex items-center space-x-2">
                     {!getUserInfo ? <>
                         <User className="w-5 h-5 text-gray-600" />
                         <div className="text-xs cursor-pointer hover:underline" onClick={() => window.location.href = '/authentication'}>
@@ -84,9 +90,18 @@ export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown,
                         </>
                     }
                 </div>
-                <div className={`${showMenu ? 'hidden xl:flex' : 'flex xl:hidden'} `}>
-                    {/* Language Dropdown */}
-                    {/* <LanguageDropdown /> */}
+                {/* Compact login/account icon for narrow mobile widths where the text block above is hidden */}
+                <div
+                    className="flex sm:hidden items-center cursor-pointer"
+                    onClick={() => window.location.href = getUserInfo ? '/profile' : '/authentication'}
+                >
+                    {!getUserInfo ? (
+                        <User className="w-6 h-6 text-gray-600" />
+                    ) : (
+                        <div className="h-8 w-8 rounded-full bg-black text-white overflow-hidden flex capitalize justify-center items-center font-bold text-xs">
+                            {getUserInfo?.profile_pic ? <img src={getUserInfo?.profile_pic} alt={getUserInfo?.email?.charAt(0)} className="h-full w-full" /> : <>{getUserInfo?.fname?.charAt(0).toUpperCase()}</>}
+                        </div>
+                    )}
                 </div>
 
 

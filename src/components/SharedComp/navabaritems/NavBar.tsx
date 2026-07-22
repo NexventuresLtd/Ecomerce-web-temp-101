@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import TopNav from './TopNav';
 import SecondNav from './SecondNav';
 import ThirdMenuNav from './ThirdMenuNav';
+import AnnouncementBanner from '../AnnouncementBanner';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -84,6 +85,7 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="w-full bg-white">
+      <AnnouncementBanner />
       <TopNav />
 
       <div

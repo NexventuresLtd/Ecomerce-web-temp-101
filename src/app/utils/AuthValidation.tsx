@@ -29,37 +29,28 @@ export const validateForm = (data: FormData): ValidationErrors => {
     return newErrors;
 };
 
+// Only the phone number is required to create an account — name, email and
+// password are all optional and only validated if the user chose to fill them in.
 export const validateSignupForm = (data: SignupFormData): ValidationErrors => {
     const newErrors: ValidationErrors = {};
 
-    if (!data.fname) {
-        newErrors.fname = 'First name is required';
+    if (!data.phone) {
+        newErrors.phone = 'Phone number is required';
+    } else if (!validatePhone(data.phone)) {
+        newErrors.phone = 'Please enter a valid phone number';
     }
 
-    if (!data.lname) {
-        newErrors.lname = 'Last name is required';
-    }
-
-    if (!data.email) {
-        newErrors.email = 'Email is required';
-    } else if (!validateEmail(data.email)) {
+    if (data.email && !validateEmail(data.email)) {
         newErrors.email = 'Please enter a valid email address';
     }
 
-    if (!data.password) {
-        newErrors.password = 'Password is required';
-    } else if (data.password.length < 6) {
-        newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    if (!data.confirmPassword) {
-        newErrors.confirmPassword = 'Please confirm your password';
-    } else if (data.password !== data.confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    if (data.phone && !validatePhone(data.phone)) {
-        newErrors.general = 'Please enter a valid phone number';
+    if (data.password || data.confirmPassword) {
+        if (data.password.length < 6) {
+            newErrors.password = 'Password must be at least 6 characters';
+        }
+        if (data.password !== data.confirmPassword) {
+            newErrors.confirmPassword = 'Passwords do not match';
+        }
     }
 
     return newErrors;

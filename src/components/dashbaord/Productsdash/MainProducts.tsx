@@ -12,13 +12,20 @@ import ViewProdTable from './ViewAllProducts/viewProdTable';
 import type { Product } from '../../../types/Product/NewProductDataDash';
 import ProductForm from './ViewAllProducts/ProductForm';
 import ProductDetailView from './ViewAllProducts/ProductDetailView';
+import { categoryApi } from '../../../app/dashcategory/category';
+import type { ProductCategory } from '../../../types/dashboard/category';
 
 // Filter Types
 type StockStatus = 'all' | 'active' | 'inactive' | 'in_stock' | 'out_of_stock';
+type Condition = 'all' | 'new' | 'used';
 
 interface FilterState {
     categories: string[];
+    productCategoryId: number | 'all';
+    condition: Condition;
+    featuredOnly: boolean;
     priceRange: [number, number];
+    minPrice: number;
     minRating: number;
     inStockOnly: boolean;
     stockStatus: StockStatus;
@@ -46,13 +53,25 @@ const ProductManagement: React.FC = () => {
     // Filter state
     const [filters, setFilters] = useState<FilterState>({
         categories: [],
+        productCategoryId: 'all',
+        condition: 'all',
+        featuredOnly: false,
         priceRange: [0, 100000000],
+        minPrice: 0,
         minRating: 0,
         inStockOnly: false,
         stockStatus: 'all' as StockStatus,
     });
 
     const [currentSort, setCurrentSort] = useState<SortOption>('newest');
+    const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
+
+    // Load categories once for the filter dropdown
+    useEffect(() => {
+        categoryApi.getProductCategories()
+            .then((data: any) => setProductCategories(Array.isArray(data) ? data : []))
+            .catch(() => setProductCategories([]));
+    }, []);
 
     const fetchProducts = useCallback(async (page: number = 1, searchQuery: string = searchTerm) => {
         setLoading(true);
@@ -90,8 +109,10 @@ const ProductManagement: React.FC = () => {
             }
 
             // Add price range filter
+            if (filters.minPrice > 0) {
+                queryParams.append('price_min', filters.minPrice.toString());
+            }
             if (filters.priceRange[1] < 100000000) {
-                queryParams.append('price_min', '0');
                 queryParams.append('price_max', filters.priceRange[1].toString());
             }
 
@@ -101,6 +122,21 @@ const ProductManagement: React.FC = () => {
             else if (filters.stockStatus === 'in_stock') queryParams.append('instock_min', '1');
             else if (filters.stockStatus === 'out_of_stock') { queryParams.append('instock_min', '0'); queryParams.append('instock_max', '0'); }
             else if (filters.inStockOnly)                queryParams.append('instock_min', '1');
+
+            // Category filter
+            if (filters.productCategoryId !== 'all') {
+                queryParams.append('product_category_id', filters.productCategoryId.toString());
+            }
+
+            // Condition filter (new/used)
+            if (filters.condition !== 'all') {
+                queryParams.append('is_new', filters.condition);
+            }
+
+            // Featured filter
+            if (filters.featuredOnly) {
+                queryParams.set('is_featured', 'true');
+            }
 
             // Add rating filter (keep it in query but it's hidden in UI)
             if (filters.minRating > 0) {
@@ -209,8 +245,12 @@ const ProductManagement: React.FC = () => {
 
     // Check if any filters are active
     const hasActiveFilters = filters.categories.length > 0 ||
+        filters.productCategoryId !== 'all' ||
+        filters.condition !== 'all' ||
+        filters.featuredOnly ||
         filters.minRating > 0 ||
         filters.inStockOnly ||
+        filters.minPrice > 0 ||
         filters.priceRange[1] < 100000000 ||
         filters.stockStatus !== 'all';
 
@@ -274,7 +314,11 @@ const ProductManagement: React.FC = () => {
                                 onClick={() => {
                                     setFilters({
                                         categories: [],
+                                        productCategoryId: 'all',
+                                        condition: 'all',
+                                        featuredOnly: false,
                                         priceRange: [0, 100000000],
+                                        minPrice: 0,
                                         minRating: 0,
                                         inStockOnly: false,
                                         stockStatus: 'all',
@@ -334,8 +378,109 @@ const ProductManagement: React.FC = () => {
                 </div>
 
                 {/* Advanced Filters */}
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Price Range Filter */}
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Category Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Category
+                        </label>
+                        <select
+                            value={filters.productCategoryId}
+                            onChange={(e) => setFilters(prev => ({
+                                ...prev,
+                                productCategoryId: e.target.value === 'all' ? 'all' : Number(e.target.value)
+                            }))}
+                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="all">All Categories</option>
+                            {productCategories.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Stock Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Stock Status
+                        </label>
+                        <select
+                            value={filters.stockStatus}
+                            onChange={(e) => setFilters(prev => ({
+                                ...prev,
+                                stockStatus: e.target.value as StockStatus
+                            }))}
+                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="all">All Products</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="in_stock">In Stock Only</option>
+                            <option value="out_of_stock">Out of Stock Only</option>
+                        </select>
+                    </div>
+
+                    {/* Condition Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Condition
+                        </label>
+                        <select
+                            value={filters.condition}
+                            onChange={(e) => setFilters(prev => ({
+                                ...prev,
+                                condition: e.target.value as Condition
+                            }))}
+                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="all">New & Used</option>
+                            <option value="new">New Only</option>
+                            <option value="used">Used Only</option>
+                        </select>
+                    </div>
+
+                    {/* Featured Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Visibility
+                        </label>
+                        <select
+                            value={filters.featuredOnly ? 'featured' : 'all'}
+                            onChange={(e) => setFilters(prev => ({
+                                ...prev,
+                                featuredOnly: e.target.value === 'featured'
+                            }))}
+                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="all">All Products</option>
+                            <option value="featured">Featured Only</option>
+                        </select>
+                    </div>
+
+                    {/* Min Price Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Min Price: {formatRWF(filters.minPrice)}
+                        </label>
+                        <input
+                            type="range"
+                            min="0"
+                            max="100000000"
+                            step="10000"
+                            value={filters.minPrice}
+                            onChange={(e) => setFilters(prev => ({
+                                ...prev,
+                                minPrice: Number(e.target.value)
+                            }))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>Rwf 0</span>
+                            <span>Rwf 100M</span>
+                        </div>
+                    </div>
+
+                    {/* Max Price Filter */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Max Price: {formatRWF(filters.priceRange[1])}
@@ -358,7 +503,7 @@ const ProductManagement: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Rating Filter - FIXED: Kept hidden as before */}
+                    {/* Rating Filter - kept hidden as before */}
                     <div className='hidden'>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Min Rating
@@ -376,24 +521,6 @@ const ProductManagement: React.FC = () => {
                             <option value={3}>3★ & above</option>
                             <option value={2}>2★ & above</option>
                             <option value={1}>1★ & above</option>
-                        </select>
-                    </div>
-
-                    {/* Stock Filter */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Stock Status
-                        </label>
-                        <select
-                            value={filters.inStockOnly ? 'in_stock' : 'all'}
-                            onChange={(e) => setFilters(prev => ({
-                                ...prev,
-                                inStockOnly: e.target.value === 'in_stock'
-                            }))}
-                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                            <option value="all">All Products</option>
-                            <option value="in_stock">In Stock Only</option>
                         </select>
                     </div>
                 </div>

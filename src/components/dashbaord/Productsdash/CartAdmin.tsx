@@ -11,12 +11,15 @@ import {
   ToggleRight,
   Trash2,
   MessageCircle,
+  MessageSquare,
   Download,
   Filter
 } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
 import { RWF } from '../../../app/priceConver';
 import { handleClickWhatsapp } from '../../../app/ProductWhasapp';
+import { notifyApi } from '../../../app/notify';
+import SmsComposeModal from './SmsComposeModal';
 
 // Import jsPDF and autoTable with proper types
 import jsPDF from 'jspdf';
@@ -68,31 +71,50 @@ const CartAdmin: React.FC = () => {
   const [selectedCart, setSelectedCart] = useState<Cart | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
+
+  // SMS compose modal — lets the admin edit the default message before sending
+  const [smsTarget, setSmsTarget] = useState<Cart | null>(null);
+  const [sendingSms, setSendingSms] = useState(false);
   
   // Date filtering states
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [showDateFilter, setShowDateFilter] = useState(false);
 
+  // Pagination state — carts come back newest-item-added-first from the server
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 15;
+  const [totalCount, setTotalCount] = useState(0);
+  const [overallStats, setOverallStats] = useState({ total_items_all: 0, total_value_all: 0, active_users_count: 0 });
+
   useEffect(() => {
-    fetchCarts();
-  }, []);
+    fetchCarts(currentPage);
+  }, [currentPage]);
 
   useEffect(() => {
     applyDateFilter();
   }, [carts, startDate, endDate]);
 
-  const fetchCarts = async () => {
+  const fetchCarts = async (page: number = 1) => {
     try {
       setLoading(true);
-      const response = await mainAxios.get('/cart/all');
+      const skip = (page - 1) * pageSize;
+      const response = await mainAxios.get(`/cart/all?skip=${skip}&limit=${pageSize}`);
       setCarts(response.data.carts || []);
+      setTotalCount(response.data.total_count || 0);
+      setOverallStats({
+        total_items_all: response.data.total_items_all || 0,
+        total_value_all: response.data.total_value_all || 0,
+        active_users_count: response.data.active_users_count || 0,
+      });
     } catch (error) {
       console.error('Error fetching carts:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const applyDateFilter = () => {
     if (!startDate && !endDate) {
@@ -542,6 +564,34 @@ const CartAdmin: React.FC = () => {
     handleClickWhatsapp("Cart Information", cart.phone || "250781691713", message);
   };
 
+  const buildDefaultSmsMessage = (cart: Cart) => {
+    const itemsList = cart.items.map(item =>
+      `${item.product_name} (Qty: ${item.quantity}) - ${RWF.format(item.total_item_price)}`
+    ).join(', ');
+
+    return `Hello ${cart.fname}, your cart: ${itemsList}. Total: ${RWF.format(cart.total_price)}. - Umukamezi`;
+  };
+
+  const openSmsCompose = (cart: Cart) => {
+    if (!cart.phone) return;
+    setSmsTarget(cart);
+  };
+
+  const handleSendSms = async (message: string) => {
+    if (!smsTarget?.phone) return;
+    setSendingSms(true);
+    try {
+      await notifyApi.sendSms(smsTarget.phone, message);
+      alert('SMS sent successfully');
+      setSmsTarget(null);
+    } catch (error) {
+      console.error('Error sending SMS:', error);
+      alert('Failed to send SMS');
+    } finally {
+      setSendingSms(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -568,8 +618,8 @@ const CartAdmin: React.FC = () => {
         <div>
           <h2 className="text-2xl font-semibold text-gray-800">Cart Management</h2>
           <p className="text-gray-600 mt-1">
-            Total {filteredCarts.length} cart{filteredCarts.length !== 1 ? 's' : ''} • {' '}
-            {filteredCarts.reduce((sum, c) => sum + c.total_items, 0)} total items
+            Showing {filteredCarts.length} of {totalCount} cart{totalCount !== 1 ? 's' : ''} • {' '}
+            page {currentPage} of {totalPages}
             {(startDate || endDate) && (
               <span className="text-blue-600 ml-2">
                 (Filtered)
@@ -621,7 +671,7 @@ const CartAdmin: React.FC = () => {
           </div>
 
           <button
-            onClick={fetchCarts}
+            onClick={() => fetchCarts(currentPage)}
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
@@ -689,7 +739,7 @@ const CartAdmin: React.FC = () => {
             <ShoppingCart className="w-8 h-8 text-blue-600" />
             <div className="ml-3">
               <p className="text-sm font-medium text-blue-900">Total Carts</p>
-              <p className="text-2xl font-bold text-blue-600">{filteredCarts.length}</p>
+              <p className="text-2xl font-bold text-blue-600">{totalCount}</p>
             </div>
           </div>
         </div>
@@ -699,7 +749,7 @@ const CartAdmin: React.FC = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-green-900">Total Items</p>
               <p className="text-2xl font-bold text-green-600">
-                {filteredCarts.reduce((sum, c) => sum + c.total_items, 0)}
+                {overallStats.total_items_all}
               </p>
             </div>
           </div>
@@ -710,7 +760,7 @@ const CartAdmin: React.FC = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-purple-900">Total Value</p>
               <p className="text-2xl font-bold text-purple-600">
-                {RWF.format(filteredCarts.reduce((sum, c) => sum + c.total_price, 0))}
+                {RWF.format(overallStats.total_value_all)}
               </p>
             </div>
           </div>
@@ -721,7 +771,7 @@ const CartAdmin: React.FC = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-orange-900">Active Users</p>
               <p className="text-2xl font-bold text-orange-600">
-                {new Set(filteredCarts.map(c => c.user_id)).size}
+                {overallStats.active_users_count}
               </p>
             </div>
           </div>
@@ -829,6 +879,15 @@ const CartAdmin: React.FC = () => {
                       WhatsApp
                     </button>
                   )}
+                  {cart.phone && (
+                    <button
+                      onClick={() => openSmsCompose(cart)}
+                      className="flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-1" />
+                      SMS
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -850,6 +909,31 @@ const CartAdmin: React.FC = () => {
               Clear filters
             </button>
           )}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalCount > 0 && (
+        <div className="flex items-center justify-between mt-6 px-2">
+          <p className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1 || loading}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages || loading}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
 
@@ -889,7 +973,7 @@ const CartAdmin: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Cart Summary</h4>
                   <div className="space-y-1 text-sm">
-                    <p><span className="text-gray-600">Total Items:</span> {selectedCart.total_items}</p>
+                    <p><span className="text-gray-600">Total Items:</span> {selectedCart.items?.length || 0}</p>
                     <p><span className="text-gray-600">Total Value:</span> {RWF.format(selectedCart.total_price)}</p>
                     <p><span className="text-gray-600">Status:</span> 
                       <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
@@ -987,7 +1071,7 @@ const CartAdmin: React.FC = () => {
                 <div className="flex justify-between items-center p-4 border-t border-gray-200 mt-6">
                   <div>
                     <p className="font-semibold text-gray-900">Cart Total</p>
-                    <p className="text-sm text-gray-600">{selectedCart.total_items} items</p>
+                    <p className="text-sm text-gray-600">{selectedCart.items.length} item{selectedCart.items.length !== 1 ? 's' : ''}</p>
                   </div>
                   <p className="font-bold text-2xl text-green-600">
                     {RWF.format(selectedCart.total_price)}
@@ -1006,6 +1090,15 @@ const CartAdmin: React.FC = () => {
                   Send WhatsApp
                 </button>
               )}
+              {selectedCart.phone && (
+                <button
+                  onClick={() => openSmsCompose(selectedCart)}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Send SMS
+                </button>
+              )}
               <button
                 onClick={closeModal}
                 className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
@@ -1016,6 +1109,17 @@ const CartAdmin: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* SMS Compose Modal */}
+      <SmsComposeModal
+        isOpen={!!smsTarget}
+        phone={smsTarget?.phone || ''}
+        recipientName={smsTarget ? `${smsTarget.fname} ${smsTarget.lname}` : ''}
+        defaultMessage={smsTarget ? buildDefaultSmsMessage(smsTarget) : ''}
+        sending={sendingSms}
+        onClose={() => setSmsTarget(null)}
+        onSend={handleSendSms}
+      />
     </div>
   );
 };

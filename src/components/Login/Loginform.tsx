@@ -8,6 +8,7 @@ import {
     Loader2,
     // User,
     AlertCircle,
+    Smartphone,
 } from 'lucide-react';
 import { formVariant } from '../../constants/auth/authVariants';
 import type { FormData, SignupFormData, ValidationErrors } from '../../types/auth/auth';
@@ -30,9 +31,13 @@ interface LoginProps {
     isLoading: boolean;
     setIsVerified: React.Dispatch<React.SetStateAction<boolean>>;
     isVerified: boolean;
+    startPhoneLogin: (phone: string) => void;
+    phoneLoginLoading: boolean;
 }
-const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsVerified, formData, setFormData, handleLogin, handleGoogleLogin, setShowSignupModal, isLoading }: LoginProps) => {
+const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsVerified, formData, setFormData, handleLogin, handleGoogleLogin, setShowSignupModal, isLoading, startPhoneLogin, phoneLoginLoading }: LoginProps) => {
     const [showPassword, setShowPassword] = useState(false);
+    const [showPhoneLogin, setShowPhoneLogin] = useState(false);
+    const [loginPhone, setLoginPhone] = useState('');
 
     const [whichMethod, setwhichMethod] = useState("drag");
     const [resetCaptcha, setResetCaptcha] = useState(false);
@@ -132,103 +137,161 @@ const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsV
                             )}
                             {/* Login Form */}
                             <div className="space-y-6">
-                                {/* Email Input */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Email Address
-                                    </label>
-                                    <div className="relative">
-                                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                        <motion.input
-                                            whileFocus={{ scale: 1.02 }}
-                                            type="email"
-                                            value={formData.email}
-                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl outline-none focus:ring-3 focus:ring-slate-200 focus:border-transparent transition-all duration-200"
-                                            placeholder="Enter your email"
-                                        />
-                                    </div>
-                                    {errors.email && (
-                                        <motion.p
-                                            initial={{ opacity: 0, y: -10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="text-red-500 text-sm mt-1"
-                                        >
-                                            {errors.email}
-                                        </motion.p>
-                                    )}
-                                </div>
+                                {!showPhoneLogin ? (
+                                    <>
+                                        {/* Email Input */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Email Address
+                                            </label>
+                                            <div className="relative">
+                                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                <motion.input
+                                                    whileFocus={{ scale: 1.02 }}
+                                                    type="email"
+                                                    value={formData.email}
+                                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                    className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl outline-none focus:ring-3 focus:ring-slate-200 focus:border-transparent transition-all duration-200"
+                                                    placeholder="Enter your email"
+                                                />
+                                            </div>
+                                            {errors.email && (
+                                                <motion.p
+                                                    initial={{ opacity: 0, y: -10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="text-red-500 text-sm mt-1"
+                                                >
+                                                    {errors.email}
+                                                </motion.p>
+                                            )}
+                                        </div>
 
-                                {/* Password Input */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Password
-                                    </label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                        <motion.input
-                                            whileFocus={{ scale: 1.02 }}
-                                            type={showPassword ? "text" : "password"}
-                                            value={formData.password}
-                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                            className="w-full pl-12 pr-12 py-4 border border-gray-300 rounded-xl outline-none focus:ring-3 focus:ring-slate-200 focus:border-transparent transition-all duration-200"
-                                            placeholder="Enter your password"
-                                        />
+                                        {/* Password Input */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Password
+                                            </label>
+                                            <div className="relative">
+                                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                <motion.input
+                                                    whileFocus={{ scale: 1.02 }}
+                                                    type={showPassword ? "text" : "password"}
+                                                    value={formData.password}
+                                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                                    className="w-full pl-12 pr-12 py-4 border border-gray-300 rounded-xl outline-none focus:ring-3 focus:ring-slate-200 focus:border-transparent transition-all duration-200"
+                                                    placeholder="Enter your password"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                                >
+                                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                                </button>
+                                            </div>
+                                            {errors.password && (
+                                                <motion.p
+                                                    initial={{ opacity: 0, y: -10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="text-red-500 text-sm mt-1"
+                                                >
+                                                    {errors.password}
+                                                </motion.p>
+                                            )}
+
+                                            {/* Forgot Password */}
+                                            <div className="flex justify-between mt-3">
+                                                {/* Create Account Link */}
+                                                <button
+                                                    onClick={() => { setShowSignupModal(true); setPasswordreset(false) }}
+                                                    className="text-slate-800 hover:text-slate-800/80 font-medium text-sm transition-colors"
+                                                >
+                                                    Create new account
+                                                </button>
+
+                                                <button
+                                                    onClick={() => {
+                                                        setPasswordreset(true);
+                                                        setShowSignupModal(true)
+                                                    }}
+
+                                                    type="button"
+                                                    className="text-slate-800 cursor-pointer hover:text-slate-800/80 text-sm font-medium transition-colors"
+                                                >
+                                                    Forgot Password?
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {/* Login Button */}
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={handleLogin}
+                                            disabled={isLoading}
+                                            className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-4 rounded-xl transition-all duration-200 flex items-center justify-center disabled:opacity-50"
+                                        >
+                                            {isLoading ? (
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                            ) : (
+                                                "Sign In"
+                                            )}
+                                        </motion.button>
+
+                                        {/* Switch to phone login */}
                                         <button
                                             type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                            onClick={() => setShowPhoneLogin(true)}
+                                            className="w-full flex items-center justify-center gap-2 text-slate-700 hover:text-slate-900 text-sm font-medium transition-colors"
                                         >
-                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                            <Smartphone className="w-4 h-4" />
+                                            Login with phone number instead
                                         </button>
-                                    </div>
-                                    {errors.password && (
-                                        <motion.p
-                                            initial={{ opacity: 0, y: -10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="text-red-500 text-sm mt-1"
+                                    </>
+                                ) : (
+                                    <>
+                                        {/* Phone number — passwordless login via SMS code */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Phone Number
+                                            </label>
+                                            <div className="relative">
+                                                <Smartphone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                <motion.input
+                                                    whileFocus={{ scale: 1.02 }}
+                                                    type="tel"
+                                                    value={loginPhone}
+                                                    onChange={(e) => setLoginPhone(e.target.value)}
+                                                    className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl outline-none focus:ring-3 focus:ring-slate-200 focus:border-transparent transition-all duration-200"
+                                                    placeholder="+250781234567"
+                                                />
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-2">We'll text you a 6-digit code — no password needed.</p>
+                                        </div>
+
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => startPhoneLogin(loginPhone)}
+                                            disabled={phoneLoginLoading || !loginPhone}
+                                            className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-4 rounded-xl transition-all duration-200 flex items-center justify-center disabled:opacity-50"
                                         >
-                                            {errors.password}
-                                        </motion.p>
-                                    )}
-
-                                    {/* Forgot Password */}
-                                    <div className="flex justify-between mt-3">
-                                        {/* Create Account Link */}
-                                        <button
-                                            onClick={() => { setShowSignupModal(true); setPasswordreset(false) }}
-                                            className="text-slate-800 hover:text-slate-800/80 font-medium text-sm transition-colors"
-                                        >
-                                            Create new account
-                                        </button>
+                                            {phoneLoginLoading ? (
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                            ) : (
+                                                "Send Code"
+                                            )}
+                                        </motion.button>
 
                                         <button
-                                            onClick={() => {
-                                                setPasswordreset(true);
-                                                setShowSignupModal(true)
-                                            }}
-
                                             type="button"
-                                            className="text-slate-800 cursor-pointer hover:text-slate-800/80 text-sm font-medium transition-colors"
+                                            onClick={() => setShowPhoneLogin(false)}
+                                            className="w-full flex items-center justify-center gap-2 text-slate-700 hover:text-slate-900 text-sm font-medium transition-colors"
                                         >
-                                            Forgot Password?
+                                            <Mail className="w-4 h-4" />
+                                            Login with email instead
                                         </button>
-                                    </div>
-                                </div>
-                                {/* Login Button */}
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={handleLogin}
-                                    disabled={isLoading}
-                                    className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-4 rounded-xl transition-all duration-200 flex items-center justify-center disabled:opacity-50"
-                                >
-                                    {isLoading ? (
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                    ) : (
-                                        "Sign In"
-                                    )}
-                                </motion.button>
+                                    </>
+                                )}
 
                                 {/* Divider */}
                                 <div className="relative">

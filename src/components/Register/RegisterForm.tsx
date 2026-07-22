@@ -37,18 +37,14 @@ const RegisterForm: React.FC<RegisterProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [profilePicError, setProfilePicError] = useState<string | null>(null);
 
+    // Only the phone number (step 2) is required — everything else is optional.
     const nextStep = () => {
-        // Validate current step before proceeding
-        if (step === 1) {
-            if (!signupData.fname || !signupData.lname) {
-                return;
-            }
-        } else if (step === 2) {
-            if (!signupData.email) {
+        if (step === 2) {
+            if (!signupData.phone) {
                 return;
             }
         } else if (step === 3) {
-            if (!signupData.password || !signupData.confirmPassword || signupData.password !== signupData.confirmPassword) {
+            if ((signupData.password || signupData.confirmPassword) && signupData.password !== signupData.confirmPassword) {
                 return;
             }
         }
@@ -89,16 +85,10 @@ const RegisterForm: React.FC<RegisterProps> = ({
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
-        setProfilePicError('Profile picture is required');
+        setProfilePicError(null);
     };
 
     const handleSubmit = () => {
-        // Final validation before submission
-        if (!signupData.profile_pic) {
-            setProfilePicError('Profile picture is required');
-            return;
-        }
-
         const formData = new FormData();
         formData.append('fname', signupData.fname);
         formData.append('lname', signupData.lname);
@@ -130,9 +120,10 @@ const RegisterForm: React.FC<RegisterProps> = ({
             title: "Full Names",
             fields: (
                 <>
+                    <p className="text-sm text-gray-500 -mt-2 mb-2">Optional — you can add this later from your profile.</p>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            First Name <span className="text-red-500">*</span>
+                            First Name
                         </label>
                         <motion.input
                             whileFocus={{ scale: 1.02 }}
@@ -141,7 +132,6 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             onChange={(e) => setSignupData({ ...signupData, fname: e.target.value })}
                             className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
                             placeholder="Enter your first name"
-                            required
                         />
                         {errors.fname && (
                             <p className="text-red-500 text-sm mt-1">{errors.fname}</p>
@@ -150,7 +140,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Last Name <span className="text-red-500">*</span>
+                            Last Name
                         </label>
                         <motion.input
                             whileFocus={{ scale: 1.02 }}
@@ -159,7 +149,6 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             onChange={(e) => setSignupData({ ...signupData, lname: e.target.value })}
                             className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
                             placeholder="Enter your last name"
-                            required
                         />
                         {errors.lname && (
                             <p className="text-red-500 text-sm mt-1">{errors.lname}</p>
@@ -174,7 +163,26 @@ const RegisterForm: React.FC<RegisterProps> = ({
                 <>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Email Address <span className="text-red-500">*</span>
+                            Phone Number <span className="text-red-500">*</span>
+                        </label>
+                        <motion.input
+                            whileFocus={{ scale: 1.02 }}
+                            type="tel"
+                            value={signupData.phone || ''}
+                            onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
+                            className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                            placeholder="+250781234567"
+                            required
+                        />
+                        {errors.phone && (
+                            <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-1">We'll send a verification code to this number.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Email Address (Optional)
                         </label>
                         <motion.input
                             whileFocus={{ scale: 1.02 }}
@@ -183,25 +191,10 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
                             className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
                             placeholder="Enter your email"
-                            required
                         />
                         {errors.email && (
                             <p className="text-red-500 text-sm mt-1">{errors.email}</p>
                         )}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Phone Number (Optional)
-                        </label>
-                        <motion.input
-                            whileFocus={{ scale: 1.02 }}
-                            type="tel"
-                            value={signupData.phone || ''}
-                            onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
-                            className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                            placeholder="+1234567890"
-                        />
                     </div>
                 </>),
         },
@@ -209,9 +202,12 @@ const RegisterForm: React.FC<RegisterProps> = ({
             title: "Security",
             fields: (
                 <>
+                    <p className="text-sm text-gray-500 -mt-2 mb-2">
+                        Optional — leave blank to sign in with just your phone number and a code each time.
+                    </p>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Password <span className="text-red-500">*</span>
+                            Password
                         </label>
                         <motion.input
                             whileFocus={{ scale: 1.02 }}
@@ -220,7 +216,6 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
                             className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
                             placeholder="Create a password (min 6 characters)"
-                            required
                         />
                         {errors.password && (
                             <p className="text-red-500 text-sm mt-1">{errors.password}</p>
@@ -229,7 +224,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Confirm Password <span className="text-red-500">*</span>
+                            Confirm Password
                         </label>
                         <motion.input
                             whileFocus={{ scale: 1.02 }}
@@ -238,7 +233,6 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
                             className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
                             placeholder="Confirm your password"
-                            required
                         />
                         {errors.confirmPassword && (
                             <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
@@ -280,7 +274,6 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             onChange={handleImageChange}
                             accept="image/*"
                             className="hidden"
-                            required
                         />
 
                         <motion.button
@@ -294,7 +287,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             <span>{previewImage ? 'Change Image' : 'Upload Image'}</span>
                         </motion.button>
 
-                        <p className="text-xs text-gray-500 mt-2">Required: JPG, PNG up to 2MB</p>
+                        <p className="text-xs text-gray-500 mt-2">Optional: JPG, PNG up to 2MB</p>
                         {profilePicError && (
                             <p className="text-red-500 text-sm mt-2 text-center">{profilePicError}</p>
                         )}
@@ -406,9 +399,8 @@ const RegisterForm: React.FC<RegisterProps> = ({
                         whileTap={{ scale: 0.98 }}
                         onClick={nextStep}
                         disabled={
-                            (step === 1 && (!signupData.fname || !signupData.lname)) ||
-                            (step === 2 && !signupData.email) ||
-                            (step === 3 && (!signupData.password || !signupData.confirmPassword || signupData.password !== signupData.confirmPassword))
+                            (step === 2 && !signupData.phone) ||
+                            (step === 3 && !!(signupData.password || signupData.confirmPassword) && signupData.password !== signupData.confirmPassword)
                         }
                         className="px-6 py-3 bg-primary text-white rounded-lg disabled:opacity-50"
                     >
@@ -419,7 +411,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={handleSubmit}
-                        disabled={isLoading || !!successMessage || !signupData.profile_pic}
+                        disabled={isLoading || !!successMessage}
                         className="px-6 py-3 bg-primary text-white rounded-lg disabled:opacity-50 flex items-center space-x-2"
                     >
                         {isLoading ? (

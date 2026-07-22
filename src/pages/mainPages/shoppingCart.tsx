@@ -8,6 +8,8 @@ import { useNavigation } from '../../hooks/product/useNavigation';
 import mainAxios from "../../Instance/mainAxios";
 import { paymentService } from '../../app/products/paymentService';
 import { billingService } from '../../app/userProfile/billingService';
+import { token } from '../../app/Localstorage';
+import { getGuestCartId } from '../../app/utils/guestCart';
 
 // Interfaces based on API response
 interface Color {
@@ -758,7 +760,8 @@ const ColorSelection: React.FC<{
             // Prepare query parameters
             const params = new URLSearchParams({
                 quantity: quantity.toString(),
-                delivery: delivery
+                delivery: delivery,
+                ...(token ? {} : { guest_id: getGuestCartId() })
             });
 
             // Prepare request body with color array
@@ -838,7 +841,8 @@ const CartItem: React.FC<{
             // Prepare query parameters
             const params = new URLSearchParams({
                 quantity: item.quantity.toString(),
-                delivery: selectedDelivery
+                delivery: selectedDelivery,
+                ...(token ? {} : { guest_id: getGuestCartId() })
             });
 
             // Prepare request body with color array
@@ -868,7 +872,8 @@ const CartItem: React.FC<{
             // Prepare query parameters
             const params = new URLSearchParams({
                 quantity: item.quantity.toString(),
-                delivery: delivery
+                delivery: delivery,
+                ...(token ? {} : { guest_id: getGuestCartId() })
             });
 
             // Prepare request body with color array
@@ -1122,10 +1127,12 @@ const ShoppingCartPage: React.FC = () => {
         fetchCart();
     }, []);
 
+    const guestParam = () => token ? '' : `?guest_id=${getGuestCartId()}`;
+
     const fetchCart = async () => {
         try {
             setLoading(true);
-            const response = await mainAxios.get('/cart/my-cart');
+            const response = await mainAxios.get(`/cart/my-cart${guestParam()}`);
             setCartData(response.data);
         } catch (error: any) {
             console.error('Error fetching cart:', error);
@@ -1161,7 +1168,8 @@ const ShoppingCartPage: React.FC = () => {
             // Prepare query parameters
             const params = new URLSearchParams({
                 quantity: quantity.toString(),
-                delivery: delivery
+                delivery: delivery,
+                ...(token ? {} : { guest_id: getGuestCartId() })
             });
 
             // Prepare request body with color array
@@ -1192,7 +1200,7 @@ const ShoppingCartPage: React.FC = () => {
     const removeItem = async (cartItemId: number) => {
         try {
             setUpdating(true);
-            await mainAxios.delete(`/cart/delete/${cartItemId}`);
+            await mainAxios.delete(`/cart/delete/${cartItemId}${guestParam()}`);
             showAlert('Item removed from cart', 'success');
             fetchCart(); // Refresh cart data
         } catch (error: any) {
@@ -1215,6 +1223,11 @@ const ShoppingCartPage: React.FC = () => {
     };
 
     const handleCheckout = () => {
+        if (!token) {
+            showAlert('Please log in or create an account to complete checkout.', 'info');
+            window.location.href = '/authentication?next=/shopping-cart';
+            return;
+        }
         setShowPaymentModal(true);
     };
 

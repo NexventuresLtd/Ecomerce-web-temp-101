@@ -9,7 +9,10 @@ import { handleApiError } from '../../app/utils/HandelHttpError';
 import { validateForm, validateSignupForm } from '../../app/utils/AuthValidation';
 import { AlertCircle, CheckCircle2, X } from 'lucide-react';
 import OTPVerification from '../../components/SharedComp/auth/OTPCleint';
+import PhoneOtpVerify from '../../components/SharedComp/auth/PhoneOtpVerify';
 import PasswordReset from '../../components/SharedComp/auth/Password';
+import { cartApi } from '../../app/products/cart';
+import { wishlistService } from '../../app/products/wishlistService';
 
 
 
@@ -17,6 +20,10 @@ const AnimatedLoginPage: React.FC = () => {
     const [isClothPulled, setIsClothPulled] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [showOTP, setShowOTP] = useState(false)
+    const [showRegisterOTP, setShowRegisterOTP] = useState(false)
+    const [registerPhoneOtp, setRegisterPhoneOtp] = useState<{ phone: string; verificationCode: string } | null>(null)
+    const [phoneLoginOtp, setPhoneLoginOtp] = useState<{ phone: string; verificationCode: string } | null>(null)
+    const [phoneLoginLoading, setPhoneLoginLoading] = useState(false)
     const [NewUSer, setNewUser] = useState()
     const [showSignupModal, setShowSignupModal] = useState(false);
     const [Passwordreset, setPasswordreset] = useState<boolean>(false);
@@ -67,6 +74,7 @@ const AnimatedLoginPage: React.FC = () => {
         localStorage.setItem("refresh", newUser.refresh_token);
         // Save user info
         localStorage.setItem("userInfo", JSON.stringify(newUser.encrypted_data));
+        Promise.all([cartApi.mergeGuestCart(), wishlistService.mergeGuestWishlist()]);
     }
 
     // Handle form submission
@@ -105,6 +113,7 @@ const AnimatedLoginPage: React.FC = () => {
                     localStorage.setItem("refresh", newUser.refresh_token);
                     // Save user info
                     localStorage.setItem("userInfo", JSON.stringify(newUser.encrypted_data));
+                    await Promise.all([cartApi.mergeGuestCart(), wishlistService.mergeGuestWishlist()]);
                     window.location.href = "/"
                 }
 
@@ -144,6 +153,7 @@ const AnimatedLoginPage: React.FC = () => {
             localStorage.setItem("refresh", newUser.refresh_token);
             // Save user info
             localStorage.setItem("userInfo", JSON.stringify(newUser.encrypted_data));
+            await Promise.all([cartApi.mergeGuestCart(), wishlistService.mergeGuestWishlist()]);
             window.location.href = "/"
 
         } catch (error) {
@@ -193,20 +203,22 @@ const AnimatedLoginPage: React.FC = () => {
                 });
                 setEmoji("success")
 
-                // Clear form and close modal after successful registration
-                setTimeout(() => {
-                    setShowSignupModal(false);
-                    setSignupData({
-                        email: '',
-                        password: '',
-                        confirmPassword: '',
-                        fname: '',
-                        lname: '',
-                        phone: '',
-                        profile_pic: ''
+                if (registerType.type == "GOOGLE") {
+                    // Social signup is already verified — no OTP step needed
+                    setTimeout(() => {
+                        setShowSignupModal(false);
+                        setSuccessMessage(null);
+                    }, 3000);
+                } else if (response?.data?.email) {
+                    // Registered with an email — verification code was sent there (+ phone if given)
+                    setShowRegisterOTP(true);
+                } else {
+                    // Phone-only registration — the code was already sent via SMS
+                    setRegisterPhoneOtp({
+                        phone: response?.data?.phone,
+                        verificationCode: response?.data?.verification_code,
                     });
-                    setSuccessMessage(null);
-                }, 3000);
+                }
 
             } catch (error) {
                 const errorMessage = handleApiError(error);
@@ -236,6 +248,40 @@ const AnimatedLoginPage: React.FC = () => {
         setShowOTP(false);
         setShowSignupModal(false)
         // Navigate back to email input
+    };
+
+    const handleRegisterOtpSuccess = () => {
+        setShowRegisterOTP(false);
+        setRegisterPhoneOtp(null);
+        setShowSignupModal(false);
+        setSignupData({
+            email: '', password: '', confirmPassword: '',
+            fname: '', lname: '', phone: '', profile_pic: ''
+        });
+        setSuccessMessage(null);
+        setNotification({ type: 'success', message: 'Account verified! You can now log in.' });
+    };
+
+    // ------------- Login with phone number + OTP (passwordless) -------------
+    const startPhoneLogin = async (phone: string) => {
+        setPhoneLoginLoading(true);
+        setErrors({});
+        try {
+            const response = await mainAxios.post('/auth/login-phone/request-otp', { phone });
+            setPhoneLoginOtp({ phone, verificationCode: response.data.verification_code });
+        } catch (error) {
+            const errorMessage = handleApiError(error);
+            setErrors({ general: errorMessage });
+            setNotification({ type: 'error', message: errorMessage });
+        } finally {
+            setPhoneLoginLoading(false);
+        }
+    };
+
+    const handlePhoneLoginSuccess = (newUser: any) => {
+        EnableOtp(newUser);
+        setPhoneLoginOtp(null);
+        window.location.href = "/";
     };
     //------------------forgot password succes
     const handleSuccess = () => {
@@ -312,6 +358,29 @@ const AnimatedLoginPage: React.FC = () => {
                         onVerificationSuccess={handleVerificationSuccess}
                         onBack={handleBack}
                     />
+                    : showRegisterOTP && signupData.email ?
+                    <OTPVerification
+                        email={signupData.email}
+                        purpose="email"
+                        onVerificationSuccess={handleRegisterOtpSuccess}
+                        onBack={() => setShowRegisterOTP(false)}
+                    />
+                    : registerPhoneOtp ?
+                    <PhoneOtpVerify
+                        phone={registerPhoneOtp.phone}
+                        mode="register"
+                        initialVerificationCode={registerPhoneOtp.verificationCode}
+                        onVerified={handleRegisterOtpSuccess}
+                        onBack={() => setRegisterPhoneOtp(null)}
+                    />
+                    : phoneLoginOtp ?
+                    <PhoneOtpVerify
+                        phone={phoneLoginOtp.phone}
+                        mode="login"
+                        initialVerificationCode={phoneLoginOtp.verificationCode}
+                        onVerified={handlePhoneLoginSuccess}
+                        onBack={() => setPhoneLoginOtp(null)}
+                    />
                     :
                     <>
                         {!showSignupModal &&
@@ -328,7 +397,9 @@ const AnimatedLoginPage: React.FC = () => {
                                 formData={formData}
                                 setErrors={setErrors}
                                 setSignupData={setSignupData}
-                                setFormData={setFormData} />
+                                setFormData={setFormData}
+                                startPhoneLogin={startPhoneLogin}
+                                phoneLoginLoading={phoneLoginLoading} />
                         }
                         {/* Signup Modal */}
                         {showSignupModal && !Passwordreset && (

@@ -8,21 +8,28 @@ import ProductManagement from '../../components/dashbaord/Productsdash/MainProdu
 import WishlistAdmin from '../../components/dashbaord/Productsdash/WishlistAdmin';
 import CartAdmin from '../../components/dashbaord/Productsdash/CartAdmin';
 import Overview from '../../components/dashbaord/maindashboard/overview';
+import RestrictedOverview from '../../components/dashbaord/maindashboard/RestrictedOverview';
+import { useCurrentUser } from '../../hooks/useCurrentUser';
 import VlogManager from '../../components/dashbaord/vlog/Vlog';
 import DashboardReport from '../../components/dashbaord/maindashboard/DashbaordReport';
 import UsersManagement from '../../components/dashbaord/UsersManagement';
 import HeroSliderManager from '../../components/dashbaord/slider/sliderManage';
 import AdminOrders from '../../components/dashbaord/Productsdash/AdminOrders';
 import AdminDeliveries from '../../components/dashbaord/Productsdash/AdminDeliveries';
+import AnnouncementManager from '../../components/dashbaord/AnnouncementManager';
 
 // Main Content Component
 const MainContent: React.FC = () => {
     const { currentView } = useAppContext();
+    const { user } = useCurrentUser();
+    // The full stats/notifications dashboard is reserved for the super admin —
+    // every other admin only gets revenue + role assignment.
+    const DashboardHome = user?.is_super_admin ? Overview : RestrictedOverview;
 
     const renderView = () => {
         switch (currentView) {
             case "dashboard":
-                return <Overview />;
+                return <DashboardHome />;
             case "products":
                 return <ProductManagement />;
             case "categories":
@@ -45,8 +52,10 @@ const MainContent: React.FC = () => {
                 return <AdminDeliveries deliveryTypeFilter="pickup" />;
             case "slide":
                 return <HeroSliderManager/>
+            case "announcements":
+                return <AnnouncementManager />
             default:
-                return <Overview />;
+                return <DashboardHome />;
         }
     };
 

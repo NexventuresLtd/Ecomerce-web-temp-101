@@ -110,9 +110,16 @@ mainAxios.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
 
+    // Background/decorative calls (e.g. navbar wishlist count) can opt out of
+    // the forced logout+redirect — a stale token there shouldn't kick a guest
+    // off a page (like the cart) that doesn't actually require login.
+    if (originalRequest?.skipAuthRedirect) {
+      return Promise.reject(error);
+    }
+
     // Check for 401 Unauthorized (session expired)
     if (error.response?.status === 401) {
-      const isAuthEndpoint = originalRequest.url?.includes("auth/") || 
+      const isAuthEndpoint = originalRequest.url?.includes("auth/") ||
                            originalRequest.url?.includes("login/");
       
       // If it's a non-auth endpoint and we haven't retried yet, try to refresh

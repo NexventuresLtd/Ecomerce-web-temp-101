@@ -12,6 +12,7 @@ export interface CurrentUser {
   role: string;
   is_active: boolean;
   is_verified: boolean;
+  is_super_admin: boolean;
   two_factor: boolean;
   provider: string;
   created_at: string;
@@ -34,7 +35,7 @@ export function useCurrentUser(): UseCurrentUserResult {
     }
 
     mainAxios
-      .get<CurrentUser>("/auth/me")
+      .get<CurrentUser>("/auth/me", { skipAuthRedirect: true } as any)
       .then((res) => {
         setUser(res.data);
         // Keep localStorage in sync so other non-hook code stays consistent
