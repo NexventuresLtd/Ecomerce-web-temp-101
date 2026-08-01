@@ -38,7 +38,8 @@ export interface ValidationErrors {
 }
 
 export interface ApiError {
-    message: string;
+    message?: string;
+    detail?: string; // FastAPI's HTTPException error responses use this field
     errors?: Record<string, string[]>;
     statusCode?: number;
 }
