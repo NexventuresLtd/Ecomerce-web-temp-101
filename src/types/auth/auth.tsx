@@ -33,7 +33,6 @@ export interface ValidationErrors {
     confirmPassword?: string;
     fname?: string;
     lname?: string;
-    phone?: string;
     general?: string;
 }
 

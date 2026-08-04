@@ -13,14 +13,11 @@ import {
   ShoppingCart,
   PhoneCall,
   MessageCircle,
-  MessageSquare,
   Download,
   Filter
 } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
 import { handleClickWhatsapp } from '../../../app/ProductWhasapp';
-import { notifyApi } from '../../../app/notify';
-import SmsComposeModal from './SmsComposeModal';
 
 // Import jsPDF and autoTable with proper types
 import jsPDF from 'jspdf';
@@ -79,10 +76,6 @@ const WishlistAdmin: React.FC = () => {
   const [selectedWishlist, setSelectedWishlist] = useState<Wishlist | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
-
-  // SMS compose modal — lets the admin edit the default message before sending
-  const [smsTarget, setSmsTarget] = useState<Wishlist | null>(null);
-  const [sendingSms, setSendingSms] = useState(false);
 
   // Date filtering states
   const [startDate, setStartDate] = useState<string>('');
@@ -451,34 +444,6 @@ const WishlistAdmin: React.FC = () => {
     handleClickWhatsapp("Wishlist Information", wishlist.phone || "250781691713", message);
   };
 
-  const buildDefaultSmsMessage = (wishlist: Wishlist) => {
-    const itemsList = wishlist.items.map(item =>
-      `${item.product_name} (Qty: ${item.quantity}) - ${formatCurrency(item.total_item_price)}`
-    ).join(', ');
-
-    return `Hello ${wishlist.fname}, your wishlist: ${itemsList}. Total: ${formatCurrency(wishlist.total_price)}. - Umukamezi`;
-  };
-
-  const openSmsCompose = (wishlist: Wishlist) => {
-    if (!wishlist.phone) return;
-    setSmsTarget(wishlist);
-  };
-
-  const handleSendSms = async (message: string) => {
-    if (!smsTarget?.phone) return;
-    setSendingSms(true);
-    try {
-      await notifyApi.sendSms(smsTarget.phone, message);
-      alert('SMS sent successfully');
-      setSmsTarget(null);
-    } catch (error) {
-      console.error('Error sending SMS:', error);
-      alert('Failed to send SMS');
-    } finally {
-      setSendingSms(false);
-    }
-  };
-
   // Pagination — server already returns just the current page, newest-item-added-first
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
 
@@ -775,15 +740,6 @@ const WishlistAdmin: React.FC = () => {
                       WhatsApp
                     </button>
                   )}
-                  {wishlist.phone && (
-                    <button
-                      onClick={() => openSmsCompose(wishlist)}
-                      className="flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
-                    >
-                      <MessageSquare className="w-4 h-4 mr-1" />
-                      SMS
-                    </button>
-                  )}
                 </td>
               </tr>
             ))}
@@ -982,15 +938,6 @@ const WishlistAdmin: React.FC = () => {
                   Send WhatsApp
                 </button>
               )}
-              {selectedWishlist.phone && (
-                <button
-                  onClick={() => openSmsCompose(selectedWishlist)}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Send SMS
-                </button>
-              )}
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
@@ -1001,17 +948,6 @@ const WishlistAdmin: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* SMS Compose Modal */}
-      <SmsComposeModal
-        isOpen={!!smsTarget}
-        phone={smsTarget?.phone || ''}
-        recipientName={smsTarget ? `${smsTarget.fname} ${smsTarget.lname}` : ''}
-        defaultMessage={smsTarget ? buildDefaultSmsMessage(smsTarget) : ''}
-        sending={sendingSms}
-        onClose={() => setSmsTarget(null)}
-        onSend={handleSendSms}
-      />
     </div>
   );
 };
