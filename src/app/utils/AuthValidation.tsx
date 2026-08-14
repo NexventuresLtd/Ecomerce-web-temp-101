@@ -15,9 +15,9 @@ export const validateForm = (data: FormData): ValidationErrors => {
     const newErrors: ValidationErrors = {};
 
     if (!data.email) {
-        newErrors.email = 'Email is required';
-    } else if (!validateEmail(data.email)) {
-        newErrors.email = 'Please enter a valid email address';
+        newErrors.email = 'Email or phone number is required';
+    } else if (!validateEmail(data.email) && !validatePhone(data.email)) {
+        newErrors.email = 'Please enter a valid email address or phone number';
     }
 
     if (!data.password) {
@@ -58,7 +58,11 @@ export const validateSignupForm = (data: SignupFormData): ValidationErrors => {
         newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    if (data.phone && !validatePhone(data.phone)) {
+    if (!data.phone) {
+        newErrors.phone = 'Phone number is required';
+        newErrors.general = 'Phone number is required';
+    } else if (!validatePhone(data.phone)) {
+        newErrors.phone = 'Please enter a valid phone number';
         newErrors.general = 'Please enter a valid phone number';
     }
 

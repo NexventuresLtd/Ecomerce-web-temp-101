@@ -186,7 +186,7 @@ const RegisterForm: React.FC<RegisterProps> = ({
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Phone Number (Optional)
+                            Phone Number <span className="text-red-500">*</span>
                         </label>
                         <motion.input
                             whileFocus={{ scale: 1.02 }}
@@ -194,8 +194,12 @@ const RegisterForm: React.FC<RegisterProps> = ({
                             value={signupData.phone || ''}
                             onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
                             className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                            placeholder="+1234567890"
+                            placeholder="+250788604106"
+                            required
                         />
+                        {errors.phone && (
+                            <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                        )}
                     </div>
                 </>),
         },

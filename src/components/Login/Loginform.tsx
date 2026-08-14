@@ -132,20 +132,20 @@ const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsV
                             )}
                             {/* Login Form */}
                             <div className="space-y-6">
-                                {/* Email Input */}
+                                {/* Email / Phone Input */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Email Address
+                                        Email Address or Phone Number
                                     </label>
                                     <div className="relative">
                                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                                         <motion.input
                                             whileFocus={{ scale: 1.02 }}
-                                            type="email"
+                                            type="text"
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                             className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl outline-none focus:ring-3 focus:ring-slate-200 focus:border-transparent transition-all duration-200"
-                                            placeholder="Enter your email"
+                                            placeholder="Enter your email or phone number (+250...)"
                                         />
                                     </div>
                                     {errors.email && (
