@@ -203,7 +203,7 @@ mainAxios.interceptors.response.use(
 mainAxios.interceptors.request.use(
   config => {
     // Get fresh token from storage for each request
-    const currentToken = localStorage.getItem("authToken");
+    const currentToken = localStorage.getItem("authToken") || localStorage.getItem("token") || localStorage.getItem("access_token");
     if (currentToken) {
       config.headers.Authorization = `Bearer ${currentToken}`;
     }
