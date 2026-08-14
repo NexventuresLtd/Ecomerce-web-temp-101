@@ -100,17 +100,21 @@ const AnimatedLoginPage: React.FC = () => {
                 // 2. Redirect to dashboard or protected route
                 const newUser = response?.data;
 
-                setNewUser(newUser)
-                if (newUser?.encrypted_data?.two_factor) {
-                    setShowOTP(true)
+                setNewUser(newUser);
+                const userRole = newUser?.encrypted_data?.role;
+                const isSuperAdmin = newUser?.encrypted_data?.is_super_admin;
+                const isAdmin = userRole === "ADMIN" || Boolean(isSuperAdmin);
+
+                if (!isAdmin) {
+                    // Mandatory OTP verification for buyers
+                    setShowOTP(true);
                 } else {
-                    // Save tokens
+                    // Admins log in directly
                     localStorage.setItem("authToken", newUser.access_token);
                     localStorage.setItem("refresh", newUser.refresh_token);
-                    // Save user info
                     localStorage.setItem("userInfo", JSON.stringify(newUser.encrypted_data));
                     await Promise.all([cartApi.mergeGuestCart(), wishlistService.mergeGuestWishlist()]);
-                    window.location.href = "/"
+                    window.location.href = "/";
                 }
 
 
@@ -206,7 +210,7 @@ const AnimatedLoginPage: React.FC = () => {
                         setSuccessMessage(null);
                     }, 3000);
                 } else {
-                    // Ask for the code sent to their email + phone before letting them log in
+                    // Mandatory OTP verification for new buyers
                     setShowRegisterOTP(true);
                 }
 
@@ -318,9 +322,11 @@ const AnimatedLoginPage: React.FC = () => {
             {/* Main Content */}
             <div
                 className="relative z-10 min-h-screen flex items-center justify-center px-4">
-                {showOTP && formData.email ?
+                {showOTP && (formData.email || (NewUSer as any)?.encrypted_data?.email) ?
                     <OTPVerification
                         email={formData.email}
+                        userEmail={(NewUSer as any)?.encrypted_data?.email || formData.email}
+                        userPhone={(NewUSer as any)?.encrypted_data?.phone}
                         purpose="login"
                         onVerificationSuccess={handleVerificationSuccess}
                         onBack={handleBack}
