@@ -12,7 +12,8 @@ export type ViewType =
   | "wishlists"
   | "carts"
   | "slide"
-  | "announcements";
+  | "announcements"
+  | "sms_broadcast";
 
 // Context
 export interface AppContextType {

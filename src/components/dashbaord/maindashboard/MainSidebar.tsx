@@ -12,6 +12,7 @@ import {
     Truck,
     Building2,
     Megaphone,
+    MessageSquare,
 } from 'lucide-react';
 import type { ViewType } from '../../../types/dashboard/mainDashbaord';
 import { useAppContext } from '../../../contexts/dashbaord/context';
@@ -38,6 +39,7 @@ export const Sidebar: React.FC = () => {
         { id: 'vlog' as ViewType, label: 'Vlog', icon: Video },
         { id: 'slide' as ViewType, label: 'Slider', icon: Sliders },
         { id: 'announcements' as ViewType, label: 'Announcements', icon: Megaphone },
+        { id: 'sms_broadcast' as ViewType, label: 'SMS Broadcast', icon: MessageSquare },
     ]:
     [
         { id: 'dashboard' as ViewType, label: 'Dashboard', icon: LayoutDashboard },
