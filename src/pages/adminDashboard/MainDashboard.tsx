@@ -17,6 +17,7 @@ import HeroSliderManager from '../../components/dashbaord/slider/sliderManage';
 import AdminOrders from '../../components/dashbaord/Productsdash/AdminOrders';
 import AdminDeliveries from '../../components/dashbaord/Productsdash/AdminDeliveries';
 import AnnouncementManager from '../../components/dashbaord/AnnouncementManager';
+import SMSBroadcastManager from '../../components/dashbaord/SMSBroadcastManager';
 
 // Main Content Component
 const MainContent: React.FC = () => {
@@ -54,6 +55,8 @@ const MainContent: React.FC = () => {
                 return <HeroSliderManager/>
             case "announcements":
                 return <AnnouncementManager />
+            case "sms_broadcast":
+                return <SMSBroadcastManager />
             default:
                 return <DashboardHome />;
         }

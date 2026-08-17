@@ -10,6 +10,8 @@ import { paymentService } from '../../app/products/paymentService';
 import { billingService } from '../../app/userProfile/billingService';
 import { token } from '../../app/Localstorage';
 import { getGuestCartId } from '../../app/utils/guestCart';
+import { useCurrentUser } from '../../hooks/useCurrentUser';
+import OTPVerification from '../../components/SharedComp/auth/OTPCleint';
 
 // Interfaces based on API response
 interface Color {
@@ -85,6 +87,40 @@ const PaymentModal: React.FC<{
     const [statusMsg, setStatusMsg] = useState('');
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const pollCount = useRef(0);
+    const { user } = useCurrentUser();
+    const [showPaymentOTP, setShowPaymentOTP] = useState(false);
+    const [pendingPaymentAction, setPendingPaymentAction] = useState<'momo' | 'card' | null>(null);
+
+    const handleInitiateMomoWithOTP = () => {
+        const err = validatePhone(phone);
+        if (err) { setPhoneError(err); return; }
+        if (deliveryType === 'delivery' && !deliveryAddress.trim()) {
+            setDeliveryAddressError('Please enter a delivery address.');
+            return;
+        }
+        setPendingPaymentAction('momo');
+        setShowPaymentOTP(true);
+    };
+
+    const handleInitiateCardWithOTP = () => {
+        const err = validatePhone(phone);
+        if (err) { setPhoneError(err); return; }
+        if (deliveryType === 'delivery' && !deliveryAddress.trim()) {
+            setDeliveryAddressError('Please enter a delivery address.');
+            return;
+        }
+        setPendingPaymentAction('card');
+        setShowPaymentOTP(true);
+    };
+
+    const handleOTPVerified = () => {
+        setShowPaymentOTP(false);
+        if (pendingPaymentAction === 'momo') {
+            handleMomoSubmit();
+        } else if (pendingPaymentAction === 'card') {
+            handleCardSubmit();
+        }
+    };
 
     const stopPolling = () => {
         if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
@@ -110,6 +146,8 @@ const PaymentModal: React.FC<{
             setInvoiceNumber('');
             setStatusMsg('');
             pollCount.current = 0;
+            setShowPaymentOTP(false);
+            setPendingPaymentAction(null);
         }
         if (isOpen) {
             (async () => {
@@ -560,7 +598,7 @@ const PaymentModal: React.FC<{
                                     if (selectedBillingId && updateBillingChecked) {
                                         setShowUpdateConfirm(true);
                                     } else {
-                                        (method === 'momo' ? handleMomoSubmit() : handleCardSubmit());
+                                        (method === 'momo' ? handleInitiateMomoWithOTP() : handleInitiateCardWithOTP());
                                     }
                                 }}
                                 className="flex-1 py-3 rounded-lg font-medium text-white transition-colors"
@@ -572,12 +610,26 @@ const PaymentModal: React.FC<{
                             isOpen={showUpdateConfirm}
                             title="Update saved billing?"
                             message="We'll update your saved billing with the phone you entered after a successful payment. Continue?"
-                            onConfirm={() => { setShowUpdateConfirm(false); (method === 'momo' ? handleMomoSubmit() : handleCardSubmit()); }}
-                            onCancel={() => { setShowUpdateConfirm(false); setUpdateBillingChecked(false); (method === 'momo' ? handleMomoSubmit() : handleCardSubmit()); }}
+                            onConfirm={() => { setShowUpdateConfirm(false); (method === 'momo' ? handleInitiateMomoWithOTP() : handleInitiateCardWithOTP()); }}
+                            onCancel={() => { setShowUpdateConfirm(false); setUpdateBillingChecked(false); (method === 'momo' ? handleInitiateMomoWithOTP() : handleInitiateCardWithOTP()); }}
                             confirmText="Yes, update after success"
                             cancelText="No, proceed without update"
                         />
                         {alert && <CustomAlert message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
+                        
+                        {/* OTP Verification Overlay during Checkout */}
+                        {showPaymentOTP && (
+                            <div className="fixed inset-0 z-[120] bg-black bg-opacity-60 flex items-center justify-center p-4">
+                                <OTPVerification
+                                    email={user?.email || phone}
+                                    userEmail={user?.email}
+                                    userPhone={user?.phone || phone}
+                                    purpose="payment"
+                                    onVerificationSuccess={handleOTPVerified}
+                                    onBack={() => setShowPaymentOTP(false)}
+                                />
+                            </div>
+                        )}
                     </div>
                 )}
 

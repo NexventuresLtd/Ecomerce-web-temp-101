@@ -254,7 +254,7 @@ const AdminDeliveries = ({ deliveryTypeFilter = 'all' }: { deliveryTypeFilter?: 
     const loadDeliveries = async (t: TabType) => {
         setLoading(true); setError('');
         try {
-            const ds = t === 'pending' ? 'PENDING_DELIVERY' : 'DELIVERED';
+            const ds = t === 'pending' ? 'PENDING_DELIVERY' : 'COMPLETED';
             const data = await paymentService.getPendingDeliveries(ds, deliveryTypeFilter);
             setItems(data.deliveries || []);
         } catch (e: any) {

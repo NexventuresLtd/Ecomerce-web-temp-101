@@ -11,15 +11,12 @@ import {
   ToggleRight,
   Trash2,
   MessageCircle,
-  MessageSquare,
   Download,
   Filter
 } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
 import { RWF } from '../../../app/priceConver';
 import { handleClickWhatsapp } from '../../../app/ProductWhasapp';
-import { notifyApi } from '../../../app/notify';
-import SmsComposeModal from './SmsComposeModal';
 
 // Import jsPDF and autoTable with proper types
 import jsPDF from 'jspdf';
@@ -72,10 +69,6 @@ const CartAdmin: React.FC = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
 
-  // SMS compose modal — lets the admin edit the default message before sending
-  const [smsTarget, setSmsTarget] = useState<Cart | null>(null);
-  const [sendingSms, setSendingSms] = useState(false);
-  
   // Date filtering states
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -564,34 +557,6 @@ const CartAdmin: React.FC = () => {
     handleClickWhatsapp("Cart Information", cart.phone || "250781691713", message);
   };
 
-  const buildDefaultSmsMessage = (cart: Cart) => {
-    const itemsList = cart.items.map(item =>
-      `${item.product_name} (Qty: ${item.quantity}) - ${RWF.format(item.total_item_price)}`
-    ).join(', ');
-
-    return `Hello ${cart.fname}, your cart: ${itemsList}. Total: ${RWF.format(cart.total_price)}. - Umukamezi`;
-  };
-
-  const openSmsCompose = (cart: Cart) => {
-    if (!cart.phone) return;
-    setSmsTarget(cart);
-  };
-
-  const handleSendSms = async (message: string) => {
-    if (!smsTarget?.phone) return;
-    setSendingSms(true);
-    try {
-      await notifyApi.sendSms(smsTarget.phone, message);
-      alert('SMS sent successfully');
-      setSmsTarget(null);
-    } catch (error) {
-      console.error('Error sending SMS:', error);
-      alert('Failed to send SMS');
-    } finally {
-      setSendingSms(false);
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -879,15 +844,6 @@ const CartAdmin: React.FC = () => {
                       WhatsApp
                     </button>
                   )}
-                  {cart.phone && (
-                    <button
-                      onClick={() => openSmsCompose(cart)}
-                      className="flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
-                    >
-                      <MessageSquare className="w-4 h-4 mr-1" />
-                      SMS
-                    </button>
-                  )}
                 </td>
               </tr>
             ))}
@@ -1090,15 +1046,6 @@ const CartAdmin: React.FC = () => {
                   Send WhatsApp
                 </button>
               )}
-              {selectedCart.phone && (
-                <button
-                  onClick={() => openSmsCompose(selectedCart)}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Send SMS
-                </button>
-              )}
               <button
                 onClick={closeModal}
                 className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
@@ -1109,17 +1056,6 @@ const CartAdmin: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* SMS Compose Modal */}
-      <SmsComposeModal
-        isOpen={!!smsTarget}
-        phone={smsTarget?.phone || ''}
-        recipientName={smsTarget ? `${smsTarget.fname} ${smsTarget.lname}` : ''}
-        defaultMessage={smsTarget ? buildDefaultSmsMessage(smsTarget) : ''}
-        sending={sendingSms}
-        onClose={() => setSmsTarget(null)}
-        onSend={handleSendSms}
-      />
     </div>
   );
 };

@@ -9,7 +9,6 @@ import { handleApiError } from '../../app/utils/HandelHttpError';
 import { validateForm, validateSignupForm } from '../../app/utils/AuthValidation';
 import { AlertCircle, CheckCircle2, X } from 'lucide-react';
 import OTPVerification from '../../components/SharedComp/auth/OTPCleint';
-import PhoneOtpVerify from '../../components/SharedComp/auth/PhoneOtpVerify';
 import PasswordReset from '../../components/SharedComp/auth/Password';
 import { cartApi } from '../../app/products/cart';
 import { wishlistService } from '../../app/products/wishlistService';
@@ -21,9 +20,6 @@ const AnimatedLoginPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showOTP, setShowOTP] = useState(false)
     const [showRegisterOTP, setShowRegisterOTP] = useState(false)
-    const [registerPhoneOtp, setRegisterPhoneOtp] = useState<{ phone: string; verificationCode: string } | null>(null)
-    const [phoneLoginOtp, setPhoneLoginOtp] = useState<{ phone: string; verificationCode: string } | null>(null)
-    const [phoneLoginLoading, setPhoneLoginLoading] = useState(false)
     const [NewUSer, setNewUser] = useState()
     const [showSignupModal, setShowSignupModal] = useState(false);
     const [Passwordreset, setPasswordreset] = useState<boolean>(false);
@@ -104,17 +100,21 @@ const AnimatedLoginPage: React.FC = () => {
                 // 2. Redirect to dashboard or protected route
                 const newUser = response?.data;
 
-                setNewUser(newUser)
-                if (newUser?.encrypted_data?.two_factor) {
-                    setShowOTP(true)
+                setNewUser(newUser);
+                const userRole = newUser?.encrypted_data?.role;
+                const isSuperAdmin = newUser?.encrypted_data?.is_super_admin;
+                const isAdmin = userRole === "ADMIN" || Boolean(isSuperAdmin);
+
+                if (!isAdmin) {
+                    // Mandatory OTP verification for buyers
+                    setShowOTP(true);
                 } else {
-                    // Save tokens
+                    // Admins log in directly
                     localStorage.setItem("authToken", newUser.access_token);
                     localStorage.setItem("refresh", newUser.refresh_token);
-                    // Save user info
                     localStorage.setItem("userInfo", JSON.stringify(newUser.encrypted_data));
                     await Promise.all([cartApi.mergeGuestCart(), wishlistService.mergeGuestWishlist()]);
-                    window.location.href = "/"
+                    window.location.href = "/";
                 }
 
 
@@ -209,15 +209,9 @@ const AnimatedLoginPage: React.FC = () => {
                         setShowSignupModal(false);
                         setSuccessMessage(null);
                     }, 3000);
-                } else if (response?.data?.email) {
-                    // Registered with an email — verification code was sent there (+ phone if given)
-                    setShowRegisterOTP(true);
                 } else {
-                    // Phone-only registration — the code was already sent via SMS
-                    setRegisterPhoneOtp({
-                        phone: response?.data?.phone,
-                        verificationCode: response?.data?.verification_code,
-                    });
+                    // Mandatory OTP verification for new buyers
+                    setShowRegisterOTP(true);
                 }
 
             } catch (error) {
@@ -252,7 +246,6 @@ const AnimatedLoginPage: React.FC = () => {
 
     const handleRegisterOtpSuccess = () => {
         setShowRegisterOTP(false);
-        setRegisterPhoneOtp(null);
         setShowSignupModal(false);
         setSignupData({
             email: '', password: '', confirmPassword: '',
@@ -260,28 +253,6 @@ const AnimatedLoginPage: React.FC = () => {
         });
         setSuccessMessage(null);
         setNotification({ type: 'success', message: 'Account verified! You can now log in.' });
-    };
-
-    // ------------- Login with phone number + OTP (passwordless) -------------
-    const startPhoneLogin = async (phone: string) => {
-        setPhoneLoginLoading(true);
-        setErrors({});
-        try {
-            const response = await mainAxios.post('/auth/login-phone/request-otp', { phone });
-            setPhoneLoginOtp({ phone, verificationCode: response.data.verification_code });
-        } catch (error) {
-            const errorMessage = handleApiError(error);
-            setErrors({ general: errorMessage });
-            setNotification({ type: 'error', message: errorMessage });
-        } finally {
-            setPhoneLoginLoading(false);
-        }
-    };
-
-    const handlePhoneLoginSuccess = (newUser: any) => {
-        EnableOtp(newUser);
-        setPhoneLoginOtp(null);
-        window.location.href = "/";
     };
     //------------------forgot password succes
     const handleSuccess = () => {
@@ -351,9 +322,11 @@ const AnimatedLoginPage: React.FC = () => {
             {/* Main Content */}
             <div
                 className="relative z-10 min-h-screen flex items-center justify-center px-4">
-                {showOTP && formData.email ?
+                {showOTP && (formData.email || (NewUSer as any)?.encrypted_data?.email) ?
                     <OTPVerification
                         email={formData.email}
+                        userEmail={(NewUSer as any)?.encrypted_data?.email || formData.email}
+                        userPhone={(NewUSer as any)?.encrypted_data?.phone}
                         purpose="login"
                         onVerificationSuccess={handleVerificationSuccess}
                         onBack={handleBack}
@@ -364,22 +337,6 @@ const AnimatedLoginPage: React.FC = () => {
                         purpose="email"
                         onVerificationSuccess={handleRegisterOtpSuccess}
                         onBack={() => setShowRegisterOTP(false)}
-                    />
-                    : registerPhoneOtp ?
-                    <PhoneOtpVerify
-                        phone={registerPhoneOtp.phone}
-                        mode="register"
-                        initialVerificationCode={registerPhoneOtp.verificationCode}
-                        onVerified={handleRegisterOtpSuccess}
-                        onBack={() => setRegisterPhoneOtp(null)}
-                    />
-                    : phoneLoginOtp ?
-                    <PhoneOtpVerify
-                        phone={phoneLoginOtp.phone}
-                        mode="login"
-                        initialVerificationCode={phoneLoginOtp.verificationCode}
-                        onVerified={handlePhoneLoginSuccess}
-                        onBack={() => setPhoneLoginOtp(null)}
                     />
                     :
                     <>
@@ -397,9 +354,7 @@ const AnimatedLoginPage: React.FC = () => {
                                 formData={formData}
                                 setErrors={setErrors}
                                 setSignupData={setSignupData}
-                                setFormData={setFormData}
-                                startPhoneLogin={startPhoneLogin}
-                                phoneLoginLoading={phoneLoginLoading} />
+                                setFormData={setFormData} />
                         }
                         {/* Signup Modal */}
                         {showSignupModal && !Passwordreset && (
