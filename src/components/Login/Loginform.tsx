@@ -13,8 +13,6 @@ import {
 import { formVariant } from '../../constants/auth/authVariants';
 import type { FormData, SignupFormData, ValidationErrors } from '../../types/auth/auth';
 import GoogleLoginButton from '../SharedComp/auth/GoogleLoginButton';
-import { InteractivePatternCaptcha, SmartLogicCaptcha } from '../SharedComp/auth/rechaprtch';
-import DragCaptcha from '../SharedComp/auth/DragCaptcha';
 
 
 interface LoginProps {
@@ -29,28 +27,17 @@ interface LoginProps {
     setErrors: React.Dispatch<React.SetStateAction<ValidationErrors>>;
     setSignupData: React.Dispatch<React.SetStateAction<SignupFormData>>;
     isLoading: boolean;
-    setIsVerified: React.Dispatch<React.SetStateAction<boolean>>;
-    isVerified: boolean;
     startPhoneLogin: (phone: string) => void;
     phoneLoginLoading: boolean;
 }
-const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsVerified, formData, setFormData, handleLogin, handleGoogleLogin, setShowSignupModal, isLoading, startPhoneLogin, phoneLoginLoading }: LoginProps) => {
+const Loginform = ({ isClothPulled, setPasswordreset, errors, formData, setFormData, handleLogin, handleGoogleLogin, setShowSignupModal, isLoading, startPhoneLogin, phoneLoginLoading }: LoginProps) => {
     const [showPassword, setShowPassword] = useState(false);
     const [showPhoneLogin, setShowPhoneLogin] = useState(false);
     const [loginPhone, setLoginPhone] = useState('');
 
-    const [whichMethod, setwhichMethod] = useState("drag");
-    const [resetCaptcha, setResetCaptcha] = useState(false);
     const handelGoogleLogin = (msg?: string, userInfo?: any) => {
         handleGoogleLogin({ "type": "GOOGLE", "provider": null, "email": userInfo?.email, "msg": msg })
-        setResetCaptcha(prev => !prev);
     }
-    //------Handel rechatp
-    const handleVerify = (success: boolean) => {
-        setIsVerified(success);
-        console.log('Verification result:', success);
-    };
-
 
     return (
         <>
@@ -62,53 +49,7 @@ const Loginform = ({ isClothPulled, setPasswordreset, errors, isVerified, setIsV
             >
                 <div className="bg-white rounded-2xl shadow-2xl p-8">
 
-                    {!isVerified ?
-                        <>
-                            <div className="w-full max-w-md mx-auto">
-                                <h2 className="text-xl justify-center font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                    🤖 Show That You’re Not a Robot
-                                </h2>
-
-                                <div className="bg-blue-50 rounded-xl p-4 flex gap-4 justify-center mb-4">
-                                    <button
-                                        onClick={() => setwhichMethod("drag")}
-                                        className="bg-white px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-100 hover:scale-105 transition-all duration-200"
-                                    >
-                                        Drag
-                                    </button>
-                                    {/* <button
-                                        onClick={() => setwhichMethod("smart")}
-                                        className="bg-white px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-100 hover:scale-105 transition-all duration-200"
-                                    >
-                                        Smart
-                                    </button> */}
-                                    <button
-                                        onClick={() => setwhichMethod("pattern")}
-                                        className="bg-white px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-100 hover:scale-105 transition-all duration-200"
-                                    >
-                                        Pattern
-                                    </button>
-                                </div>
-                            </div>
-
-                            {whichMethod == "drag" ?
-                                <DragCaptcha
-                                    onVerify={setIsVerified}
-                                    resetTrigger={resetCaptcha}
-                                />
-                                : whichMethod == "smart" ?
-                                    <SmartLogicCaptcha
-                                        onVerify={handleVerify}
-                                        theme={"light"}
-                                    />
-                                    :
-                                    <InteractivePatternCaptcha
-                                        onVerify={handleVerify}
-                                        theme="light"
-                                        className=""
-                                    />
-                            }
-                        </> :
+                    {
                         <>
                             {/* Header */}
                             <div className="text-center mb-8">

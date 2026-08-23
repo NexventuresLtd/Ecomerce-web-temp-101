@@ -8,4 +8,10 @@ export const notifyApi = {
     );
     return response.data;
   },
+
+  // Super Admin: send a custom SMS to a batch of selected users at once.
+  sendBulkSms: async (phones: string[], message: string): Promise<{ message: string; sent: string[]; failed: string[] }> => {
+    const response = await mainAxios.post('/notify/sms/bulk', { phones, message });
+    return response.data;
+  },
 };

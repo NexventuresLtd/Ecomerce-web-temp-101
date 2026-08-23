@@ -38,7 +38,7 @@ const Header: React.FC = () => {
           <h1 className="text-xl font-semibold text-gray-900">{getPageTitle(currentView)}</h1>
         </div>
         <div className="flex items-center gap-2">
-          {user?.is_super_admin && <NotificationBell />}
+          {user?.role === 'admin' && <NotificationBell />}
           <button onClick={() => logout()} className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded">
             <LogOut size={18} />
             <span className="hidden sm:inline">Logout</span>

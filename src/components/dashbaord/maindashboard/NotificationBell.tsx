@@ -41,7 +41,7 @@ const NotificationBell = () => {
             const unseen = lastSeen ? items.filter(n => n.at && n.at > lastSeen).length : items.length;
             setUnseenCount(unseen);
         } catch {
-            // admin without super-admin rights — silently do nothing
+            // non-admin viewer or a transient error — silently do nothing
         }
     };
 

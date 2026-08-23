@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Check, X, ArrowLeft, Loader } from 'lucide-react';
+import { Mail, Check, X, ArrowLeft, Loader, Lock } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
 
 interface PasswordResetProps {
@@ -10,50 +10,81 @@ interface PasswordResetProps {
     className?: string;
 }
 
+type Step = 'email' | 'otp' | 'password' | 'done';
+
 const PasswordReset: React.FC<PasswordResetProps> = ({
     onBack,
     setShowSignupModal,
     onSuccess,
 
 }) => {
+    const [step, setStep] = useState<Step>('email');
     const [email, setEmail] = useState('');
+    const [otpCode, setOtpCode] = useState('');
+    const [verificationCode, setVerificationCode] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleRequestOtp = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
         setError('');
 
-        // Basic email validation
         if (!email || !/\S+@\S+\.\S+/.test(email)) {
             setError('Please enter a valid email address');
-            setIsLoading(false);
             return;
         }
 
+        setIsLoading(true);
         try {
-            // Using URLSearchParams to format data as x-www-form-urlencoded
-            const formData = new URLSearchParams();
-            formData.append('email', email);
+            const response = await mainAxios.post('/auth/forgot-password/request-otp', { email });
+            setVerificationCode(response.data.verification_code || '');
+            setStep('otp');
+        } catch (err: any) {
+            setError(err.response?.data?.detail || 'Failed to send reset code. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-            const response = await mainAxios.post('/auth/request-password-reset', formData, {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
+    const handleVerifyOtp = (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        if (otpCode.trim().length < 6) {
+            setError('Enter the 6-digit code sent to your email/phone');
+            return;
+        }
+        setStep('password');
+    };
+
+    const handleResetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+
+        if (newPassword.length < 8) {
+            setError('Password must be at least 8 characters');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setError('Passwords do not match');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await mainAxios.post('/auth/forgot-password/verify-and-reset', {
+                email,
+                otp_code: otpCode.trim(),
+                verification_code: verificationCode,
+                new_password: newPassword,
             });
-
-            if (response.status === 200) {
-                setSuccess(true);
-                if (onSuccess) {
-                    setTimeout(() => {
-                        onSuccess();
-                    }, 3000);
-                }
+            setStep('done');
+            if (onSuccess) {
+                setTimeout(() => onSuccess(), 3000);
             }
         } catch (err: any) {
-            setError(err.response?.data?.detail || 'Failed to send reset instructions. Please try again.');
+            setError(err.response?.data?.detail || 'Failed to reset password. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -97,17 +128,21 @@ const PasswordReset: React.FC<PasswordResetProps> = ({
 
             <div className="flex items-center justify-center mb-6">
                 <div className="bg-primary/10 p-3 rounded-full">
-                    <Mail className="text-primary" size={24} />
+                    {step === 'password' ? (
+                        <Lock className="text-primary" size={24} />
+                    ) : (
+                        <Mail className="text-primary" size={24} />
+                    )}
                 </div>
             </div>
 
-            {!success ? (
+            {step === 'email' && (
                 <>
                     <p className="text-gray-600 text-center mb-6">
-                        Enter your email address and we'll send you instructions to reset your password.
+                        Enter your email address and we'll send a reset code to your email and phone.
                     </p>
 
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleRequestOtp}>
                         <div className="mb-4">
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                                 Email Address
@@ -149,12 +184,122 @@ const PasswordReset: React.FC<PasswordResetProps> = ({
                                     Sending...
                                 </>
                             ) : (
-                                'Send Reset Instructions'
+                                'Send Reset Code'
                             )}
                         </button>
                     </form>
                 </>
-            ) : (
+            )}
+
+            {step === 'otp' && (
+                <>
+                    <p className="text-gray-600 text-center mb-6">
+                        We've sent a 6-digit code to <span className="font-medium">{email}</span> (and your phone, if on file).
+                    </p>
+
+                    <form onSubmit={handleVerifyOtp}>
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            value={otpCode}
+                            onChange={(e) => { setOtpCode(e.target.value); setError(''); }}
+                            placeholder="Enter 6-digit code"
+                            maxLength={6}
+                            className="w-full text-center text-2xl tracking-[0.5em] font-semibold px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent mb-4"
+                        />
+
+                        <AnimatePresence>
+                            {error && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg flex items-center"
+                                >
+                                    <X size={16} className="mr-2 flex-shrink-0" />
+                                    <span className="text-sm">{error}</span>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <button
+                            type="submit"
+                            disabled={otpCode.trim().length < 6}
+                            className="w-full py-4 px-4 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            Continue
+                        </button>
+                    </form>
+                </>
+            )}
+
+            {step === 'password' && (
+                <>
+                    <p className="text-gray-600 text-center mb-6">
+                        Choose a new password for your account.
+                    </p>
+
+                    <form onSubmit={handleResetPassword}>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                New Password
+                            </label>
+                            <input
+                                type="password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                placeholder="At least 8 characters"
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Confirm Password
+                            </label>
+                            <input
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                placeholder="Re-enter your password"
+                                disabled={isLoading}
+                            />
+                        </div>
+
+                        <AnimatePresence>
+                            {error && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg flex items-center"
+                                >
+                                    <X size={16} className="mr-2 flex-shrink-0" />
+                                    <span className="text-sm">{error}</span>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <button
+                            type="submit"
+                            disabled={isLoading || !newPassword || !confirmPassword}
+                            className="w-full py-4 px-4 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader size={18} className="animate-spin mr-2" />
+                                    Updating...
+                                </>
+                            ) : (
+                                'Reset Password'
+                            )}
+                        </button>
+                    </form>
+                </>
+            )}
+
+            {step === 'done' && (
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -164,23 +309,11 @@ const PasswordReset: React.FC<PasswordResetProps> = ({
                         <div className="bg-green-100 p-2 rounded-full mb-3">
                             <Check size={24} className="text-green-600" />
                         </div>
-                        <h3 className="font-medium text-lg mb-1">Instructions Sent</h3>
+                        <h3 className="font-medium text-lg mb-1">Password Updated</h3>
                         <p className="text-sm">
-                            We've sent password reset instructions to <span className="font-semibold">{email}</span>.
-                            Please check your inbox.
+                            Your password has been changed successfully. You can now log in.
                         </p>
                     </div>
-
-                    <p className="text-gray-600 text-sm">
-                        Didn't receive the email? Check your spam folder or{' '}
-                        <button
-                            onClick={() => setSuccess(false)}
-                            className="text-primary hover:text-primary/80 font-medium"
-                        >
-                            try again
-                        </button>
-                        .
-                    </p>
                 </motion.div>
             )}
 

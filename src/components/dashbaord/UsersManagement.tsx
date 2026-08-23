@@ -10,11 +10,12 @@ import {
   Eye,
   RefreshCw,
   Download,
-  
+  MessageSquare,
   ArrowUpDown,
   X
 } from 'lucide-react';
 import mainAxios from '../../Instance/mainAxios';
+import { notifyApi } from '../../app/notify';
 
 
 // Define types based on your backend response
@@ -59,6 +60,13 @@ const UsersManagement = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
   const [updatingUser, setUpdatingUser] = useState<number | null>(null);
+
+  // Bulk SMS — select multiple users, compose one message, send to all their phones
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [showBulkSmsModal, setShowBulkSmsModal] = useState(false);
+  const [bulkSmsMessage, setBulkSmsMessage] = useState('');
+  const [sendingBulkSms, setSendingBulkSms] = useState(false);
+  const [bulkSmsResult, setBulkSmsResult] = useState<{ sent: string[]; failed: string[] } | null>(null);
 
   // Fetch users from backend
   const fetchUsers = async () => {
@@ -176,6 +184,45 @@ const UsersManagement = () => {
     }
   };
 
+  const toggleSelected = (userId: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(userId) ? next.delete(userId) : next.add(userId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds(prev =>
+      prev.size === filteredUsers.length ? new Set() : new Set(filteredUsers.map(u => u.id))
+    );
+  };
+
+  const selectedPhones = users
+    .filter(u => selectedIds.has(u.id) && u.phone)
+    .map(u => u.phone);
+
+  const handleSendBulkSms = async () => {
+    if (!bulkSmsMessage.trim() || selectedPhones.length === 0) return;
+    setSendingBulkSms(true);
+    setBulkSmsResult(null);
+    try {
+      const result = await notifyApi.sendBulkSms(selectedPhones, bulkSmsMessage.trim());
+      setBulkSmsResult({ sent: result.sent, failed: result.failed });
+    } catch (err) {
+      console.error('Error sending bulk SMS:', err);
+      setError('Failed to send bulk SMS');
+    } finally {
+      setSendingBulkSms(false);
+    }
+  };
+
+  const closeBulkSmsModal = () => {
+    setShowBulkSmsModal(false);
+    setBulkSmsMessage('');
+    setBulkSmsResult(null);
+  };
+
   // Get unique roles for filter
   const uniqueRoles = Array.from(new Set(users.map(user => user.role)));
 
@@ -247,6 +294,15 @@ const UsersManagement = () => {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+              {selectedIds.size > 0 && (
+                <button
+                  onClick={() => setShowBulkSmsModal(true)}
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors w-full sm:w-auto"
+                >
+                  <MessageSquare size={16} />
+                  Send SMS to Selected ({selectedIds.size})
+                </button>
+              )}
               <button
                 onClick={exportUsers}
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto"
@@ -343,7 +399,15 @@ const UsersManagement = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th 
+                  <th className="px-4 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={filteredUsers.length > 0 && selectedIds.size === filteredUsers.length}
+                      onChange={toggleSelectAll}
+                      className="rounded border-gray-300 cursor-pointer"
+                    />
+                  </th>
+                  <th
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('fname')}
                   >
@@ -384,6 +448,14 @@ const UsersManagement = () => {
               <tbody className="divide-y divide-gray-200">
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(user.id)}
+                        onChange={() => toggleSelected(user.id)}
+                        className="rounded border-gray-300 cursor-pointer"
+                      />
+                    </td>
                     {/* User Info */}
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
@@ -692,6 +764,70 @@ const UsersManagement = () => {
                   Close
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk SMS Modal */}
+      {showBulkSmsModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-lg w-full">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-indigo-600" />
+                  Send SMS to Selected Users
+                </h3>
+                <p className="text-sm text-gray-600 mt-0.5">
+                  {selectedPhones.length} of {selectedIds.size} selected user{selectedIds.size !== 1 ? 's' : ''} have a phone number on file
+                </p>
+              </div>
+              <button onClick={closeBulkSmsModal} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {!bulkSmsResult ? (
+                <>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                  <textarea
+                    value={bulkSmsMessage}
+                    onChange={(e) => setBulkSmsMessage(e.target.value)}
+                    rows={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    placeholder="Type the SMS message to send to all selected users..."
+                  />
+                  <p className="text-xs text-gray-500 mt-1">{bulkSmsMessage.length} characters</p>
+                </>
+              ) : (
+                <div className="text-sm space-y-2">
+                  <p className="text-green-700 font-medium">✓ Sent to {bulkSmsResult.sent.length} recipient{bulkSmsResult.sent.length !== 1 ? 's' : ''}</p>
+                  {bulkSmsResult.failed.length > 0 && (
+                    <p className="text-red-600">✗ Failed for {bulkSmsResult.failed.length}: {bulkSmsResult.failed.join(', ')}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={closeBulkSmsModal}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                {bulkSmsResult ? 'Close' : 'Cancel'}
+              </button>
+              {!bulkSmsResult && (
+                <button
+                  onClick={handleSendBulkSms}
+                  disabled={sendingBulkSms || !bulkSmsMessage.trim() || selectedPhones.length === 0}
+                  className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  {sendingBulkSms ? 'Sending...' : `Send to ${selectedPhones.length}`}
+                </button>
+              )}
             </div>
           </div>
         </div>

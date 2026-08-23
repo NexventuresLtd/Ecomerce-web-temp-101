@@ -27,7 +27,6 @@ const AnimatedLoginPage: React.FC = () => {
     const [NewUSer, setNewUser] = useState()
     const [showSignupModal, setShowSignupModal] = useState(false);
     const [Passwordreset, setPasswordreset] = useState<boolean>(false);
-    const [isVerified, setIsVerified] = useState(false);
     const [formData, setFormData] = useState<FormData>({ email: '', password: '' });
     const [signupData, setSignupData] = useState<SignupFormData>({
         email: '',
@@ -385,8 +384,6 @@ const AnimatedLoginPage: React.FC = () => {
                     <>
                         {!showSignupModal &&
                             <Loginform
-                                isVerified={isVerified}
-                                setIsVerified={setIsVerified}
                                 handleLogin={handleLogin}
                                 handleGoogleLogin={handleGoogleLogin}
                                 setShowSignupModal={setShowSignupModal}
