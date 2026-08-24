@@ -251,7 +251,8 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
                             key={index}
                             ref={(el) => { inputRefs.current[index] = el; }}
                             type="text"
-                            inputMode="numeric"
+                            inputMode="text"
+                            autoCapitalize="characters"
                             pattern="[A-Z0-9]*"
                             value={digit}
                             onChange={(e) => handleChange(e, index)}

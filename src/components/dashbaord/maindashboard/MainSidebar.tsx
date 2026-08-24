@@ -20,7 +20,8 @@ import { useCurrentUser } from '../../../hooks/useCurrentUser';
 // Sidebar Component
 export const Sidebar: React.FC = () => {
     const { currentView, setCurrentView, isSidebarOpen, setSidebarOpen } = useAppContext();
-    const { role } = useCurrentUser();
+    const { role, user } = useCurrentUser();
+    const isSuperAdmin = !!user?.is_super_admin;
 
     const menuItems =
     role === "admin" ?
@@ -29,10 +30,11 @@ export const Sidebar: React.FC = () => {
         { id: 'products' as ViewType, label: 'Products', icon: Package },
         { id: 'categories' as ViewType, label: 'Categories', icon: Tag },
         // { id: 'report' as ViewType, label: 'Report', icon: Dock },
-        { id: 'users' as ViewType, label: 'Users', icon: Users },
+        // Users & Transactions carry sensitive/financial data — super admin only.
+        ...(isSuperAdmin ? [{ id: 'users' as ViewType, label: 'Users', icon: Users }] : []),
         { id: 'wishlists' as ViewType, label: 'Wishlists', icon: Heart },
         { id: 'carts' as ViewType, label: 'Carts', icon: ShoppingBag },
-        { id: 'orders' as ViewType, label: 'Transactions', icon: Receipt },
+        ...(isSuperAdmin ? [{ id: 'orders' as ViewType, label: 'Transactions', icon: Receipt }] : []),
         { id: 'deliveries' as ViewType, label: 'Deliveries', icon: Truck },
         { id: 'pickups' as ViewType, label: 'Pickups', icon: Building2 },
         { id: 'vlog' as ViewType, label: 'Vlog', icon: Video },

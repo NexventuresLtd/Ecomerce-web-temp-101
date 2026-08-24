@@ -15,6 +15,7 @@ import {
   X
 } from 'lucide-react';
 import { heroSliderService } from '../../../app/sliders/sliders';
+import { getAdminErrorMessage } from '../../../app/utils/getAdminErrorMessage';
 import type { HeroSlider } from '../../../types/sliders';
 
 // HeroSlider Form Component
@@ -393,7 +394,7 @@ const HeroSliderManager: React.FC = () => {
       setSliders(slidersData);
     } catch (error) {
       console.error('Error loading hero sliders:', error);
-      alert('Failed to load hero sliders');
+      alert(getAdminErrorMessage(error, 'Failed to load hero sliders'));
     } finally {
       setLoading(false);
     }

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import mainAxios from '../../Instance/mainAxios';
 import { notifyApi } from '../../app/notify';
+import { getAdminErrorMessage } from '../../app/utils/getAdminErrorMessage';
 
 
 // Define types based on your backend response
@@ -84,7 +85,7 @@ const UsersManagement = () => {
       setTotalUsers(response.data.total_users);
     } catch (err) {
       console.error('Error fetching users:', err);
-      setError('Failed to load users data');
+      setError(getAdminErrorMessage(err, 'Failed to load users data'));
     } finally {
       setLoading(false);
     }

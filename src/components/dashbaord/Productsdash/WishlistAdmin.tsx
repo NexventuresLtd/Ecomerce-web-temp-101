@@ -15,12 +15,14 @@ import {
   MessageCircle,
   MessageSquare,
   Download,
-  Filter
+  Filter,
+  Lock
 } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
 import { handleClickWhatsapp } from '../../../app/ProductWhasapp';
 import { notifyApi } from '../../../app/notify';
 import SmsComposeModal from './SmsComposeModal';
+import { getAdminErrorMessage } from '../../../app/utils/getAdminErrorMessage';
 
 // Import jsPDF and autoTable with proper types
 import jsPDF from 'jspdf';
@@ -72,6 +74,7 @@ const WishlistAdmin: React.FC = () => {
   const [wishlists, setWishlists] = useState<Wishlist[]>([]);
   const [filteredWishlists, setFilteredWishlists] = useState<Wishlist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
@@ -100,6 +103,7 @@ const WishlistAdmin: React.FC = () => {
   const fetchWishlists = async (page: number = 1) => {
     try {
       setLoading(true);
+      setError(null);
       const skip = (page - 1) * itemsPerPage;
       const response = await mainAxios.get(`/wishlist/all?skip=${skip}&limit=${itemsPerPage}`);
       setWishlists(response.data.wishlists || []);
@@ -109,8 +113,9 @@ const WishlistAdmin: React.FC = () => {
         total_value_all: response.data.total_value_all || 0,
         active_users_count: response.data.active_users_count || 0,
       });
-    } catch (error) {
-      console.error('Error fetching wishlists:', error);
+    } catch (err) {
+      console.error('Error fetching wishlists:', err);
+      setError(getAdminErrorMessage(err, 'Failed to load wishlists'));
     } finally {
       setLoading(false);
     }
@@ -504,6 +509,22 @@ const WishlistAdmin: React.FC = () => {
       <div className="flex items-center justify-center h-64">
         <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
         <span className="ml-2 text-gray-600">Loading wishlists...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center">
+        <Lock className="w-10 h-10 text-red-400 mb-3" />
+        <p className="text-gray-700 font-medium">{error}</p>
+        <button
+          onClick={() => fetchWishlists(currentPage)}
+          className="mt-4 flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Retry
+        </button>
       </div>
     );
   }

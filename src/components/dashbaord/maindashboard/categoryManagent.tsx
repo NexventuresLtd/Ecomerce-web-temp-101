@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, ImageIcon, Grid, List, Filter } from 'lucide-react';
 import type { Category, MainCategory, ProductCategory, SubCategory } from '../../../types/dashboard/category';
 import { categoryApi } from '../../../app/dashcategory/category';
+import { getAdminErrorMessage } from '../../../app/utils/getAdminErrorMessage';
 import CategoryItem from './CategoryItem';
 import CategoryModal from './CategoryManageModal';
 import ViewModal from './ViewModal';
@@ -79,7 +80,7 @@ const CategoriesView: React.FC = () => {
             
         } catch (error) {
             console.error('Failed to load categories:', error);
-            setError('Failed to load categories. Please try again.');
+            setError(getAdminErrorMessage(error, 'Failed to load categories. Please try again.'));
         } finally {
             setLoading(false);
         }

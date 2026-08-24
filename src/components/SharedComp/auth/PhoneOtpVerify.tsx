@@ -107,10 +107,13 @@ const PhoneOtpVerify: React.FC<PhoneOtpVerifyProps> = ({
             <form onSubmit={handleSubmit} className="mb-6">
                 <input
                     type="text"
-                    inputMode="numeric"
+                    inputMode="text"
+                    autoCapitalize="characters"
+                    autoCorrect="off"
+                    spellCheck={false}
                     value={otpCode}
-                    onChange={(e) => { setOtpCode(e.target.value); setError(''); }}
-                    placeholder="Enter 6-digit code"
+                    onChange={(e) => { setOtpCode(e.target.value.toUpperCase()); setError(''); }}
+                    placeholder="Enter 6-character code"
                     maxLength={6}
                     disabled={isLoading || success}
                     className="w-full text-center text-2xl tracking-[0.5em] font-semibold px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent mb-4"

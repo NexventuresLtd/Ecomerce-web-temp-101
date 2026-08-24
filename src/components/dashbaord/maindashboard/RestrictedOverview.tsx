@@ -1,21 +1,22 @@
 import { useState, useEffect } from 'react';
 import { DollarSign } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
-import UsersManagement from '../UsersManagement';
+import { getAdminErrorMessage } from '../../../app/utils/getAdminErrorMessage';
 
 const RWF = new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', minimumFractionDigits: 0 });
 
-// Shown to plain "admin" accounts — the full stats/notifications dashboard
-// is reserved for the super admin. This admin only gets to see total
-// revenue and manage user roles.
+// Shown to plain "admin" accounts — the full stats/notifications dashboard,
+// user management, and transactions are all reserved for the super admin.
+// This admin only gets to see total revenue.
 const RestrictedOverview = () => {
     const [revenue, setRevenue] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         mainAxios.get('/dashboard/revenue-summary')
             .then(res => setRevenue(res.data?.total_revenue ?? 0))
-            .catch(() => setRevenue(0))
+            .catch(err => setError(getAdminErrorMessage(err, 'Failed to load revenue')))
             .finally(() => setLoading(false));
     }, []);
 
@@ -29,13 +30,12 @@ const RestrictedOverview = () => {
                     <div>
                         <p className="text-sm text-gray-500">Total Revenue</p>
                         <p className="text-2xl font-bold text-gray-900">
-                            {loading ? '...' : RWF.format(revenue || 0)}
+                            {loading ? '...' : error ? '—' : RWF.format(revenue || 0)}
                         </p>
                     </div>
                 </div>
+                {error && <p className="text-sm text-red-600 mt-3">{error}</p>}
             </div>
-
-            <UsersManagement />
         </div>
     );
 };

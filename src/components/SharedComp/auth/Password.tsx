@@ -194,16 +194,19 @@ const PasswordReset: React.FC<PasswordResetProps> = ({
             {step === 'otp' && (
                 <>
                     <p className="text-gray-600 text-center mb-6">
-                        We've sent a 6-digit code to <span className="font-medium">{email}</span> (and your phone, if on file).
+                        We've sent a 6-character code to <span className="font-medium">{email}</span> (and your phone, if on file).
                     </p>
 
                     <form onSubmit={handleVerifyOtp}>
                         <input
                             type="text"
-                            inputMode="numeric"
+                            inputMode="text"
+                            autoCapitalize="characters"
+                            autoCorrect="off"
+                            spellCheck={false}
                             value={otpCode}
-                            onChange={(e) => { setOtpCode(e.target.value); setError(''); }}
-                            placeholder="Enter 6-digit code"
+                            onChange={(e) => { setOtpCode(e.target.value.toUpperCase()); setError(''); }}
+                            placeholder="Enter 6-character code"
                             maxLength={6}
                             className="w-full text-center text-2xl tracking-[0.5em] font-semibold px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent mb-4"
                         />

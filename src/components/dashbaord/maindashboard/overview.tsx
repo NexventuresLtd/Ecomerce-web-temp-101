@@ -34,6 +34,7 @@ import {
 } from 'recharts';
 
 import mainAxios from '../../../Instance/mainAxios';
+import { getAdminErrorMessage } from '../../../app/utils/getAdminErrorMessage';
 import { useAppContext } from '../../../contexts/dashbaord/context';
 import { paymentService } from '../../../app/products/paymentService';
 
@@ -148,7 +149,7 @@ const umukameziDashboard = () => {
       animateValues(data, txData.summary);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      setError('Failed to load dashboard data');
+      setError(getAdminErrorMessage(err, 'Failed to load dashboard data'));
     } finally {
       setLoading(false);
     }
