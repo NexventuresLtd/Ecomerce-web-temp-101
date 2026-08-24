@@ -31,6 +31,7 @@ interface User {
   provider: string;
   is_active: boolean;
   is_verified: boolean;
+  is_super_admin: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -180,6 +181,28 @@ const UsersManagement = () => {
     } catch (err) {
       console.error('Error updating user role:', err);
       setError('Failed to update user role');
+    } finally {
+      setUpdatingUser(null);
+    }
+  };
+
+  // Promote/demote an admin to/from super admin (super admin only, enforced server-side)
+  const updateUserSuperAdmin = async (userId: number, makeSuperAdmin: boolean) => {
+    try {
+      setUpdatingUser(userId);
+      await mainAxios.put(`/auth/users/${userId}`, {
+        is_super_admin: makeSuperAdmin
+      });
+
+      setUsers(users.map(user =>
+        user.id === userId ? { ...user, is_super_admin: makeSuperAdmin } : user
+      ));
+      if (selectedUser?.id === userId) {
+        setSelectedUser({ ...selectedUser, is_super_admin: makeSuperAdmin });
+      }
+    } catch (err) {
+      console.error('Error updating super admin status:', err);
+      setError(getAdminErrorMessage(err, 'Failed to update super admin status'));
     } finally {
       setUpdatingUser(null);
     }
@@ -514,6 +537,20 @@ const UsersManagement = () => {
                       {updatingUser === user.id && (
                         <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 ml-1 inline-block"></div>
                       )}
+                      {user.role === 'admin' && (
+                        <button
+                          onClick={() => updateUserSuperAdmin(user.id, !user.is_super_admin)}
+                          disabled={updatingUser === user.id}
+                          className={`block mt-1 text-xs px-2 py-0.5 rounded-full border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                            user.is_super_admin
+                              ? 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100'
+                              : 'text-gray-500 bg-white border-gray-200 hover:bg-gray-50'
+                          }`}
+                          title={user.is_super_admin ? 'Click to remove super admin' : 'Click to make super admin'}
+                        >
+                          {user.is_super_admin ? '★ Super Admin' : '+ Make Super Admin'}
+                        </button>
+                      )}
                     </td>
 
                     {/* Status */}
@@ -709,6 +746,27 @@ const UsersManagement = () => {
                     <span className="ml-2 text-gray-900">{selectedUser.provider}</span>
                   </div>
                 </div>
+
+                {selectedUser.role === 'admin' && (
+                  <div>
+                    <span className="font-medium text-gray-700">Super Admin:</span>
+                    <button
+                      onClick={() => updateUserSuperAdmin(selectedUser.id, !selectedUser.is_super_admin)}
+                      disabled={updatingUser === selectedUser.id}
+                      className={`ml-2 px-3 py-1 rounded-full border text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                        selectedUser.is_super_admin
+                          ? 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100'
+                          : 'text-gray-600 bg-white border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {updatingUser === selectedUser.id
+                        ? 'Updating...'
+                        : selectedUser.is_super_admin
+                          ? '★ Yes — click to remove'
+                          : 'No — click to promote'}
+                    </button>
+                  </div>
+                )}
 
                 {selectedUser.phone && (
                   <div>

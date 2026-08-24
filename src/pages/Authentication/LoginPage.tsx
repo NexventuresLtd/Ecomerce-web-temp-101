@@ -181,12 +181,13 @@ const AnimatedLoginPage: React.FC = () => {
 
                 let response
                 if (registerType.type == "GOOGLE") {
+                    // Google's OAuth response never includes a phone number or a
+                    // password — don't fake one with the email address (that
+                    // corrupted the phone field and broke SMS sends for these users).
                     response = await mainAxios.post(`/auth/signUp-social-auth?provider=${registerType.type}&provider_id=${registerType.provider}`, {
                         "email": registerType.data.email,
                         "fname": registerType.data.given_name,
                         "lname": registerType.data.family_name,
-                        "password": registerType.data.email,
-                        "phone": registerType.data.email,
                         "profile_pic": registerType.data.picture
 
                     });
