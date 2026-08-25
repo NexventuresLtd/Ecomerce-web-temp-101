@@ -12,6 +12,7 @@ import {
     Truck,
     Building2,
     Megaphone,
+    UserCircle,
 } from 'lucide-react';
 import type { ViewType } from '../../../types/dashboard/mainDashbaord';
 import { useAppContext } from '../../../contexts/dashbaord/context';
@@ -41,6 +42,7 @@ export const Sidebar: React.FC = () => {
         { id: 'slide' as ViewType, label: 'Slider', icon: Sliders },
         { id: 'authSliders' as ViewType, label: 'Login/Register Slider', icon: Sliders },
         { id: 'announcements' as ViewType, label: 'Announcements', icon: Megaphone },
+        { id: 'profile' as ViewType, label: 'Profile', icon: UserCircle },
     ]:
     [
         { id: 'dashboard' as ViewType, label: 'Dashboard', icon: LayoutDashboard },
@@ -49,6 +51,7 @@ export const Sidebar: React.FC = () => {
         { id: 'wishlists' as ViewType, label: 'Wishlists', icon: Heart },
         { id: 'carts' as ViewType, label: 'Carts', icon: ShoppingBag },
         { id: 'vlog' as ViewType, label: 'Vlog', icon: Video },
+        { id: 'profile' as ViewType, label: 'Profile', icon: UserCircle },
     ];
 
     const handleItemClick = (viewId: ViewType) => {

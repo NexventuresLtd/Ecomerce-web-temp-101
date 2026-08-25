@@ -23,6 +23,7 @@ const Header: React.FC = () => {
       case 'announcements': return 'Announcements';
       case 'slide': return 'Hero Slider';
       case 'authSliders': return 'Login/Register Slider';
+      case 'profile': return 'Profile';
       default: return 'Dashboard';
     }
   };

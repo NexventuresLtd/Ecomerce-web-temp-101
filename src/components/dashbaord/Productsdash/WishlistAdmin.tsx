@@ -25,7 +25,6 @@ import SmsComposeModal from './SmsComposeModal';
 import { getAdminErrorMessage } from '../../../app/utils/getAdminErrorMessage';
 
 import { createReportDoc, addReportFooter, drawSummaryBand, REPORT_TABLE_THEME } from '../../../app/utils/pdfReport';
-import { createReportDoc, addReportFooter, drawSummaryBand, REPORT_TABLE_THEME } from '../../../app/utils/pdfReport';
 
 interface ProductColor {
   name: string;
@@ -150,10 +149,6 @@ const WishlistAdmin: React.FC = () => {
         ? `Date Range: ${startDate ? new Date(startDate).toLocaleDateString() : 'Beginning'} - ${endDate ? new Date(endDate).toLocaleDateString() : 'Present'}`
         : undefined;
       const doc = await createReportDoc('WISHLIST MANAGEMENT REPORT', dateRangeText);
-      const dateRangeText = (startDate || endDate)
-        ? `Date Range: ${startDate ? new Date(startDate).toLocaleDateString() : 'Beginning'} - ${endDate ? new Date(endDate).toLocaleDateString() : 'Present'}`
-        : undefined;
-      const doc = await createReportDoc('WISHLIST MANAGEMENT REPORT', dateRangeText);
       const pageWidth = doc.internal.pageSize.getWidth();
 
       const totalWishlists = filteredWishlists.length;
@@ -161,12 +156,6 @@ const WishlistAdmin: React.FC = () => {
       const totalValue = filteredWishlists.reduce((sum, w) => sum + w.total_price, 0);
       const activeUsers = new Set(filteredWishlists.map(w => w.user_id)).size;
 
-      let yPosition = drawSummaryBand(doc, 48, [
-        { label: 'Total Wishlists', value: totalWishlists.toString() },
-        { label: 'Total Items', value: totalItems.toString() },
-        { label: 'Total Value', value: formatCurrency(totalValue) },
-        { label: 'Active Users', value: activeUsers.toString() },
-      ]);
       let yPosition = drawSummaryBand(doc, 48, [
         { label: 'Total Wishlists', value: totalWishlists.toString() },
         { label: 'Total Items', value: totalItems.toString() },
@@ -193,11 +182,9 @@ const WishlistAdmin: React.FC = () => {
 
         doc.autoTable({
           ...REPORT_TABLE_THEME,
-          ...REPORT_TABLE_THEME,
           startY: yPosition,
           head: [headers],
           body: tableData,
-          margin: { left: 14, right: 14 }
           margin: { left: 14, right: 14 }
         });
       } else {
@@ -206,7 +193,6 @@ const WishlistAdmin: React.FC = () => {
         doc.text('No wishlist data available for the selected criteria.', pageWidth / 2, yPosition + 20, { align: 'center' });
       }
 
-      addReportFooter(doc);
       addReportFooter(doc);
 
       const fileName = `wishlists-report-${new Date().toISOString().split('T')[0]}.pdf`;
@@ -222,7 +208,6 @@ const WishlistAdmin: React.FC = () => {
   const generateDetailedPDFReport = async () => {
     setGeneratingReport(true);
     try {
-      const doc = await createReportDoc('DETAILED WISHLIST REPORT');
       const doc = await createReportDoc('DETAILED WISHLIST REPORT');
       const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -292,7 +277,6 @@ const WishlistAdmin: React.FC = () => {
 
           doc.autoTable({
             ...REPORT_TABLE_THEME,
-            ...REPORT_TABLE_THEME,
             startY: yPosition,
             head: [['Product Name', 'Quantity', 'Unit Price', 'Total', 'Delivery']],
             body: itemData,
@@ -317,7 +301,6 @@ const WishlistAdmin: React.FC = () => {
         }
       });
 
-      addReportFooter(doc);
       addReportFooter(doc);
 
       const fileName = `detailed-wishlists-report-${new Date().toISOString().split('T')[0]}.pdf`;

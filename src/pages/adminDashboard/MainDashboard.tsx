@@ -18,6 +18,7 @@ import AuthSliderManager from '../../components/dashbaord/slider/authSliderManag
 import AdminOrders from '../../components/dashbaord/Productsdash/AdminOrders';
 import AdminDeliveries from '../../components/dashbaord/Productsdash/AdminDeliveries';
 import AnnouncementManager from '../../components/dashbaord/AnnouncementManager';
+import AdminProfile from '../../components/dashbaord/maindashboard/AdminProfile';
 
 // Main Content Component
 const MainContent: React.FC = () => {
@@ -57,6 +58,8 @@ const MainContent: React.FC = () => {
                 return <AuthSliderManager/>
             case "announcements":
                 return <AnnouncementManager />
+            case "profile":
+                return <AdminProfile />
             default:
                 return <DashboardHome />;
         }

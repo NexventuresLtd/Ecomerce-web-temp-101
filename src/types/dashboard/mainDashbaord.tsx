@@ -13,7 +13,8 @@ export type ViewType =
   | "carts"
   | "slide"
   | "authSliders"
-  | "announcements";
+  | "announcements"
+  | "profile";
 
 // Context
 export interface AppContextType {
