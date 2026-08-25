@@ -110,11 +110,11 @@ const LoginPage: React.FC = () => {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-full rounded-3xl bg-white/10 backdrop-blur-2xl shadow-2xl p-8 sm:p-10"
+                className="w-full rounded-3xl bg-white backdrop-blur-2xl shadow-2xl p-8 sm:p-10"
             >
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-                    <p className="text-white/60">Sign in to continue to Umukamezi</p>
+                    <h1 className="text-3xl font-bold text-slate-800 mb-2">Welcome Back</h1>
+                    <p className="text-slate-600">Sign in to continue to Umukamezi</p>
                 </div>
 
                 <AnimatePresence>
@@ -123,7 +123,7 @@ const LoginPage: React.FC = () => {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
-                            className="mb-5 p-3 rounded-xl bg-red-500/15 text-red-200 flex items-start gap-2 text-sm"
+                            className="mb-5 p-3 rounded-xl bg-red-500/30 text-red-900 flex items-start gap-2 text-sm"
                         >
                             <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
                             <span>{errors.general}</span>
@@ -133,47 +133,47 @@ const LoginPage: React.FC = () => {
 
                 <form onSubmit={handleLogin} className="space-y-5">
                     <div>
-                        <label className="block text-sm font-medium text-white/70 mb-2">Email or Phone Number</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Email or Phone Number</label>
                         <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-700" />
                             <input
                                 type="text"
                                 value={formData.identifier}
                                 onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
-                                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/10 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-white/30 transition-all"
+                                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/10 text-slate-700 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                                 placeholder="you@example.com or +250781234567"
                                 autoComplete="username"
                             />
                         </div>
-                        {errors.identifier && <p className="text-red-300 text-sm mt-1.5">{errors.identifier}</p>}
+                        {errors.identifier && <p className="text-red-500 text-sm mt-1.5">{errors.identifier}</p>}
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-white/70 mb-2">Password</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Password</label>
                         <div className="relative">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-700" />
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                className="w-full pl-12 pr-12 py-3.5 rounded-xl bg-white/10 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-white/30 transition-all"
+                                className="w-full pl-12 pr-12 py-3.5 rounded-xl bg-white/10 text-slate-700 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                                 placeholder="Enter your password"
                                 autoComplete="current-password"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-black/40 hover:text-black/70"
                             >
                                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                             </button>
                         </div>
-                        {errors.password && <p className="text-red-300 text-sm mt-1.5">{errors.password}</p>}
+                        {errors.password && <p className="text-red-500 text-sm mt-1.5">{errors.password}</p>}
                         <div className="flex justify-end mt-2">
                             <button
                                 type="button"
                                 onClick={() => setShowForgotPassword(true)}
-                                className="text-white/60 hover:text-white text-sm transition-colors"
+                                className="text-slate-700 hover:text-slate-900 text-sm transition-colors"
                             >
                                 Forgot Password?
                             </button>
@@ -185,7 +185,7 @@ const LoginPage: React.FC = () => {
                         whileTap={{ scale: 0.98 }}
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-secondary hover:bg-secondary-dark text-white font-semibold py-3.5 rounded-xl transition-all flex items-center justify-center disabled:opacity-60"
+                        className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3.5 rounded-xl transition-all flex items-center justify-center disabled:opacity-60"
                     >
                         {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
                     </motion.button>
@@ -196,17 +196,17 @@ const LoginPage: React.FC = () => {
                         <div className="w-full border-t border-white/15" />
                     </div>
                     <div className="relative flex justify-center text-sm">
-                        <span className="px-3 bg-transparent text-white/50">or continue with</span>
+                        <span className="px-3 bg-transparent text-slate-700">or continue with</span>
                     </div>
                 </div>
 
                 <GoogleLoginButton title="Sign In With" handelGoogleLogin={handleGoogleLogin} />
 
-                <p className="text-center text-white/60 mt-7">
+                <p className="text-center text-slate-700 mt-7">
                     Don't have an account?{' '}
-                    <a href="/register" className="text-white font-medium hover:underline">Create one</a>
+                    <a href="/register" className="text-blue-500 font-medium hover:underline">Create one</a>
                 </p>
-                <a href="/" className="block text-center text-white/40 hover:text-white/70 text-sm mt-3 transition-colors">
+                <a href="/" className="block text-center text-slate-700/40 hover:text-slate-700/70 text-sm mt-3 transition-colors">
                     Back to shopping
                 </a>
             </motion.div>

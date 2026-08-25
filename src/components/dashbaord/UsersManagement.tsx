@@ -281,22 +281,7 @@ const UsersManagement = () => {
   const startItem = currentPage * itemsPerPage + 1;
   const endItem = Math.min((currentPage + 1) * itemsPerPage, totalUsers);
 
-  // Export users data
-  const exportUsers = () => {
-    const exportData = {
-      timestamp: new Date().toISOString(),
-      total_users: totalUsers,
-      users: filteredUsers
-    };
 
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `users-export-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   // Get status color
   const getStatusColor = (isActive: boolean) => {

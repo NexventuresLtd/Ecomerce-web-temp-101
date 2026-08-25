@@ -117,12 +117,12 @@ const RegisterPage: React.FC = () => {
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="w-full rounded-3xl bg-white/10 backdrop-blur-2xl shadow-2xl p-10 text-center"
+                    className="w-full rounded-3xl bg-slate-100 backdrop-blur-2xl shadow-2xl p-10 text-center"
                 >
                     <CheckCircle2 className="w-14 h-14 text-emerald-300 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold text-white mb-2">Account Verified!</h2>
-                    <p className="text-white/60 mb-6">You can now sign in to your account.</p>
-                    <a href="/login" className="inline-block px-6 py-3 bg-secondary hover:bg-secondary-dark text-white font-semibold rounded-xl transition-colors">
+                    <h2 className="text-2xl font-bold text-slate-700 mb-2">Account Verified!</h2>
+                    <p className="text-slate-700/60 mb-6">You can now sign in to your account.</p>
+                    <a href="/login" className="inline-block px-6 py-3 bg-secondary hover:bg-secondary-dark text-slate-700 font-semibold rounded-xl transition-colors">
                         Go to Sign In
                     </a>
                 </motion.div>
@@ -162,11 +162,11 @@ const RegisterPage: React.FC = () => {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-full rounded-3xl bg-white/10 backdrop-blur-2xl shadow-2xl p-8 sm:p-10"
+                className="w-full rounded-3xl bg-white backdrop-blur-2xl shadow-2xl p-8 sm:p-10"
             >
                 <div className="text-center mb-7">
-                    <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-                    <p className="text-white/60">Join Umukamezi in a few quick steps</p>
+                    <h1 className="text-3xl font-bold text-slate-800 mb-2">Create Account</h1>
+                    <p className="text-slate-600">Join Umukamezi in a few quick steps</p>
                 </div>
 
                 <AnimatePresence>
@@ -175,7 +175,7 @@ const RegisterPage: React.FC = () => {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
-                            className="mb-5 p-3 rounded-xl bg-red-500/15 text-red-200 flex items-start gap-2 text-sm"
+                            className="mb-5 p-3 rounded-xl bg-red-500/30 text-red-900 flex items-start gap-2 text-sm"
                         >
                             <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
                             <span>{errors.general}</span>
@@ -186,7 +186,7 @@ const RegisterPage: React.FC = () => {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
-                            className="mb-5 p-3 rounded-xl bg-emerald-500/15 text-emerald-200 flex items-start gap-2 text-sm"
+                            className="mb-5 p-3 rounded-xl bg-emerald-500/30 text-emerald-900 flex items-start gap-2 text-sm"
                         >
                             <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0" />
                             <span>{successMessage}</span>
@@ -197,66 +197,66 @@ const RegisterPage: React.FC = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-sm font-medium text-white/70 mb-2">First Name</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">First Name</label>
                             <div className="relative">
-                                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700" />
                                 <input
                                     type="text"
                                     value={formData.fname}
                                     onChange={(e) => handleChange('fname', e.target.value)}
-                                    className="w-full pl-10 pr-3 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-white/30 text-sm"
+                                    className="w-full pl-10 pr-3 py-3 rounded-xl bg-slate-100 text-slate-700 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-blue-950 transition-all"
                                     placeholder="First name"
                                 />
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-white/70 mb-2">Last Name</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Last Name</label>
                             <input
                                 type="text"
                                 value={formData.lname}
                                 onChange={(e) => handleChange('lname', e.target.value)}
-                                className="w-full px-3.5 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-white/30 text-sm"
+                                className="w-full px-3.5 py-3 rounded-xl bg-slate-100 text-slate-700 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-blue-950 transition-all"
                                 placeholder="Last name"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-white/70 mb-2">Email Address</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
                         <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-700" />
                             <input
                                 type="email"
                                 value={formData.email}
                                 onChange={(e) => handleChange('email', e.target.value)}
-                                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/10 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-white/30"
+                                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-100 text-slate-700 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-blue-950 transition-all"
                                 placeholder="you@example.com"
                             />
                         </div>
-                        {errors.email && <p className="text-red-300 text-sm mt-1.5">{errors.email}</p>}
+                        {errors.email && <p className="text-red-500 text-sm mt-1.5">{errors.email}</p>}
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-white/70 mb-2">Phone Number</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Phone Number</label>
                         <div className="relative">
-                            <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                            <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-800" />
                             <input
                                 type="tel"
                                 value={formData.phone}
                                 onChange={(e) => handleChange('phone', e.target.value)}
-                                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/10 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-white/30"
+                                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-100 text-slate-700 placeholder-slate-400 outline-none focus:ring-2 focus:ring-white/30"
                                 placeholder="+250781234567"
                             />
                         </div>
-                        {errors.phone && <p className="text-red-300 text-sm mt-1.5">{errors.phone}</p>}
+                        {errors.phone && <p className="text-red-500 text-sm mt-1.5">{errors.phone}</p>}
                         {!formData.email && !formData.phone && (
-                            <p className="text-white/40 text-xs mt-1.5">Provide at least an email or a phone number.</p>
+                            <p className="text-slate-800 text-xs mt-1.5">Provide at least an email or a phone number.</p>
                         )}
                     </div>
 
                     {availableVerifyOptions.length > 1 && (
                         <div>
-                            <label className="block text-sm font-medium text-white/70 mb-2">Verify my account via</label>
+                            <label className="block text-sm font-medium text-slate-700/70 mb-2">Verify my account via</label>
                             <div className="flex gap-2">
                                 {availableVerifyOptions.map((opt) => (
                                     <button
@@ -264,8 +264,8 @@ const RegisterPage: React.FC = () => {
                                         type="button"
                                         onClick={() => setFormData({ ...formData, verify_via: opt.value })}
                                         className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${formData.verify_via === opt.value
-                                                ? 'bg-secondary text-white'
-                                                : 'bg-white/10 text-white/70 hover:bg-white/20'
+                                                ? 'bg-secondary text-slate-700'
+                                                : 'bg-slate-100 text-slate-700/70 hover:bg-white/20'
                                             }`}
                                     >
                                         {opt.label}
@@ -277,47 +277,47 @@ const RegisterPage: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-white/70 mb-2">Password</label>
+                            <label className="block text-sm font-medium text-slate-700/70 mb-2">Password</label>
                             <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-800" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     value={formData.password}
                                     onChange={(e) => handleChange('password', e.target.value)}
-                                    className="w-full pl-12 pr-12 py-3.5 rounded-xl bg-white/10 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-white/30"
+                                    className="w-full pl-12 pr-12 py-3.5 rounded-xl bg-slate-100 text-slate-700 placeholder-slate-400 outline-none focus:ring-2 focus:ring-white/30"
                                     placeholder="At least 6 characters"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-800 hover:text-slate-700/70"
                                 >
                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
                             </div>
-                            {errors.password && <p className="text-red-300 text-sm mt-1.5">{errors.password}</p>}
+                            {errors.password && <p className="text-red-500 text-sm mt-1.5">{errors.password}</p>}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-white/70 mb-2">Confirm Password</label>
+                            <label className="block text-sm font-medium text-slate-700/70 mb-2">Confirm Password</label>
                             <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-800" />
                                 <input
                                     type={showConfirmPassword ? 'text' : 'password'}
                                     value={formData.confirmPassword}
                                     onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                                    className="w-full pl-12 pr-12 py-3.5 rounded-xl bg-white/10 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-white/30"
+                                    className="w-full pl-12 pr-12 py-3.5 rounded-xl bg-slate-100 text-slate-700 placeholder-slate-400 outline-none focus:ring-2 focus:ring-white/30"
                                     placeholder="Re-enter your password"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-800 hover:text-slate-700/70"
                                 >
                                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
                             </div>
-                            {errors.confirmPassword && <p className="text-red-300 text-sm mt-1.5">{errors.confirmPassword}</p>}
+                            {errors.confirmPassword && <p className="text-red-500 text-sm mt-1.5">{errors.confirmPassword}</p>}
                         </div>
                     </div>
 
@@ -326,7 +326,7 @@ const RegisterPage: React.FC = () => {
                         whileTap={{ scale: 0.98 }}
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-secondary hover:bg-secondary-dark text-white font-semibold py-3.5 rounded-xl transition-all flex items-center justify-center disabled:opacity-60 mt-2"
+                        className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3.5 rounded-xl transition-all flex items-center justify-center disabled:opacity-60 mt-2"
                     >
                         {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
                     </motion.button>
@@ -337,17 +337,17 @@ const RegisterPage: React.FC = () => {
                         <div className="w-full border-t border-white/15" />
                     </div>
                     <div className="relative flex justify-center text-sm">
-                        <span className="px-3 bg-transparent text-white/50">or continue with</span>
+                        <span className="px-3 bg-transparent text-slate-700/50">or continue with</span>
                     </div>
                 </div>
 
                 <GoogleLoginButton title="Sign Up With" handelGoogleLogin={handleGoogleSignup} />
 
-                <p className="text-center text-white/60 mt-7">
+                <p className="text-center text-slate-700/60 mt-7">
                     Already have an account?{' '}
-                    <a href="/login" className="text-white font-medium hover:underline">Sign in</a>
+                    <a href="/login" className="text-slate-700 font-medium hover:underline">Sign in</a>
                 </p>
-                <a href="/" className="block text-center text-white/40 hover:text-white/70 text-sm mt-3 transition-colors">
+                <a href="/" className="block text-center text-slate-800 hover:text-slate-700/70 text-sm mt-3 transition-colors">
                     Back to Home
                 </a>
             </motion.div>
