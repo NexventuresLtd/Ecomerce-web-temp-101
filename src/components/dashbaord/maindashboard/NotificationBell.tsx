@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, UserPlus, ShoppingCart, CreditCard } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
+import { useAppContext } from '../../../contexts/dashbaord/context';
+import type { ViewType } from '../../../types/dashboard/mainDashbaord';
 
 interface Notification {
     type: 'new_user' | 'new_cart' | 'payment';
@@ -8,6 +10,13 @@ interface Notification {
     message: string;
     at: string | null;
 }
+
+// Which admin tab each notification type should jump to on click.
+const TARGET_VIEW: Record<Notification['type'], ViewType> = {
+    new_user: 'users',
+    new_cart: 'carts',
+    payment: 'orders',
+};
 
 const DOT_COLOR: Record<Notification['color'], string> = {
     blue: 'bg-blue-500',
@@ -30,6 +39,12 @@ const NotificationBell = () => {
     const [open, setOpen] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
     const ref = useRef<HTMLDivElement>(null);
+    const { setCurrentView } = useAppContext();
+
+    const handleNotificationClick = (n: Notification) => {
+        setOpen(false);
+        setCurrentView?.(TARGET_VIEW[n.type]);
+    };
 
     const load = async () => {
         try {
@@ -94,17 +109,22 @@ const NotificationBell = () => {
                             {notifications.map((n, i) => {
                                 const Icon = ICON[n.type];
                                 return (
-                                    <li key={i} className="px-4 py-3 flex items-start gap-3 hover:bg-gray-50">
-                                        <span className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${DOT_COLOR[n.color]}`} />
-                                        <Icon size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                                        <div className="min-w-0">
-                                            <p className="text-sm text-gray-800 truncate">{n.message}</p>
-                                            {n.at && (
-                                                <p className="text-xs text-gray-400 mt-0.5">
-                                                    {new Date(n.at).toLocaleString()}
-                                                </p>
-                                            )}
-                                        </div>
+                                    <li key={i}>
+                                        <button
+                                            onClick={() => handleNotificationClick(n)}
+                                            className="w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-gray-50 transition-colors"
+                                        >
+                                            <span className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${DOT_COLOR[n.color]}`} />
+                                            <Icon size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                                            <div className="min-w-0">
+                                                <p className="text-sm text-gray-800 truncate">{n.message}</p>
+                                                {n.at && (
+                                                    <p className="text-xs text-gray-400 mt-0.5">
+                                                        {new Date(n.at).toLocaleString()}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </button>
                                     </li>
                                 );
                             })}

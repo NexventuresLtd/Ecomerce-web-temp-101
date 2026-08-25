@@ -14,4 +14,10 @@ export const notifyApi = {
     const response = await mainAxios.post('/notify/sms/bulk', { phones, message });
     return response.data;
   },
+
+  // Admin: send an ad-hoc email to a single user — the email sibling of sendSms.
+  sendEmail: async (email: string, subject: string, message: string, recipientName = ''): Promise<{ message: string }> => {
+    const response = await mainAxios.post('/notify/email', { email, subject, message, recipient_name: recipientName });
+    return response.data;
+  },
 };

@@ -1,7 +1,8 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import HomePage from "./pages/mainPages/HomePage";
 import ScrollToHash from "./hooks/ScrollController";
-import AnimatedLoginPage from "./pages/Authentication/LoginPage";
+import LoginPage from "./pages/Authentication/Login";
+import RegisterPage from "./pages/Authentication/Register";
 import { getUserInfo } from "./app/Localstorage";
 import { useCurrentUser } from "./hooks/useCurrentUser";
 import ViewProductDetails from "./pages/mainPages/ViewProductDetails";
@@ -96,12 +97,18 @@ export default function App() {
             <Route path="/vlog" element={<VlogPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route
-              path="/authentication"
-              element={getUserInfo ? <HomePage /> : <AnimatedLoginPage />}
+              path="/login"
+              element={getUserInfo ? <HomePage /> : <LoginPage />}
             />
             <Route
+              path="/register"
+              element={getUserInfo ? <HomePage /> : <RegisterPage />}
+            />
+            {/* Legacy combined auth page — kept as a redirect so old links/bookmarks still work */}
+            <Route path="/authentication" element={<Navigate to="/login" replace />} />
+            <Route
               path="/admin-dashboard"
-              element={getUserInfo ? liveRole === "admin" ? <MainContent /> : <NotAuthorized /> : <AnimatedLoginPage />}
+              element={getUserInfo ? liveRole === "admin" ? <MainContent /> : <NotAuthorized /> : <LoginPage />}
             />
             <Route path="/test" element={<MainContent />} />
             <Route path="*" element={<NotFound />} />

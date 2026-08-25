@@ -39,6 +39,7 @@ export const Sidebar: React.FC = () => {
         { id: 'pickups' as ViewType, label: 'Pickups', icon: Building2 },
         { id: 'vlog' as ViewType, label: 'Vlog', icon: Video },
         { id: 'slide' as ViewType, label: 'Slider', icon: Sliders },
+        { id: 'authSliders' as ViewType, label: 'Login/Register Slider', icon: Sliders },
         { id: 'announcements' as ViewType, label: 'Announcements', icon: Megaphone },
     ]:
     [

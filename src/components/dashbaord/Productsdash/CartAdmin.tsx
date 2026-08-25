@@ -23,21 +23,7 @@ import { notifyApi } from '../../../app/notify';
 import SmsComposeModal from './SmsComposeModal';
 import { getAdminErrorMessage } from '../../../app/utils/getAdminErrorMessage';
 
-// Import jsPDF and autoTable with proper types
-import jsPDF from 'jspdf';
-
-// Import autoTable function separately
-import 'jspdf-autotable';
-
-// Extend jsPDF type to include autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-    lastAutoTable?: {
-      finalY: number;
-    };
-  }
-}
+import { createReportDoc, addReportFooter, drawSummaryBand, REPORT_TABLE_THEME } from '../../../app/utils/pdfReport';
 
 interface CartItem {
   id: number;
@@ -156,41 +142,13 @@ const CartAdmin: React.FC = () => {
   const generatePDFReport = async () => {
     setGeneratingReport(true);
     try {
-      // Create new PDF document
-      const doc = new jsPDF();
+      // Date range info for the letterhead subtitle
+      const dateRangeText = (startDate || endDate)
+        ? `Date Range: ${startDate ? new Date(startDate).toLocaleDateString() : 'Beginning'} - ${endDate ? new Date(endDate).toLocaleDateString() : 'Present'}`
+        : undefined;
+      const doc = await createReportDoc('CART MANAGEMENT REPORT', dateRangeText);
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      
-      // Current date for report
-      const reportDate = new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-
-      // Add logo placeholder
-      doc.setFillColor(59, 130, 246);
-      doc.rect(20, 15, 30, 30, 'F');
-      doc.setFontSize(16);
-      doc.setTextColor(255, 255, 255);
-      doc.text('LOGO', 35, 32, { align: 'center' });
-
-      // Report header
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(24);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CART MANAGEMENT REPORT', pageWidth / 2, 30, { align: 'center' });
-      
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Generated on: ${reportDate}`, pageWidth / 2, 40, { align: 'center' });
-      
-      // Date range info
-      if (startDate || endDate) {
-        const start = startDate ? new Date(startDate).toLocaleDateString() : 'Beginning';
-        const end = endDate ? new Date(endDate).toLocaleDateString() : 'Present';
-        doc.text(`Date Range: ${start} - ${end}`, pageWidth / 2, 48, { align: 'center' });
-      }
 
       // Summary statistics
       const totalCarts = filteredCarts.length;
@@ -198,23 +156,12 @@ const CartAdmin: React.FC = () => {
       const totalValue = filteredCarts.reduce((sum, cart) => sum + cart.total_price, 0);
       const activeUsers = new Set(filteredCarts.map(cart => cart.user_id)).size;
 
-      let yPosition = 70;
-
-      // Summary section
-      doc.setFillColor(243, 244, 246);
-      doc.rect(20, yPosition - 5, pageWidth - 40, 25, 'F');
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('SUMMARY OVERVIEW', 28, yPosition);
-      
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Total Carts: ${totalCarts}`, 28, yPosition + 8);
-      doc.text(`Total Items: ${totalItems}`, 100, yPosition + 8);
-      doc.text(`Total Value: ${RWF.format(totalValue)}`, 150, yPosition + 8);
-      doc.text(`Active Users: ${activeUsers}`, 28, yPosition + 16);
-
-      yPosition += 35;
+      let yPosition = drawSummaryBand(doc, 48, [
+        { label: 'Total Carts', value: totalCarts.toString() },
+        { label: 'Total Items', value: totalItems.toString() },
+        { label: 'Total Value', value: RWF.format(totalValue) },
+        { label: 'Active Users', value: activeUsers.toString() },
+      ]);
 
       // Detailed cart data
       if (filteredCarts.length > 0) {
@@ -246,23 +193,11 @@ const CartAdmin: React.FC = () => {
 
         // Add table using autoTable
         doc.autoTable({
+          ...REPORT_TABLE_THEME,
           startY: yPosition,
           head: [headers],
           body: tableData,
-          theme: 'grid',
-          styles: {
-            fontSize: 8,
-            cellPadding: 2,
-          },
-          headStyles: {
-            fillColor: [59, 130, 246],
-            textColor: 255,
-            fontStyle: 'bold'
-          },
-          alternateRowStyles: {
-            fillColor: [243, 244, 246]
-          },
-          margin: { left: 20, right: 20 }
+          margin: { left: 14, right: 14 }
         });
 
         // Get the final Y position after the table
@@ -297,15 +232,10 @@ const CartAdmin: React.FC = () => {
               ]);
               
               doc.autoTable({
+                ...REPORT_TABLE_THEME,
                 startY: currentY,
                 head: [['Product', 'Qty', 'Unit Price', 'Total']],
                 body: itemData,
-                theme: 'grid',
-                styles: { fontSize: 7 },
-                headStyles: {
-                  fillColor: [107, 114, 128],
-                  textColor: 255
-                },
                 margin: { left: 28, right: 20 },
                 tableWidth: 150
               });
@@ -330,15 +260,7 @@ const CartAdmin: React.FC = () => {
         doc.text('No cart data available for the selected criteria.', pageWidth / 2, yPosition + 20, { align: 'center' });
       }
 
-      // Add footer with page numbers
-      const pageCount = doc.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(128, 128, 128);
-        doc.text(`Page ${i} of ${pageCount}`, pageWidth - 25, pageHeight - 10);
-        doc.text(`Generated by Cart Management System`, 25, pageHeight - 10);
-      }
+      addReportFooter(doc);
 
       // Save the PDF
       const fileName = `carts-report-${new Date().toISOString().split('T')[0]}.pdf`;
@@ -355,23 +277,10 @@ const CartAdmin: React.FC = () => {
   const generateDetailedPDFReport = async () => {
     setGeneratingReport(true);
     try {
-      const doc = new jsPDF();
+      const doc = await createReportDoc('DETAILED CART REPORT');
       const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      
-      // Report header
-      doc.setFillColor(30, 41, 59); 
-      doc.rect(0, 0, pageWidth, 40, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
-      doc.text('UMUKAMEZI CART REPORT', pageWidth / 2, 25, { align: 'center' });
-      
-      doc.setFontSize(10);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, pageWidth / 2, 32, { align: 'center' });
 
-      let yPosition = 60;
+      let yPosition = 50;
 
       // Summary section
       doc.setTextColor(0, 0, 0);
@@ -442,15 +351,10 @@ const CartAdmin: React.FC = () => {
           ]);
 
           doc.autoTable({
+            ...REPORT_TABLE_THEME,
             startY: yPosition,
             head: [['Product Name', 'Quantity', 'Unit Price', 'Total', 'Delivery']],
             body: itemData,
-            theme: 'grid',
-            styles: { fontSize: 7 },
-            headStyles: {
-              fillColor: [107, 114, 128],
-              textColor: 255
-            },
             margin: { left: 20, right: 20 }
           });
 
@@ -474,15 +378,7 @@ const CartAdmin: React.FC = () => {
         }
       });
 
-      // Add footer
-      const pageCount = doc.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(128, 128, 128);
-        doc.text(`Page ${i} of ${pageCount}`, pageWidth - 25, pageHeight - 10);
-        doc.text(`Confidential - Cart Management Report`, 25, pageHeight - 10);
-      }
+      addReportFooter(doc);
 
       const fileName = `detailed-carts-report-${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);

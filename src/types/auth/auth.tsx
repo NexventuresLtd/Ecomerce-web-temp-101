@@ -19,21 +19,33 @@ export interface FormData {
     password: string;
 }
 
-export interface SignupFormData extends FormData {
+export type VerifyVia = 'email' | 'phone' | 'both';
+
+// Login is by email OR phone ("identifier") + password — no more OTP-only login.
+export interface LoginFormData {
+    identifier: string;
+    password: string;
+}
+
+export interface SignupFormData {
+    email: string;
+    password: string;
     confirmPassword: string;
     fname: string;
     lname: string;
-    phone?: string;
-    profile_pic?: string;
+    phone: string;
+    verify_via: VerifyVia;
 }
 
 export interface ValidationErrors {
+    identifier?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
     fname?: string;
     lname?: string;
     phone?: string;
+    verify_via?: string;
     general?: string;
 }
 

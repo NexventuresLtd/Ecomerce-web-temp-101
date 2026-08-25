@@ -13,8 +13,10 @@ import {
     TrendingUp,
     XCircle,
     FileText,
+    Download,
 } from 'lucide-react';
 import { paymentService, type AdminOrder } from '../../../app/products/paymentService';
+import { createReportDoc, addReportFooter, drawSummaryBand, REPORT_TABLE_THEME } from '../../../app/utils/pdfReport';
 
 const RWF = new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', minimumFractionDigits: 0 });
 
@@ -163,6 +165,7 @@ const AdminOrders = () => {
         pending_orders: 0,
         failed_orders: 0,
     });
+    const [generatingReport, setGeneratingReport] = useState(false);
 
     const loadOrders = async (nextPage = page, nextStatus = statusFilter) => {
         try {
@@ -187,6 +190,60 @@ const AdminOrders = () => {
     };
 
     useEffect(() => { loadOrders(1, statusFilter); }, []);
+
+    const generatePDFReport = async () => {
+        setGeneratingReport(true);
+        try {
+            // Pull every matching transaction (not just the current page) for the export.
+            const data = await paymentService.getAllOrders(1, 1000, statusFilter.toLowerCase());
+            const reportOrders = data.orders || [];
+
+            const subtitle = statusFilter !== 'ALL' ? `Filter: ${statusFilter}` : undefined;
+            const doc = await createReportDoc('TRANSACTIONS REPORT', subtitle);
+            const pageWidth = doc.internal.pageSize.getWidth();
+
+            const reportSummary = data.summary || summary;
+            let yPosition = drawSummaryBand(doc, 48, [
+                { label: 'Total Orders', value: (reportSummary.total_orders ?? 0).toString() },
+                { label: 'Revenue', value: RWF.format(reportSummary.total_revenue ?? 0) },
+                { label: 'Successful', value: (reportSummary.successful_orders ?? 0).toString() },
+                { label: 'Pending', value: (reportSummary.pending_orders ?? 0).toString() },
+                { label: 'Failed', value: (reportSummary.failed_orders ?? 0).toString() },
+            ]);
+
+            if (reportOrders.length > 0) {
+                const tableData = reportOrders.map((o) => [
+                    o.external_id,
+                    o.buyer_name || '—',
+                    o.buyer_email || '—',
+                    o.payer_phone || 'N/A',
+                    RWF.format(o.total_amount),
+                    o.status,
+                    new Date(o.created_at).toLocaleDateString(),
+                ]);
+
+                doc.autoTable({
+                    ...REPORT_TABLE_THEME,
+                    startY: yPosition,
+                    head: [['Order ID', 'Buyer', 'Email', 'Phone', 'Amount', 'Status', 'Date']],
+                    body: tableData,
+                    margin: { left: 14, right: 14 },
+                });
+            } else {
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'italic');
+                doc.text('No transactions found for the selected filter.', pageWidth / 2, yPosition + 10, { align: 'center' });
+            }
+
+            addReportFooter(doc);
+            doc.save(`transactions-report-${new Date().toISOString().split('T')[0]}.pdf`);
+        } catch (e) {
+            console.error('Error generating transactions report:', e);
+            alert('Failed to generate PDF report. Please try again.');
+        } finally {
+            setGeneratingReport(false);
+        }
+    };
 
     const filtered = orders.filter(o => {
         const q = search.toLowerCase();
@@ -213,13 +270,23 @@ const AdminOrders = () => {
                     <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
                     <p className="text-sm text-gray-500 mt-1">All customer purchases via MTN Mobile Money</p>
                 </div>
-                <button
-                    onClick={() => loadOrders(page, statusFilter)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
-                >
-                    <RefreshCw className="w-4 h-4" />
-                    Refresh
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={generatePDFReport}
+                        disabled={generatingReport}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
+                        <Download className="w-4 h-4" />
+                        {generatingReport ? 'Generating...' : 'Export Report'}
+                    </button>
+                    <button
+                        onClick={() => loadOrders(page, statusFilter)}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                    >
+                        <RefreshCw className="w-4 h-4" />
+                        Refresh
+                    </button>
+                </div>
             </div>
 
             {/* Summary Cards */}

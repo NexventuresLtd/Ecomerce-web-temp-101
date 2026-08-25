@@ -14,6 +14,7 @@ import VlogManager from '../../components/dashbaord/vlog/Vlog';
 import DashboardReport from '../../components/dashbaord/maindashboard/DashbaordReport';
 import UsersManagement from '../../components/dashbaord/UsersManagement';
 import HeroSliderManager from '../../components/dashbaord/slider/sliderManage';
+import AuthSliderManager from '../../components/dashbaord/slider/authSliderManage';
 import AdminOrders from '../../components/dashbaord/Productsdash/AdminOrders';
 import AdminDeliveries from '../../components/dashbaord/Productsdash/AdminDeliveries';
 import AnnouncementManager from '../../components/dashbaord/AnnouncementManager';
@@ -52,6 +53,8 @@ const MainContent: React.FC = () => {
                 return <AdminDeliveries deliveryTypeFilter="pickup" />;
             case "slide":
                 return <HeroSliderManager/>
+            case "authSliders":
+                return <AuthSliderManager/>
             case "announcements":
                 return <AnnouncementManager />
             default:

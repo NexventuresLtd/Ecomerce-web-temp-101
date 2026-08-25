@@ -21,6 +21,8 @@ const Header: React.FC = () => {
       case 'wishlists': return 'User Wishlists';
       case 'carts': return 'User Carts';
       case 'announcements': return 'Announcements';
+      case 'slide': return 'Hero Slider';
+      case 'authSliders': return 'Login/Register Slider';
       default: return 'Dashboard';
     }
   };

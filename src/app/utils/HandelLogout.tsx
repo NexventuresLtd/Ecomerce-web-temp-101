@@ -1,4 +1,4 @@
-export const logout = (redirect: string = "/authentication") => {
+export const logout = (redirect: string = "/login") => {
   // Remove tokens and user info from both storages
   localStorage.removeItem("authToken");
   localStorage.removeItem("refresh");
