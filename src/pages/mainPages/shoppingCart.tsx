@@ -1225,7 +1225,7 @@ const ShoppingCartPage: React.FC = () => {
     const handleCheckout = () => {
         if (!token) {
             showAlert('Please log in or create an account to complete checkout.', 'info');
-            window.location.href = '/authentication?next=/shopping-cart';
+            window.location.href = '/login?next=/shopping-cart';
             return;
         }
         setShowPaymentModal(true);

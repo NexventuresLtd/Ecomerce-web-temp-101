@@ -17,6 +17,7 @@ import {
 import mainAxios from '../../Instance/mainAxios';
 import { notifyApi } from '../../app/notify';
 import { getAdminErrorMessage } from '../../app/utils/getAdminErrorMessage';
+import { resolveImageUrl } from '../../app/utils/resolveImageUrl';
 
 
 // Define types based on your backend response
@@ -70,7 +71,17 @@ const UsersManagement = () => {
   const [sendingBulkSms, setSendingBulkSms] = useState(false);
   const [bulkSmsResult, setBulkSmsResult] = useState<{ sent: string[]; failed: string[] } | null>(null);
 
-  // Fetch users from backend
+  // Individual message — one user, choice of email or SMS
+  const [messageTarget, setMessageTarget] = useState<User | null>(null);
+  const [messageChannel, setMessageChannel] = useState<'email' | 'sms'>('email');
+  const [messageSubject, setMessageSubject] = useState('');
+  const [messageBody, setMessageBody] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [messageResult, setMessageResult] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Fetch users from backend — search/status/verification/role/sort all run
+  // as a database query, not a client-side filter over whatever page happened
+  // to be loaded.
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -78,10 +89,16 @@ const UsersManagement = () => {
       const response = await mainAxios.get<UsersResponse>('/auth/users', {
         params: {
           skip: currentPage * itemsPerPage,
-          limit: itemsPerPage
+          limit: itemsPerPage,
+          search: searchTerm.trim(),
+          status_filter: statusFilter,
+          verified_filter: verificationFilter,
+          role_filter: roleFilter,
+          sort_by: sortField,
+          sort_dir: sortDirection,
         }
       });
-      
+
       setUsers(response.data.users);
       setTotalUsers(response.data.total_users);
     } catch (err) {
@@ -92,49 +109,25 @@ const UsersManagement = () => {
     }
   };
 
+  // Search/status/verification/role/sort/page all live in the query string —
+  // the backend does the filtering. Debounce the free-text search so we
+  // don't hit the DB on every keystroke; other filters refetch immediately.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setCurrentPage(0);
+      fetchUsers();
+    }, searchTerm ? 350 : 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, statusFilter, verificationFilter, roleFilter, sortField, sortDirection, itemsPerPage]);
+
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, itemsPerPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
 
-  // Filter and sort users
-  const filteredUsers = users
-    .filter(user => {
-      const matchesSearch = 
-        user.fname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.lname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.phone.includes(searchTerm);
-
-      const matchesStatus = statusFilter === 'all' || 
-        (statusFilter === 'active' && user.is_active) ||
-        (statusFilter === 'inactive' && !user.is_active);
-
-      const matchesVerification = verificationFilter === 'all' ||
-        (verificationFilter === 'verified' && user.is_verified) ||
-        (verificationFilter === 'unverified' && !user.is_verified);
-
-      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-
-      return matchesSearch && matchesStatus && matchesVerification && matchesRole;
-    })
-    .sort((a, b) => {
-      let aValue = a[sortField];
-      let bValue = b[sortField];
-
-      if (sortField === 'created_at' || sortField === 'updated_at') {
-        aValue = new Date(aValue as string).getTime();
-        bValue = new Date(bValue as string).getTime();
-      }
-
-      const valueA = aValue ?? '';
-      const valueB = bValue ?? '';
-      
-      if (sortDirection === 'asc') {
-        return valueA > valueB ? 1 : -1;
-      } else {
-        return valueA < valueB ? 1 : -1;
-      }
-    });
+  // The backend already returns exactly the filtered/sorted/paginated page.
+  const filteredUsers = users;
 
   // Handle sort
   const handleSort = (field: keyof User) => {
@@ -245,6 +238,39 @@ const UsersManagement = () => {
     setShowBulkSmsModal(false);
     setBulkSmsMessage('');
     setBulkSmsResult(null);
+  };
+
+  const openMessageModal = (user: User) => {
+    setMessageTarget(user);
+    setMessageChannel(user.email ? 'email' : 'sms');
+    setMessageSubject('');
+    setMessageBody('');
+    setMessageResult(null);
+  };
+
+  const closeMessageModal = () => {
+    setMessageTarget(null);
+    setMessageSubject('');
+    setMessageBody('');
+    setMessageResult(null);
+  };
+
+  const handleSendIndividualMessage = async () => {
+    if (!messageTarget || !messageBody.trim()) return;
+    setSendingMessage(true);
+    setMessageResult(null);
+    try {
+      if (messageChannel === 'email') {
+        await notifyApi.sendEmail(messageTarget.email, messageSubject.trim() || 'Umukamezi', messageBody.trim(), messageTarget.fname);
+      } else {
+        await notifyApi.sendSms(messageTarget.phone, messageBody.trim());
+      }
+      setMessageResult({ ok: true, text: `Sent via ${messageChannel === 'email' ? 'email' : 'SMS'} successfully.` });
+    } catch (err) {
+      setMessageResult({ ok: false, text: getAdminErrorMessage(err, 'Failed to send message') });
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   // Get unique roles for filter
@@ -486,7 +512,7 @@ const UsersManagement = () => {
                         <div className="flex-shrink-0">
                           {user.profile_pic ? (
                             <img
-                              src={user.profile_pic}
+                              src={resolveImageUrl(user.profile_pic)}
                               alt={`${user.fname} ${user.lname}`}
                               className="h-10 w-10 rounded-full object-cover"
                             />
@@ -600,6 +626,14 @@ const UsersManagement = () => {
                         >
                           <Eye size={16} />
                         </button>
+                        <button
+                          onClick={() => openMessageModal(user)}
+                          disabled={!user.email && !user.phone}
+                          className="p-1 text-gray-400 hover:text-indigo-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Send message"
+                        >
+                          <MessageSquare size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -705,7 +739,7 @@ const UsersManagement = () => {
                 <div className="flex items-center gap-4">
                   {selectedUser.profile_pic ? (
                     <img
-                      src={selectedUser.profile_pic}
+                      src={resolveImageUrl(selectedUser.profile_pic)}
                       alt={`${selectedUser.fname} ${selectedUser.lname}`}
                       className="h-16 w-16 rounded-full object-cover"
                     />
@@ -885,6 +919,103 @@ const UsersManagement = () => {
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   {sendingBulkSms ? 'Sending...' : `Send to ${selectedPhones.length}`}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Individual Message Modal */}
+      {messageTarget && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-lg w-full">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-indigo-600" />
+                  Message {messageTarget.fname} {messageTarget.lname}
+                </h3>
+                <p className="text-sm text-gray-600 mt-0.5">Send directly to this user by email or SMS</p>
+              </div>
+              <button onClick={closeMessageModal} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {!messageResult ? (
+                <>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMessageChannel('email')}
+                      disabled={!messageTarget.email}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${messageChannel === 'email' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                    >
+                      <Mail size={16} /> Email
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMessageChannel('sms')}
+                      disabled={!messageTarget.phone}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${messageChannel === 'sms' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                    >
+                      <Phone size={16} /> SMS
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-gray-500">
+                    Sending to {messageChannel === 'email' ? messageTarget.email : messageTarget.phone}
+                  </p>
+
+                  {messageChannel === 'email' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                      <input
+                        type="text"
+                        value={messageSubject}
+                        onChange={(e) => setMessageSubject(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                        placeholder="Message subject"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                    <textarea
+                      value={messageBody}
+                      onChange={(e) => setMessageBody(e.target.value)}
+                      rows={5}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      placeholder="Type your message..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">{messageBody.length} characters</p>
+                  </div>
+                </>
+              ) : (
+                <p className={`text-sm font-medium ${messageResult.ok ? 'text-green-700' : 'text-red-600'}`}>
+                  {messageResult.ok ? '✓ ' : '✗ '}{messageResult.text}
+                </p>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={closeMessageModal}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                {messageResult ? 'Close' : 'Cancel'}
+              </button>
+              {!messageResult && (
+                <button
+                  onClick={handleSendIndividualMessage}
+                  disabled={sendingMessage || !messageBody.trim()}
+                  className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  {sendingMessage ? 'Sending...' : 'Send'}
                 </button>
               )}
             </div>

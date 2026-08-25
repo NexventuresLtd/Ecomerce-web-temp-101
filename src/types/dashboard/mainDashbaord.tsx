@@ -12,6 +12,7 @@ export type ViewType =
   | "wishlists"
   | "carts"
   | "slide"
+  | "authSliders"
   | "announcements";
 
 // Context

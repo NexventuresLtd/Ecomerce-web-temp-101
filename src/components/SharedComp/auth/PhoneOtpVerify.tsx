@@ -5,17 +5,15 @@ import mainAxios from '../../../Instance/mainAxios';
 
 interface PhoneOtpVerifyProps {
     phone: string;
-    // 'register' just marks the account verified (no tokens issued).
-    // 'login' verifies + returns access/refresh tokens.
-    mode: 'register' | 'login';
+    // Registration-verification only — marks the account verified (no tokens
+    // issued; the user still logs in separately with their password).
     initialVerificationCode: string;
-    onVerified: (data?: any) => void;
+    onVerified: () => void;
     onBack?: () => void;
 }
 
 const PhoneOtpVerify: React.FC<PhoneOtpVerifyProps> = ({
     phone,
-    mode,
     initialVerificationCode,
     onVerified,
     onBack,
@@ -34,23 +32,13 @@ const PhoneOtpVerify: React.FC<PhoneOtpVerifyProps> = ({
         setIsLoading(true);
         setError('');
         try {
-            if (mode === 'register') {
-                await mainAxios.post('/auth/verify-otp', {
-                    otp_code: otpCode.trim(),
-                    verification_code: verificationCode,
-                    phone,
-                });
-                setSuccess(true);
-                setTimeout(() => onVerified(), 1200);
-            } else {
-                const response = await mainAxios.post('/auth/login-phone/verify-otp', {
-                    phone,
-                    otp_code: otpCode.trim(),
-                    verification_code: verificationCode,
-                });
-                setSuccess(true);
-                setTimeout(() => onVerified(response.data), 1200);
-            }
+            await mainAxios.post('/auth/verify-otp', {
+                otp_code: otpCode.trim(),
+                verification_code: verificationCode,
+                phone,
+            });
+            setSuccess(true);
+            setTimeout(() => onVerified(), 1200);
         } catch (err: any) {
             setError(err.response?.data?.detail || 'Verification failed. Please try again.');
         } finally {
@@ -63,8 +51,7 @@ const PhoneOtpVerify: React.FC<PhoneOtpVerifyProps> = ({
         setResending(true);
         setError('');
         try {
-            const url = mode === 'register' ? '/auth/register-phone/resend-otp' : '/auth/login-phone/request-otp';
-            const response = await mainAxios.post(url, { phone });
+            const response = await mainAxios.post('/auth/register-phone/resend-otp', { phone });
             setVerificationCode(response.data.verification_code);
             setOtpCode('');
         } catch (err: any) {
@@ -89,7 +76,7 @@ const PhoneOtpVerify: React.FC<PhoneOtpVerifyProps> = ({
                     </button>
                 )}
                 <h2 className="text-xl font-semibold text-gray-800 flex-1 text-center mr-4">
-                    {mode === 'register' ? 'Verify Your Phone' : 'Login Verification'}
+                    Verify Your Phone
                 </h2>
                 <div className="w-8" />
             </div>

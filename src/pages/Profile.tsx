@@ -18,16 +18,20 @@ import {
     ShoppingBag,
     Package,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    LayoutDashboard,
+    Heart,
+    Menu,
+    Camera,
 } from 'lucide-react';
-import Footer from '../components/SharedComp/footer';
-import Navbar from '../components/SharedComp/navabaritems/NavBar';
 import { billingService, type BillingRecord, type BillingData } from '../app/userProfile/billingService';
 import { paymentService, type Order } from '../app/products/paymentService';
 import { FileText } from 'lucide-react';
-import { getUserInfo } from '../app/Localstorage';
+import { getUserInfo, token } from '../app/Localstorage';
 import { logout } from '../app/utils/HandelLogout';
 import mainAxios from '../Instance/mainAxios';
+import UserNotificationBell from '../components/SharedComp/auth/UserNotificationBell';
+import { resolveImageUrl } from '../app/utils/resolveImageUrl';
 
 const RWF = new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', minimumFractionDigits: 0 });
 
@@ -47,7 +51,7 @@ interface BillingFormData {
 }
 
 
-type ProfileTab = 'billing' | 'orders';
+type ProfileTab = 'overview' | 'billing' | 'orders' | 'profile';
 type OrderStatusFilter = 'all' | 'done' | 'pending' | 'failed';
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -176,8 +180,14 @@ const OrderRow = ({ order }: { order: Order }) => {
     );
 };
 
+const VALID_TABS: ProfileTab[] = ['overview', 'billing', 'orders', 'profile'];
+
 const UserDashboard = () => {
-    const [activeTab, setActiveTab] = useState<ProfileTab>('orders');
+    const initialSection = new URLSearchParams(window.location.search).get('section') as ProfileTab | null;
+    const [activeTab, setActiveTab] = useState<ProfileTab>(
+        initialSection && VALID_TABS.includes(initialSection) ? initialSection : 'overview'
+    );
+    const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoggedIn, setIsLoggedIn] = useState(true);
     const [billingData, setBillingData] = useState<BillingFormData>({
@@ -211,25 +221,20 @@ const UserDashboard = () => {
     const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatusFilter>('all');
     const [billingOriginalReference, setBillingOriginalReference] = useState('');
 
-    // Edit-profile (name + photo) state
-    const [showEditProfile, setShowEditProfile] = useState(false);
+    // Edit-profile (name, phone + photo) state — lives inline in the Profile tab now.
     const [editFname, setEditFname] = useState(getUserInfo?.fname || '');
     const [editLname, setEditLname] = useState(getUserInfo?.lname || '');
+    const [editPhone, setEditPhone] = useState(getUserInfo?.phone || '');
     const [editPhotoPreview, setEditPhotoPreview] = useState<string | undefined>(getUserInfo?.profile_pic || undefined);
+    const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
     const [savingProfile, setSavingProfile] = useState(false);
     const [profileEditError, setProfileEditError] = useState('');
-
-    const openEditProfile = () => {
-        setEditFname(getUserInfo?.fname || '');
-        setEditLname(getUserInfo?.lname || '');
-        setEditPhotoPreview(getUserInfo?.profile_pic || undefined);
-        setProfileEditError('');
-        setShowEditProfile(true);
-    };
+    const [profileSaved, setProfileSaved] = useState(false);
 
     const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        setEditPhotoFile(file);
         const reader = new FileReader();
         reader.onloadend = () => setEditPhotoPreview(reader.result as string);
         reader.readAsDataURL(file);
@@ -239,14 +244,30 @@ const UserDashboard = () => {
         if (!getUserInfo?.id) return;
         setSavingProfile(true);
         setProfileEditError('');
+        setProfileSaved(false);
         try {
-            const payload: Record<string, string> = { fname: editFname, lname: editLname };
-            if (editPhotoPreview) payload.profile_pic = editPhotoPreview;
-            const res = await mainAxios.put(`/auth/users/${getUserInfo.id}`, payload);
+            let newProfilePic = getUserInfo.profile_pic;
+
+            // Photo is uploaded to its own endpoint — the file is stored on the
+            // server and only its URL ever touches the database/JSON payloads.
+            if (editPhotoFile) {
+                const avatarForm = new FormData();
+                avatarForm.append('file', editPhotoFile);
+                const avatarRes = await mainAxios.post(`/auth/users/${getUserInfo.id}/avatar`, avatarForm, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+                newProfilePic = avatarRes.data.profile_pic;
+            }
+
+            const res = await mainAxios.put(`/auth/users/${getUserInfo.id}`, {
+                fname: editFname, lname: editLname, phone: editPhone,
+            });
+
             const store = localStorage.getItem('authToken') ? localStorage : sessionStorage;
-            store.setItem('userInfo', JSON.stringify({ ...getUserInfo, ...res.data.user }));
-            setShowEditProfile(false);
-            window.location.reload();
+            store.setItem('userInfo', JSON.stringify({ ...getUserInfo, ...res.data.user, profile_pic: newProfilePic }));
+            setEditPhotoFile(null);
+            setProfileSaved(true);
+            setTimeout(() => window.location.reload(), 900);
         } catch (error: any) {
             setProfileEditError(error?.response?.data?.detail || 'Could not update profile. Please try again.');
         } finally {
@@ -254,10 +275,29 @@ const UserDashboard = () => {
         }
     };
 
+    // A notification's `link` is either an in-app section (/profile?section=X)
+    // or an external route (/shopping-cart, /wish-list) — route accordingly.
+    const handleNotificationNavigate = (link: string) => {
+        try {
+            const url = new URL(link, window.location.origin);
+            if (url.pathname === '/profile') {
+                const section = url.searchParams.get('section') as ProfileTab | null;
+                if (section && VALID_TABS.includes(section)) {
+                    setActiveTab(section);
+                    return;
+                }
+            }
+            window.location.href = link;
+        } catch {
+            window.location.href = link;
+        }
+    };
+
     // Check if user is logged in and load billings
     useEffect(() => {
         const userInfo = getUserInfo;
-        if (!userInfo?.email) {
+        // A logged-in user may only have a phone (no email) — don't gate on email specifically.
+        if (!token || !userInfo) {
             setIsLoggedIn(false);
             return;
         }
@@ -312,7 +352,7 @@ const UserDashboard = () => {
         logout();
         setIsLoggedIn(false);
         setShowLogoutModal(false);
-        window.location.href = '/authentication';
+        window.location.href = '/login';
     };
 
     // View billing details
@@ -813,7 +853,7 @@ const UserDashboard = () => {
                             Logout
                         </button>
                         <button
-                            onClick={() => window.location.href = '/authentication'}
+                            onClick={() => window.location.href = '/login'}
                             className="w-full bg-primary hover:bg-blue-700 text-white py-3 px-4 rounded-lg transition-colors font-medium"
                         >
                             Go to Login
@@ -825,72 +865,179 @@ const UserDashboard = () => {
         );
     }
 
+    const navItems: { id: ProfileTab; label: string; icon: any }[] = [
+        { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+        { id: 'orders', label: 'My Orders', icon: ShoppingBag },
+        { id: 'billing', label: 'Billing', icon: CreditCard },
+        { id: 'profile', label: 'Profile', icon: User },
+    ];
+    const pageTitle = navItems.find(n => n.id === activeTab)?.label || 'Dashboard';
+
     return (
         <>
-            <Navbar />
-            <div className="min-h-screen bg-gray-50 p-4">
-                <div className="w-full max-w-11/12 mx-auto">
-                    {/* Header Section */}
-                    <div className="bg-white p-6 rounded-lg mb-6">
-                        <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-                            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200">
-                                {getUserInfo?.profile_pic ? (
-                                    <img
-                                        src={getUserInfo?.profile_pic}
-                                        alt="Profile"
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <User className="w-8 h-8 text-gray-400" />
-                                )}
-                            </div>
-                            <div className="text-center md:text-left flex-1">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <div className="flex items-center gap-2 justify-center md:justify-start">
-                                            <h1 className="text-2xl font-semibold text-gray-800 mb-1">
-                                                {getUserInfo?.fname} {getUserInfo?.lname}
-                                            </h1>
-                                            <button
-                                                onClick={openEditProfile}
-                                                title="Edit name & photo"
-                                                className="text-gray-400 hover:text-gray-700 transition-colors"
-                                            >
-                                                <Edit className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                        <p className="text-gray-600 capitalize mb-2">{getUserInfo?.role}</p>
-                                        <p className="text-gray-700">{getUserInfo?.email}</p>
-                                    </div>
-                                    <button
-                                        onClick={() => setShowLogoutModal(true)}
-                                        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors"
-                                    >
-                                        <LogOut className="w-4 h-4" />
-                                        Logout
-                                    </button>
-                                </div>
-                            </div>
+        <div className="flex h-screen bg-gray-50">
+            {/* Sidebar */}
+            {isSidebarOpen && (
+                <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+            )}
+            <aside className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto`}>
+                <div className="p-6 border-b border-gray-200 flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-black text-white overflow-hidden flex justify-center items-center font-bold text-sm flex-shrink-0">
+                        {getUserInfo?.profile_pic ? (
+                            <img src={resolveImageUrl(getUserInfo.profile_pic)} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                            <>{getUserInfo?.fname?.charAt(0).toUpperCase()}</>
+                        )}
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{getUserInfo?.fname} {getUserInfo?.lname}</p>
+                        <p className="text-xs text-gray-500 truncate">{getUserInfo?.email || getUserInfo?.phone}</p>
+                    </div>
+                </div>
+                <nav className="mt-4">
+                    {navItems.map(item => {
+                        const Icon = item.icon;
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
+                                className={`w-full flex items-center gap-3 px-6 py-3 text-left transition-colors ${activeTab === item.id ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+                            >
+                                <Icon size={20} />
+                                <span className="font-medium">{item.label}</span>
+                            </button>
+                        );
+                    })}
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                        <button onClick={() => window.location.href = '/shopping-cart'} className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                            <ShoppingBag size={20} />
+                            <span className="font-medium">Cart</span>
+                        </button>
+                        <button onClick={() => window.location.href = '/wish-list'} className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                            <Heart size={20} />
+                            <span className="font-medium">Wishlist</span>
+                        </button>
+                    </div>
+                </nav>
+            </aside>
+
+            <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Header */}
+                <header className="bg-white border-b border-gray-200 px-4 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="lg:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded">
+                                {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                            </button>
+                            <h1 className="text-xl font-semibold text-gray-900">{pageTitle}</h1>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <UserNotificationBell onNavigate={handleNotificationNavigate} />
+                            <button onClick={() => setShowLogoutModal(true)} className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded">
+                                <LogOut size={18} />
+                                <span className="hidden sm:inline">Logout</span>
+                            </button>
                         </div>
                     </div>
+                </header>
 
-                    {/* Tab Navigation */}
-                    <div className="flex gap-1 bg-white border border-gray-200 rounded-lg p-1 mb-6 w-fit">
-                        <button
-                            onClick={() => setActiveTab('orders')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'orders' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-                        >
-                            <ShoppingBag className="w-4 h-4" />
-                            My Orders
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('billing')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'billing' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-                        >
-                            <CreditCard className="w-4 h-4" />
-                            Billing
-                        </button>
-                    </div>
+                <main className="flex-1 p-6 bg-gray-50 overflow-auto">
+                    {/* Overview Tab */}
+                    {activeTab === 'overview' && (
+                        <div className="space-y-6">
+                            <div className="bg-white border border-gray-200 rounded-xl p-6">
+                                <h2 className="text-lg font-semibold text-gray-900 mb-1">Welcome back, {getUserInfo?.fname || 'there'}!</h2>
+                                <p className="text-gray-500 text-sm">Here's a quick look at your account.</p>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="bg-white border border-gray-200 rounded-xl p-5">
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Spent</p>
+                                    <p className="text-2xl font-bold text-gray-900">{RWF.format(ordersSummary.total_spent)}</p>
+                                </div>
+                                <div className="bg-white border border-gray-200 rounded-xl p-5">
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Confirmed Orders</p>
+                                    <p className="text-2xl font-bold text-green-600">{ordersSummary.successful_orders}</p>
+                                </div>
+                                <div className="bg-white border border-gray-200 rounded-xl p-5">
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">All Orders</p>
+                                    <p className="text-2xl font-bold text-gray-900">{ordersSummary.total_orders}</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <button onClick={() => setActiveTab('orders')} className="bg-white border border-gray-200 rounded-xl p-5 text-left hover:border-gray-300 transition-colors">
+                                    <ShoppingBag className="w-6 h-6 text-gray-700 mb-2" />
+                                    <p className="font-medium text-gray-900">View Orders</p>
+                                </button>
+                                <button onClick={() => setActiveTab('profile')} className="bg-white border border-gray-200 rounded-xl p-5 text-left hover:border-gray-300 transition-colors">
+                                    <User className="w-6 h-6 text-gray-700 mb-2" />
+                                    <p className="font-medium text-gray-900">Edit Profile</p>
+                                </button>
+                                <button onClick={() => window.location.href = '/wish-list'} className="bg-white border border-gray-200 rounded-xl p-5 text-left hover:border-gray-300 transition-colors">
+                                    <Heart className="w-6 h-6 text-gray-700 mb-2" />
+                                    <p className="font-medium text-gray-900">My Wishlist</p>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Profile Tab */}
+                    {activeTab === 'profile' && (
+                        <div className="max-w-2xl bg-white border border-gray-200 rounded-xl p-6">
+                            <h2 className="text-lg font-semibold text-gray-900 mb-6">Edit Profile</h2>
+                            <div className="flex flex-col items-center mb-6">
+                                <div className="relative">
+                                    <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200">
+                                        {editPhotoPreview ? (
+                                            <img src={resolveImageUrl(editPhotoPreview)} alt="Preview" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User className="w-10 h-10 text-gray-400" />
+                                        )}
+                                    </div>
+                                    <label className="absolute -bottom-1 -right-1 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-colors">
+                                        <Camera className="w-4 h-4" />
+                                        <input type="file" accept="image/*" className="hidden" onChange={handleProfilePhotoChange} />
+                                    </label>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2">Click the camera icon to change your photo</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                        <input type="text" value={editFname} onChange={(e) => setEditFname(e.target.value)}
+                                            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                        <input type="text" value={editLname} onChange={(e) => setEditLname(e.target.value)}
+                                            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                    <input type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)}
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="+250781234567" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                    <input type="email" value={getUserInfo?.email || ''} disabled
+                                        className="w-full border border-gray-200 bg-gray-50 text-gray-500 rounded-lg px-3 py-2.5 text-sm cursor-not-allowed" />
+                                </div>
+                            </div>
+
+                            {profileEditError && <p className="text-sm text-red-600 mt-4">{profileEditError}</p>}
+                            {profileSaved && <p className="text-sm text-green-600 mt-4">Profile updated!</p>}
+
+                            <button
+                                onClick={handleSaveProfile}
+                                disabled={savingProfile || !editFname.trim()}
+                                className="mt-6 px-5 py-2.5 bg-primary hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg font-medium"
+                            >
+                                {savingProfile ? 'Saving...' : 'Save Changes'}
+                            </button>
+                        </div>
+                    )}
 
                     {/* Transactions Tab */}
                     {activeTab === 'orders' && (
@@ -1227,9 +1374,9 @@ const UserDashboard = () => {
                             </div>
                         </div>
                     )}
-                </div>
+                </main>
             </div>
-            <Footer />
+        </div>
 
             {/* Logout Confirmation Modal */}
             {showLogoutModal && (
@@ -1256,73 +1403,6 @@ const UserDashboard = () => {
                                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
                             >
                                 Logout
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Edit Profile Modal — name + photo */}
-            {showEditProfile && (
-                <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg max-w-md w-full p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800">Edit Profile</h3>
-                            <button onClick={() => setShowEditProfile(false)} className="text-gray-400 hover:text-gray-600">
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-
-                        <div className="flex flex-col items-center mb-4">
-                            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200 mb-2">
-                                {editPhotoPreview ? (
-                                    <img src={editPhotoPreview} alt="Preview" className="w-full h-full object-cover" />
-                                ) : (
-                                    <User className="w-8 h-8 text-gray-400" />
-                                )}
-                            </div>
-                            <label className="text-sm text-primary cursor-pointer hover:underline">
-                                Change photo (optional)
-                                <input type="file" accept="image/*" className="hidden" onChange={handleProfilePhotoChange} />
-                            </label>
-                        </div>
-
-                        <div className="space-y-3">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                                <input
-                                    type="text"
-                                    value={editFname}
-                                    onChange={(e) => setEditFname(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                                <input
-                                    type="text"
-                                    value={editLname}
-                                    onChange={(e) => setEditLname(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
-                            </div>
-                        </div>
-
-                        {profileEditError && <p className="text-sm text-red-600 mt-3">{profileEditError}</p>}
-
-                        <div className="flex gap-3 justify-end mt-6">
-                            <button
-                                onClick={() => setShowEditProfile(false)}
-                                className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSaveProfile}
-                                disabled={savingProfile || !editFname.trim()}
-                                className="px-4 py-2 bg-primary hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg font-medium"
-                            >
-                                {savingProfile ? 'Saving...' : 'Save Changes'}
                             </button>
                         </div>
                     </div>

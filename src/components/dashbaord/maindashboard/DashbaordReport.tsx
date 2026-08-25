@@ -14,7 +14,11 @@ import {
 } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { applyPlugin } from 'jspdf-autotable';
+
+// jspdf-autotable v5 no longer patches jsPDF just by importing it — this
+// restores doc.autoTable(...) / doc.lastAutoTable, which this file uses directly.
+applyPlugin(jsPDF);
 
 // Extend jsPDF type to include autoTable
 declare module 'jspdf' {

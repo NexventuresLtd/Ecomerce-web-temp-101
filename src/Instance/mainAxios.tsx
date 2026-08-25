@@ -42,7 +42,7 @@ const logoutUser = (redirectToLogin = true) => {
     localStorage.setItem("redirectPath", window.location.pathname);
     
     // Option 1: Redirect to login page
-    window.location.href = '/authentication'; // Adjust path as needed
+    window.location.href = '/login';
 
     
     // Option 2: If using React Router, you could use:

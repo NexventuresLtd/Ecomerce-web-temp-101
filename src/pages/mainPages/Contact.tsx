@@ -431,7 +431,7 @@ const ContactPage: React.FC = () => {
                         transition={{ duration: 0.6, delay: 1.6 }}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={()=>window.location.href = "/authentication"}
+                        onClick={()=>window.location.href = "/login"}
                         className="bg-white text-primary px-8 py-4 rounded-xl font-semibold hover:bg-blue-50 transition-colors"
                     >
                         Join Our Community

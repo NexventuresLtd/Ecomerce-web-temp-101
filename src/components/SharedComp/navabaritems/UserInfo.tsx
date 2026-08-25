@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { getUserInfo, token } from "../../../app/Localstorage";
 import mainAxios from "../../../Instance/mainAxios";
 import { getGuestCartId } from "../../../app/utils/guestCart";
+import { resolveImageUrl } from "../../../app/utils/resolveImageUrl";
 
 interface SecondNavProps {
     isMenuOpen: boolean
@@ -14,6 +15,11 @@ interface SecondNavProps {
 export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown }: SecondNavProps) {
     const [cartCount, setCartCount] = useState(0);
     const [wishCount, setWishCount] = useState(0);
+
+    // Admins land in the admin dashboard, everyone else in their own dashboard.
+    const goToDashboard = () => {
+        window.location.href = getUserInfo?.role === 'admin' ? '/admin-dashboard' : '/profile';
+    };
 
     const fetchCounts = async () => {
         try {
@@ -74,16 +80,16 @@ export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown 
                 <div className="hidden sm:flex items-center space-x-2">
                     {!getUserInfo ? <>
                         <User className="w-5 h-5 text-gray-600" />
-                        <div className="text-xs cursor-pointer hover:underline" onClick={() => window.location.href = '/authentication'}>
+                        <div className="text-xs cursor-pointer hover:underline" onClick={() => window.location.href = '/login'}>
                             <div className="text-gray-600">Hello, Log In</div>
                             <div className="font-semibold">Account & Orders</div>
                         </div>
                     </> :
                         <>
-                            <div onClick={() => window.location.href = '/profile'} className="h-10 w-10 rounded-full bg-black cursor-pointer text-white overflow-hidden flex capitalize justify-center items-center font-bold">
-                                {getUserInfo?.profile_pic ? <img src={getUserInfo?.profile_pic} alt={getUserInfo?.email?.charAt(0)} className="h-full w-full" /> : <>{getUserInfo?.fname?.charAt(0).toUpperCase()} {getUserInfo?.lname?.charAt(0).toUpperCase()}</>}
+                            <div onClick={goToDashboard} className="h-10 w-10 rounded-full bg-black cursor-pointer text-white overflow-hidden flex capitalize justify-center items-center font-bold">
+                                {getUserInfo?.profile_pic ? <img src={resolveImageUrl(getUserInfo?.profile_pic)} alt={getUserInfo?.email?.charAt(0)} className="h-full w-full" /> :<>{getUserInfo?.fname?.charAt(0).toUpperCase()} {getUserInfo?.lname?.charAt(0).toUpperCase()}</>}
                             </div>
-                            <div className="text-xs cursor-pointer hover:underline" onClick={() => window.location.href = '/profile'}>
+                            <div className="text-xs cursor-pointer hover:underline" onClick={goToDashboard}>
                                 <div className="text-gray-600">{getUserInfo?.fname?.slice(0, 7)} {getUserInfo?.lname?.slice(0, 7)}</div>
                                 <div className="font-semibold">{getUserInfo?.email?.slice(0, 12)}...</div>
                             </div>
@@ -93,13 +99,13 @@ export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown 
                 {/* Compact login/account icon for narrow mobile widths where the text block above is hidden */}
                 <div
                     className="flex sm:hidden items-center cursor-pointer"
-                    onClick={() => window.location.href = getUserInfo ? '/profile' : '/authentication'}
+                    onClick={() => (getUserInfo ? goToDashboard() : (window.location.href = '/login'))}
                 >
                     {!getUserInfo ? (
                         <User className="w-6 h-6 text-gray-600" />
                     ) : (
                         <div className="h-8 w-8 rounded-full bg-black text-white overflow-hidden flex capitalize justify-center items-center font-bold text-xs">
-                            {getUserInfo?.profile_pic ? <img src={getUserInfo?.profile_pic} alt={getUserInfo?.email?.charAt(0)} className="h-full w-full" /> : <>{getUserInfo?.fname?.charAt(0).toUpperCase()}</>}
+                            {getUserInfo?.profile_pic ? <img src={resolveImageUrl(getUserInfo?.profile_pic)} alt={getUserInfo?.email?.charAt(0)} className="h-full w-full" /> :<>{getUserInfo?.fname?.charAt(0).toUpperCase()}</>}
                         </div>
                     )}
                 </div>
