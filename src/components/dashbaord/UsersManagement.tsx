@@ -531,7 +531,7 @@ const UsersManagement = () => {
                       <select
                         value={user.role}
                         onChange={(e) => updateUserRole(user.id, e.target.value)}
-                        disabled={updatingUser === user.id}
+                        disabled={updatingUser === user.id || !user.email }
                         className={`text-xs px-2 py-1 rounded-full border ${getRoleColor(user.role)} focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer`}
                       >
                         <option value="buyer">BUYER</option>
