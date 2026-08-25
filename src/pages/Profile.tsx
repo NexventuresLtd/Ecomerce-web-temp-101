@@ -23,6 +23,7 @@ import {
     Heart,
     Menu,
     Camera,
+    ArrowBigLeft,
 } from 'lucide-react';
 import { billingService, type BillingRecord, type BillingData } from '../app/userProfile/billingService';
 import { paymentService, type Order } from '../app/products/paymentService';
@@ -51,7 +52,7 @@ interface BillingFormData {
 }
 
 
-type ProfileTab = 'overview' | 'billing' | 'orders' | 'profile';
+type ProfileTab = 'overview' | 'billing' | 'orders' | 'profile' | 'home';
 type OrderStatusFilter = 'all' | 'done' | 'pending' | 'failed';
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -180,7 +181,7 @@ const OrderRow = ({ order }: { order: Order }) => {
     );
 };
 
-const VALID_TABS: ProfileTab[] = ['overview', 'billing', 'orders', 'profile'];
+const VALID_TABS: ProfileTab[] = ['overview', 'billing', 'orders', 'profile', 'home'];
 
 const UserDashboard = () => {
     const initialSection = new URLSearchParams(window.location.search).get('section') as ProfileTab | null;
@@ -870,53 +871,74 @@ const UserDashboard = () => {
         { id: 'orders', label: 'My Orders', icon: ShoppingBag },
         { id: 'billing', label: 'Billing', icon: CreditCard },
         { id: 'profile', label: 'Profile', icon: User },
+        { id: 'home', label: 'Back to Home', icon: User },
     ];
     const pageTitle = navItems.find(n => n.id === activeTab)?.label || 'Dashboard';
 
     return (
         <>
-        <div className="flex h-screen bg-gray-50">
-            {/* Sidebar */}
-            {isSidebarOpen && (
-                <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
-            )}
-            <aside className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto`}>
-                <div className="p-6 border-b border-gray-200 flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-black text-white overflow-hidden flex justify-center items-center font-bold text-sm flex-shrink-0">
-                        {getUserInfo?.profile_pic ? (
-                            <img src={resolveImageUrl(getUserInfo.profile_pic)} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                            <>{getUserInfo?.fname?.charAt(0).toUpperCase()}</>
-                        )}
+            <div className="flex h-screen bg-gray-50">
+                {/* Sidebar */}
+                {isSidebarOpen && (
+                    <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+                )}
+                <aside className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto`}>
+                    <div className="p-6 border-b border-gray-200 flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-black text-white overflow-hidden flex justify-center items-center font-bold text-sm flex-shrink-0">
+                            {getUserInfo?.profile_pic ? (
+                                <img src={resolveImageUrl(getUserInfo.profile_pic)} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                                <>{getUserInfo?.fname?.charAt(0).toUpperCase()}</>
+                            )}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">{getUserInfo?.fname} {getUserInfo?.lname}</p>
+                            <p className="text-xs text-gray-500 truncate">{getUserInfo?.email || getUserInfo?.phone}</p>
+                        </div>
                     </div>
-                    <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{getUserInfo?.fname} {getUserInfo?.lname}</p>
-                        <p className="text-xs text-gray-500 truncate">{getUserInfo?.email || getUserInfo?.phone}</p>
-                    </div>
-                </div>
-                <nav className="mt-4">
-                    {navItems.map(item => {
-                        const Icon = item.icon;
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
-                                className={`w-full flex items-center gap-3 px-6 py-3 text-left transition-colors ${activeTab === item.id ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
-                            >
-                                <Icon size={20} />
-                                <span className="font-medium">{item.label}</span>
+                    <nav className="mt-4">
+                        {navItems.filter(item => item.id !== 'home').map(item => {
+                            const Icon = item.icon;
+                            return (
+                                <button
+                                    key={item.id}
+                                    onClick={() => {
+                                        setActiveTab(item.id);
+                                        setSidebarOpen(false);
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-6 py-3 text-left transition-colors ${activeTab === item.id ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+                                >
+                                    <Icon size={20} />
+                                    <span className="font-medium">{item.label}</span>
+                                </button>
+                            );
+                        })}
+                        <div className="mt-2 pt-2 border-t border-gray-100">
+                            <button onClick={() => window.location.href = '/shopping-cart'} className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                                <ShoppingBag size={20} />
+                                <span className="font-medium">Cart</span>
                             </button>
-                        );
-                    })}
-                    <div className="mt-2 pt-2 border-t border-gray-100">
-                        <button onClick={() => window.location.href = '/shopping-cart'} className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                            <ShoppingBag size={20} />
-                            <span className="font-medium">Cart</span>
-                        </button>
-                        <button onClick={() => window.location.href = '/wish-list'} className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                            <Heart size={20} />
-                            <span className="font-medium">Wishlist</span>
-                        </button>
+                            <button onClick={() => window.location.href = '/wish-list'} className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                                <Heart size={20} />
+                                <span className="font-medium">Wishlist</span>
+                            </button>
+                            <div className="mt-3 pt-2 border-t border-gray-100"></div>
+                            {navItems.filter(item => item.id == 'home').map(item => {
+                                const Icon = item.icon;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => {
+                                            setActiveTab(item.id);
+                                            setSidebarOpen(false);
+                                        }}
+                                        className={`w-full flex items-center gap-3 px-6 py-3 text-left transition-colors ${activeTab === item.id ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+                                    >
+                                        <ArrowBigLeft size={20} />
+                                        <span className="font-medium">{item.label}</span>
+                                    </button>
+                                );
+                            })}
                     </div>
                 </nav>
             </aside>
@@ -1376,152 +1398,156 @@ const UserDashboard = () => {
                     )}
                 </main>
             </div>
-        </div>
+        </div >
 
-            {/* Logout Confirmation Modal */}
-            {showLogoutModal && (
-                <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg max-w-lg w-full p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-red-100 rounded-full">
-                                <LogOut className="w-6 h-6 text-red-600" />
-                            </div>
-                            <h3 className="text-lg font-semibold text-gray-800">Confirm Logout</h3>
+            {/* Logout Confirmation Modal */ }
+    {
+        showLogoutModal && (
+            <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg max-w-lg w-full p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-red-100 rounded-full">
+                            <LogOut className="w-6 h-6 text-red-600" />
                         </div>
-                        <p className="text-gray-600 mb-6">
-                            Are you sure you want to logout? You'll need to sign in again to access your account.
-                        </p>
-                        <div className="flex gap-3 justify-end">
-                            <button
-                                onClick={closeModal}
-                                className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleLogout}
-                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
-                            >
-                                Logout
-                            </button>
-                        </div>
+                        <h3 className="text-lg font-semibold text-gray-800">Confirm Logout</h3>
+                    </div>
+                    <p className="text-gray-600 mb-6">
+                        Are you sure you want to logout? You'll need to sign in again to access your account.
+                    </p>
+                    <div className="flex gap-3 justify-end">
+                        <button
+                            onClick={closeModal}
+                            className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleLogout}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
+                        >
+                            Logout
+                        </button>
                     </div>
                 </div>
-            )}
+            </div>
+        )
+    }
 
-            {/* Billing Details Modal */}
-            {showDetailsModal && selectedBilling && (
-                <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between p-6 ">
-                            <h3 className="text-lg font-semibold text-gray-800">Billing Details</h3>
-                            <button
-                                onClick={closeModal}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
+    {/* Billing Details Modal */ }
+    {
+        showDetailsModal && selectedBilling && (
+            <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                    <div className="flex items-center justify-between p-6 ">
+                        <h3 className="text-lg font-semibold text-gray-800">Billing Details</h3>
+                        <button
+                            onClick={closeModal}
+                            className="text-gray-400 hover:text-gray-600"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
+                    <div className="p-6 space-y-4">
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-500 mb-2">Full Name</h4>
+                            <p className="text-gray-800">{selectedBilling.full_name}</p>
                         </div>
-                        <div className="p-6 space-y-4">
-                            <div>
-                                <h4 className="text-sm font-medium text-gray-500 mb-2">Full Name</h4>
-                                <p className="text-gray-800">{selectedBilling.full_name}</p>
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-medium text-gray-500 mb-2">Billing Type</h4>
-                                <p className="text-gray-800 capitalize">{selectedBilling.billing_type}</p>
-                            </div>
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-500 mb-2">Billing Type</h4>
+                            <p className="text-gray-800 capitalize">{selectedBilling.billing_type}</p>
+                        </div>
 
-                            {selectedBilling.billing_type === 'card' && (
-                                <>
-                                    <div>
-                                        <h4 className="text-sm font-medium text-gray-500 mb-2">Card Number</h4>
-                                        <p className="text-gray-800">
-                                            **** {selectedBilling.card_number?.slice(-4) || 'N/A'}
-                                        </p>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <h4 className="text-sm font-medium text-gray-500 mb-2">Expiry Date</h4>
-                                            <p className="text-gray-800">{selectedBilling.expiry_date || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <h4 className="text-sm font-medium text-gray-500 mb-2">CVV</h4>
-                                            <p className="text-gray-800">{selectedBilling.cvv ? '***' : 'N/A'}</p>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-
-                            {selectedBilling.billing_type === 'phone' && (
+                        {selectedBilling.billing_type === 'card' && (
+                            <>
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-500 mb-2">Phone Number</h4>
-                                    <p className="text-gray-800">{selectedBilling.card_number || 'N/A'}</p>
-                                </div>
-                            )}
-
-                            {selectedBilling.billing_type === 'bank_transfer' && (
-                                <div>
-                                    <h4 className="text-sm font-medium text-gray-500 mb-2">Account Number</h4>
+                                    <h4 className="text-sm font-medium text-gray-500 mb-2">Card Number</h4>
                                     <p className="text-gray-800">
-                                        ***{selectedBilling.card_number?.slice(-4) || 'N/A'}
+                                        **** {selectedBilling.card_number?.slice(-4) || 'N/A'}
                                     </p>
                                 </div>
-                            )}
-
-                            {selectedBilling.billing_type === 'paypal' && (
-                                <div>
-                                    <h4 className="text-sm font-medium text-gray-500 mb-2">PayPal Email</h4>
-                                    <p className="text-gray-800">{selectedBilling.card_number || 'N/A'}</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 className="text-sm font-medium text-gray-500 mb-2">Expiry Date</h4>
+                                        <p className="text-gray-800">{selectedBilling.expiry_date || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-medium text-gray-500 mb-2">CVV</h4>
+                                        <p className="text-gray-800">{selectedBilling.cvv ? '***' : 'N/A'}</p>
+                                    </div>
                                 </div>
-                            )}
+                            </>
+                        )}
 
+                        {selectedBilling.billing_type === 'phone' && (
                             <div>
-                                <h4 className="text-sm font-medium text-gray-500 mb-2">Address</h4>
-                                <p className="text-gray-800">{selectedBilling.address || 'N/A'}</p>
+                                <h4 className="text-sm font-medium text-gray-500 mb-2">Phone Number</h4>
+                                <p className="text-gray-800">{selectedBilling.card_number || 'N/A'}</p>
                             </div>
+                        )}
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <h4 className="text-sm font-medium text-gray-500 mb-2">City</h4>
-                                    <p className="text-gray-800">{selectedBilling.city || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <h4 className="text-sm font-medium text-gray-500 mb-2">ZIP Code</h4>
-                                    <p className="text-gray-800">{selectedBilling.zip_code || 'N/A'}</p>
-                                </div>
-                            </div>
-
+                        {selectedBilling.billing_type === 'bank_transfer' && (
                             <div>
-                                <h4 className="text-sm font-medium text-gray-500 mb-2">Country</h4>
-                                <p className="text-gray-800">{selectedBilling.country || 'N/A'}</p>
+                                <h4 className="text-sm font-medium text-gray-500 mb-2">Account Number</h4>
+                                <p className="text-gray-800">
+                                    ***{selectedBilling.card_number?.slice(-4) || 'N/A'}
+                                </p>
                             </div>
+                        )}
 
+                        {selectedBilling.billing_type === 'paypal' && (
                             <div>
-                                <h4 className="text-sm font-medium text-gray-500 mb-2">Created Date</h4>
-                                <p className="text-gray-800">{selectedBilling.created_at}</p>
+                                <h4 className="text-sm font-medium text-gray-500 mb-2">PayPal Email</h4>
+                                <p className="text-gray-800">{selectedBilling.card_number || 'N/A'}</p>
+                            </div>
+                        )}
+
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-500 mb-2">Address</h4>
+                            <p className="text-gray-800">{selectedBilling.address || 'N/A'}</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <h4 className="text-sm font-medium text-gray-500 mb-2">City</h4>
+                                <p className="text-gray-800">{selectedBilling.city || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-medium text-gray-500 mb-2">ZIP Code</h4>
+                                <p className="text-gray-800">{selectedBilling.zip_code || 'N/A'}</p>
                             </div>
                         </div>
-                        <div className="flex gap-3 p-6 border-t">
-                            <button
-                                onClick={() => {
-                                    handleEditBilling(selectedBilling);
-                                    closeModal();
-                                }}
-                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors font-medium"
-                            >
-                                Edit
-                            </button>
-                            <button
-                                onClick={closeModal}
-                                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors font-medium"
-                            >
-                                Close
-                            </button>
+
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-500 mb-2">Country</h4>
+                            <p className="text-gray-800">{selectedBilling.country || 'N/A'}</p>
+                        </div>
+
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-500 mb-2">Created Date</h4>
+                            <p className="text-gray-800">{selectedBilling.created_at}</p>
                         </div>
                     </div>
+                    <div className="flex gap-3 p-6 border-t">
+                        <button
+                            onClick={() => {
+                                handleEditBilling(selectedBilling);
+                                closeModal();
+                            }}
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors font-medium"
+                        >
+                            Edit
+                        </button>
+                        <button
+                            onClick={closeModal}
+                            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors font-medium"
+                        >
+                            Close
+                        </button>
+                    </div>
                 </div>
-            )}
+            </div>
+        )
+    }
         </>
     );
 };
