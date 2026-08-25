@@ -9,7 +9,7 @@ import {
   XCircle,
   Eye,
   RefreshCw,
-  Download,
+  // Download,
   MessageSquare,
   ArrowUpDown,
   X
@@ -353,13 +353,7 @@ const UsersManagement = () => {
                   Send SMS to Selected ({selectedIds.size})
                 </button>
               )}
-              <button
-                onClick={exportUsers}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto"
-              >
-                <Download size={16} />
-                Export
-              </button>
+   
               <button
                 onClick={fetchUsers}
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors w-full sm:w-auto"
