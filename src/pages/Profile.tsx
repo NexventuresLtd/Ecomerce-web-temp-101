@@ -226,6 +226,7 @@ const UserDashboard = () => {
     const [editFname, setEditFname] = useState(getUserInfo?.fname || '');
     const [editLname, setEditLname] = useState(getUserInfo?.lname || '');
     const [editPhone, setEditPhone] = useState(getUserInfo?.phone || '');
+    const [editEmail, setEditEmail] = useState(getUserInfo?.email || '');
     const [editPhotoPreview, setEditPhotoPreview] = useState<string | undefined>(getUserInfo?.profile_pic || undefined);
     const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
     const [savingProfile, setSavingProfile] = useState(false);
@@ -261,7 +262,7 @@ const UserDashboard = () => {
             }
 
             const res = await mainAxios.put(`/auth/users/${getUserInfo.id}`, {
-                fname: editFname, lname: editLname, phone: editPhone,
+                fname: editFname, lname: editLname, phone: editPhone, email: editEmail, profile_pic: newProfilePic
             });
 
             const store = localStorage.getItem('authToken') ? localStorage : sessionStorage;
@@ -1043,8 +1044,8 @@ const UserDashboard = () => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                                    <input type="email" value={getUserInfo?.email || ''} disabled
-                                        className="w-full border border-gray-200 bg-gray-50 text-gray-500 rounded-lg px-3 py-2.5 text-sm cursor-not-allowed" />
+                                    <input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)}
+                                        className="w-full border border-gray-200 bg-gray-50 text-gray-800 rounded-lg px-3 py-2.5 text-sm " />
                                 </div>
                             </div>
 
