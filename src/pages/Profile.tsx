@@ -924,7 +924,7 @@ const UserDashboard = () => {
                             </button>
                             <div className="mt-3 pt-2 border-t border-gray-100"></div>
                             {navItems.filter(item => item.id == 'home').map(item => {
-                                const Icon = item.icon;
+                          
                                 return (
                                     <button
                                         key={item.id}
