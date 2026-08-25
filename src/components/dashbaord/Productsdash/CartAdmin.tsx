@@ -24,6 +24,7 @@ import SmsComposeModal from './SmsComposeModal';
 import { getAdminErrorMessage } from '../../../app/utils/getAdminErrorMessage';
 
 import { createReportDoc, addReportFooter, drawSummaryBand, REPORT_TABLE_THEME } from '../../../app/utils/pdfReport';
+import { createReportDoc, addReportFooter, drawSummaryBand, REPORT_TABLE_THEME } from '../../../app/utils/pdfReport';
 
 interface CartItem {
   id: number;
@@ -147,6 +148,11 @@ const CartAdmin: React.FC = () => {
         ? `Date Range: ${startDate ? new Date(startDate).toLocaleDateString() : 'Beginning'} - ${endDate ? new Date(endDate).toLocaleDateString() : 'Present'}`
         : undefined;
       const doc = await createReportDoc('CART MANAGEMENT REPORT', dateRangeText);
+      // Date range info for the letterhead subtitle
+      const dateRangeText = (startDate || endDate)
+        ? `Date Range: ${startDate ? new Date(startDate).toLocaleDateString() : 'Beginning'} - ${endDate ? new Date(endDate).toLocaleDateString() : 'Present'}`
+        : undefined;
+      const doc = await createReportDoc('CART MANAGEMENT REPORT', dateRangeText);
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
 
@@ -156,6 +162,12 @@ const CartAdmin: React.FC = () => {
       const totalValue = filteredCarts.reduce((sum, cart) => sum + cart.total_price, 0);
       const activeUsers = new Set(filteredCarts.map(cart => cart.user_id)).size;
 
+      let yPosition = drawSummaryBand(doc, 48, [
+        { label: 'Total Carts', value: totalCarts.toString() },
+        { label: 'Total Items', value: totalItems.toString() },
+        { label: 'Total Value', value: RWF.format(totalValue) },
+        { label: 'Active Users', value: activeUsers.toString() },
+      ]);
       let yPosition = drawSummaryBand(doc, 48, [
         { label: 'Total Carts', value: totalCarts.toString() },
         { label: 'Total Items', value: totalItems.toString() },
@@ -194,9 +206,11 @@ const CartAdmin: React.FC = () => {
         // Add table using autoTable
         doc.autoTable({
           ...REPORT_TABLE_THEME,
+          ...REPORT_TABLE_THEME,
           startY: yPosition,
           head: [headers],
           body: tableData,
+          margin: { left: 14, right: 14 }
           margin: { left: 14, right: 14 }
         });
 
@@ -233,6 +247,7 @@ const CartAdmin: React.FC = () => {
               
               doc.autoTable({
                 ...REPORT_TABLE_THEME,
+                ...REPORT_TABLE_THEME,
                 startY: currentY,
                 head: [['Product', 'Qty', 'Unit Price', 'Total']],
                 body: itemData,
@@ -261,6 +276,7 @@ const CartAdmin: React.FC = () => {
       }
 
       addReportFooter(doc);
+      addReportFooter(doc);
 
       // Save the PDF
       const fileName = `carts-report-${new Date().toISOString().split('T')[0]}.pdf`;
@@ -277,6 +293,7 @@ const CartAdmin: React.FC = () => {
   const generateDetailedPDFReport = async () => {
     setGeneratingReport(true);
     try {
+      const doc = await createReportDoc('DETAILED CART REPORT');
       const doc = await createReportDoc('DETAILED CART REPORT');
       const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -352,6 +369,7 @@ const CartAdmin: React.FC = () => {
 
           doc.autoTable({
             ...REPORT_TABLE_THEME,
+            ...REPORT_TABLE_THEME,
             startY: yPosition,
             head: [['Product Name', 'Quantity', 'Unit Price', 'Total', 'Delivery']],
             body: itemData,
@@ -378,6 +396,7 @@ const CartAdmin: React.FC = () => {
         }
       });
 
+      addReportFooter(doc);
       addReportFooter(doc);
 
       const fileName = `detailed-carts-report-${new Date().toISOString().split('T')[0]}.pdf`;
