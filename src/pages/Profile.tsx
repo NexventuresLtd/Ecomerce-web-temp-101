@@ -930,8 +930,7 @@ const UserDashboard = () => {
                                     <button
                                         key={item.id}
                                         onClick={() => {
-                                            setActiveTab(item.id);
-                                            setSidebarOpen(false);
+                                           window.location.href = '/';
                                         }}
                                         className={`w-full flex items-center gap-3 px-6 py-3 text-left transition-colors ${activeTab === item.id ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
                                     >
