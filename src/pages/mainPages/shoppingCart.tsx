@@ -10,6 +10,7 @@ import { paymentService } from '../../app/products/paymentService';
 import { billingService } from '../../app/userProfile/billingService';
 import { token } from '../../app/Localstorage';
 import { getGuestCartId } from '../../app/utils/guestCart';
+import { notifyCartUpdated } from '../../app/utils/countEvents';
 
 // Interfaces based on API response
 interface Color {
@@ -761,7 +762,7 @@ const ColorSelection: React.FC<{
             const params = new URLSearchParams({
                 quantity: quantity.toString(),
                 delivery: delivery,
-                ...(token ? {} : { guest_id: getGuestCartId() })
+                guest_id: getGuestCartId()
             });
 
             // Prepare request body with color array
@@ -842,7 +843,7 @@ const CartItem: React.FC<{
             const params = new URLSearchParams({
                 quantity: item.quantity.toString(),
                 delivery: selectedDelivery,
-                ...(token ? {} : { guest_id: getGuestCartId() })
+                guest_id: getGuestCartId()
             });
 
             // Prepare request body with color array
@@ -873,7 +874,7 @@ const CartItem: React.FC<{
             const params = new URLSearchParams({
                 quantity: item.quantity.toString(),
                 delivery: delivery,
-                ...(token ? {} : { guest_id: getGuestCartId() })
+                guest_id: getGuestCartId()
             });
 
             // Prepare request body with color array
@@ -1127,13 +1128,18 @@ const ShoppingCartPage: React.FC = () => {
         fetchCart();
     }, []);
 
-    const guestParam = () => token ? '' : `?guest_id=${getGuestCartId()}`;
+    // Always sent: the server ignores it whenever the request carries a
+    // usable user, and an expired token counts as no user.
+    const guestParam = () => `?guest_id=${getGuestCartId()}`;
 
     const fetchCart = async () => {
         try {
             setLoading(true);
             const response = await mainAxios.get(`/cart/my-cart${guestParam()}`);
             setCartData(response.data);
+            // Keep the navbar badge in step — this runs after every add,
+            // quantity change, removal and completed checkout on this page.
+            notifyCartUpdated();
         } catch (error: any) {
             console.error('Error fetching cart:', error);
             if (error.response?.status === 404) {
@@ -1169,7 +1175,7 @@ const ShoppingCartPage: React.FC = () => {
             const params = new URLSearchParams({
                 quantity: quantity.toString(),
                 delivery: delivery,
-                ...(token ? {} : { guest_id: getGuestCartId() })
+                guest_id: getGuestCartId()
             });
 
             // Prepare request body with color array

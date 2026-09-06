@@ -37,6 +37,19 @@ interface User {
   updated_at: string;
 }
 
+// Roles the backend's UserRole enum accepts. Kept here (rather than derived
+// from the loaded users) so the filter always offers the full set.
+const ROLE_OPTIONS = [
+  { value: 'buyer', label: 'BUYER' },
+  { value: 'seller', label: 'SELLER' },
+  { value: 'agent', label: 'AGENT' },
+  { value: 'admin', label: 'ADMIN' },
+] as const;
+
+const ROLE_LABELS: Record<string, string> = Object.fromEntries(
+  ROLE_OPTIONS.map(r => [r.value, r.label])
+);
+
 interface UsersResponse {
   users: User[];
   total_users: number;
@@ -273,8 +286,10 @@ const UsersManagement = () => {
     }
   };
 
-  // Get unique roles for filter
-  const uniqueRoles = Array.from(new Set(users.map(user => user.role)));
+  // Every role the backend accepts — deriving this from the loaded page only
+  // ever listed the roles that happened to be on screen, so "seller"/"agent"
+  // were missing from the filter whenever nobody held them yet.
+  const uniqueRoles = ROLE_OPTIONS.map(r => r.value);
 
   // Calculate pagination
   const totalPages = Math.ceil(totalUsers / itemsPerPage);
@@ -293,15 +308,15 @@ const UsersManagement = () => {
     return isVerified ? 'text-blue-600 bg-blue-50 border-blue-200' : 'text-orange-600 bg-orange-50 border-orange-200';
   };
 
-  // Get role color
+  // Get role color — the API returns lowercase role values, so match on those.
   const getRoleColor = (role: string) => {
     const colorMap: { [key: string]: string } = {
-      ADMIN: 'text-purple-600 bg-purple-50 border-purple-200',
-      BUYER: 'text-green-600 bg-green-50 border-green-200',
-      SELLER: 'text-blue-600 bg-blue-50 border-blue-200',
-      MODERATOR: 'text-orange-600 bg-orange-50 border-orange-200'
+      admin: 'text-purple-600 bg-purple-50 border-purple-200',
+      buyer: 'text-green-600 bg-green-50 border-green-200',
+      seller: 'text-blue-600 bg-blue-50 border-blue-200',
+      agent: 'text-orange-600 bg-orange-50 border-orange-200',
     };
-    return colorMap[role] || 'text-gray-600 bg-gray-50 border-gray-200';
+    return colorMap[(role || '').toLowerCase()] || 'text-gray-600 bg-gray-50 border-gray-200';
   };
 
   if (loading && users.length === 0) {
@@ -414,7 +429,7 @@ const UsersManagement = () => {
               >
                 <option value="all">All Roles</option>
                 {uniqueRoles.map(role => (
-                  <option key={role} value={role}>{role}</option>
+                  <option key={role} value={role}>{ROLE_LABELS[role] ?? role}</option>
                 ))}
               </select>
             </div>
@@ -534,15 +549,14 @@ const UsersManagement = () => {
                         disabled={updatingUser === user.id || !user.email }
                         className={`text-xs px-2 py-1 rounded-full border ${getRoleColor(user.role)} focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer`}
                       >
-                        <option value="buyer">BUYER</option>
-                        <option value="seller">SELLER</option>
-                        <option value="admin">ADMIN</option>
-                        <option value="agent">AGENT</option>
+                        {ROLE_OPTIONS.map(r => (
+                          <option key={r.value} value={r.value}>{r.label}</option>
+                        ))}
                       </select>
                       {updatingUser === user.id && (
                         <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 ml-1 inline-block"></div>
                       )}
-                      {user.role === 'admin' && (
+                      {(user.role === 'admin' || user.is_super_admin) && (
                         <button
                           onClick={() => updateUserSuperAdmin(user.id, !user.is_super_admin)}
                           disabled={updatingUser === user.id}
@@ -760,7 +774,7 @@ const UsersManagement = () => {
                   </div>
                 </div>
 
-                {selectedUser.role === 'admin' && (
+                {(selectedUser.role === 'admin' || selectedUser.is_super_admin) && (
                   <div>
                     <span className="font-medium text-gray-700">Super Admin:</span>
                     <button

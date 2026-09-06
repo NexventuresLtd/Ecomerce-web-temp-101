@@ -17,12 +17,15 @@ import {
 import type { ViewType } from '../../../types/dashboard/mainDashbaord';
 import { useAppContext } from '../../../contexts/dashbaord/context';
 import { useCurrentUser } from '../../../hooks/useCurrentUser';
+import { useDashboardNotifications } from '../../../hooks/useDashboardNotifications';
 
 // Sidebar Component
 export const Sidebar: React.FC = () => {
     const { currentView, setCurrentView, isSidebarOpen, setSidebarOpen } = useAppContext();
     const { role, user } = useCurrentUser();
     const isSuperAdmin = !!user?.is_super_admin;
+    // Unseen events per tab, shared with the header bell.
+    const { unseenByView } = useDashboardNotifications();
 
     const menuItems =
     role === "admin" ?
@@ -82,13 +85,22 @@ export const Sidebar: React.FC = () => {
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
         lg:translate-x-0 lg:static lg:z-auto
       `}>
-                <div className="p-6 border-b border-gray-200">
-                    <h2 className="text-lg font-semibold text-gray-900">Admin Panel</h2>
-                </div>
+                <a
+                    href="/"
+                    className="flex items-center gap-3 px-6 py-4 border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                    title="Go to homepage"
+                >
+                    <img src="/Umukamezilogo.jpg" alt="Umukamezi" className="h-9 w-9 rounded object-cover flex-shrink-0" />
+                    <div className="min-w-0">
+                        <h2 className="text-lg font-semibold text-gray-900 leading-tight">Admin Panel</h2>
+                        <p className="text-xs text-gray-500">Back to store</p>
+                    </div>
+                </a>
 
                 <nav className="mt-6">
                     {menuItems.map((item) => {
                         const Icon = item.icon;
+                        const count = unseenByView[item.id] ?? 0;
                         return (
                             <button
                                 key={item.id}
@@ -102,7 +114,12 @@ export const Sidebar: React.FC = () => {
                 `}
                             >
                                 <Icon size={20} />
-                                <span className="font-medium">{item.label}</span>
+                                <span className="font-medium flex-1">{item.label}</span>
+                                {count > 0 && (
+                                    <span className="min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center flex-shrink-0">
+                                        {count > 99 ? '99+' : count}
+                                    </span>
+                                )}
                             </button>
                         );
                     })}

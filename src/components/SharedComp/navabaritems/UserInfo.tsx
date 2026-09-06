@@ -1,8 +1,9 @@
 import { Heart, Menu, ShoppingCart, User, X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getUserInfo, token } from "../../../app/Localstorage";
+import { getUserInfo } from "../../../app/Localstorage";
 import mainAxios from "../../../Instance/mainAxios";
 import { getGuestCartId } from "../../../app/utils/guestCart";
+import { CART_UPDATED, WISHLIST_UPDATED } from "../../../app/utils/countEvents";
 import { resolveImageUrl } from "../../../app/utils/resolveImageUrl";
 
 interface SecondNavProps {
@@ -21,17 +22,16 @@ export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown 
         window.location.href = getUserInfo?.role === 'admin' ? '/admin-dashboard' : '/profile';
     };
 
+    // Guests have both a cart and a wishlist, so there's one code path for
+    // everyone. guest_id always goes along: the server prefers the authenticated
+    // user and only falls back to it, and an expired token counts as no user —
+    // branching on a token merely being *present* used to blank both badges.
     const fetchCounts = async () => {
+        const guestId = getGuestCartId();
         try {
-            if (!token) {
-                // Guests still have a cart (no wishlist without an account)
-                const cartRes = await mainAxios.get(`/cart/my-cart?guest_id=${getGuestCartId()}`, { skipAuthRedirect: true } as any);
-                setCartCount(cartRes.data?.total_items ?? 0);
-                return;
-            }
             const [cartRes, wishRes] = await Promise.all([
-                mainAxios.get('/cart/my-cart', { skipAuthRedirect: true } as any),
-                mainAxios.get('/wishlist/my-wishlist', { skipAuthRedirect: true } as any),
+                mainAxios.get(`/cart/my-cart?guest_id=${guestId}`, { skipAuthRedirect: true } as any),
+                mainAxios.get(`/wishlist/my-wishlist?guest_id=${guestId}`, { skipAuthRedirect: true } as any),
             ]);
             setCartCount(cartRes.data?.total_items ?? 0);
             setWishCount(wishRes.data?.total_items ?? 0);
@@ -42,11 +42,19 @@ export default function UserInfo({ isMenuOpen, setIsMenuOpen, setActiveDropdown 
 
     useEffect(() => {
         fetchCounts();
-        window.addEventListener('cartUpdated', fetchCounts);
-        window.addEventListener('wishlistUpdated', fetchCounts);
+
+        // Re-check when the tab regains focus, so a change made in another tab
+        // (or on a page that navigated away with a full load) shows up here.
+        const onVisible = () => {
+            if (document.visibilityState === 'visible') fetchCounts();
+        };
+        window.addEventListener(CART_UPDATED, fetchCounts);
+        window.addEventListener(WISHLIST_UPDATED, fetchCounts);
+        document.addEventListener('visibilitychange', onVisible);
         return () => {
-            window.removeEventListener('cartUpdated', fetchCounts);
-            window.removeEventListener('wishlistUpdated', fetchCounts);
+            window.removeEventListener(CART_UPDATED, fetchCounts);
+            window.removeEventListener(WISHLIST_UPDATED, fetchCounts);
+            document.removeEventListener('visibilitychange', onVisible);
         };
     }, []);
 

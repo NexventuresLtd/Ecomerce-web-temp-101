@@ -1,16 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, CreditCard, ShoppingBag, Heart, Package, Info } from 'lucide-react';
-import mainAxios from '../../../Instance/mainAxios';
+import {
+    useUserNotifications,
+    markNotificationRead,
+    markAllNotificationsRead,
+    type UserNotification,
+} from '../../../hooks/useUserNotifications';
 
-export interface UserNotification {
-    id: number;
-    type: 'payment' | 'order' | 'cart' | 'wishlist' | 'system';
-    title: string;
-    message: string | null;
-    link: string | null;
-    is_read: boolean;
-    created_at: string;
-}
+export type { UserNotification };
 
 const ICON: Record<UserNotification['type'], any> = {
     payment: CreditCard,
@@ -28,29 +25,11 @@ interface UserNotificationBellProps {
 }
 
 const UserNotificationBell: React.FC<UserNotificationBellProps> = ({ onNavigate }) => {
-    const [notifications, setNotifications] = useState<UserNotification[]>([]);
-    const [unreadCount, setUnreadCount] = useState(0);
+    // Feed + counts live in a shared store so the sidebar badges track this
+    // dropdown exactly (see hooks/useUserNotifications).
+    const { notifications, unreadCount } = useUserNotifications();
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
-
-    const load = async () => {
-        try {
-            const [listRes, countRes] = await Promise.all([
-                mainAxios.get('/notifications/mine?limit=20', { skipAuthRedirect: true } as any),
-                mainAxios.get('/notifications/unread-count', { skipAuthRedirect: true } as any),
-            ]);
-            setNotifications(listRes.data?.notifications ?? []);
-            setUnreadCount(countRes.data?.unread_count ?? 0);
-        } catch {
-            // transient error — silently do nothing
-        }
-    };
-
-    useEffect(() => {
-        load();
-        const interval = setInterval(load, 30000);
-        return () => clearInterval(interval);
-    }, []);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -62,27 +41,11 @@ const UserNotificationBell: React.FC<UserNotificationBellProps> = ({ onNavigate 
 
     const handleItemClick = async (n: UserNotification) => {
         setOpen(false);
-        if (!n.is_read) {
-            try {
-                await mainAxios.put(`/notifications/${n.id}/read`, {});
-                setUnreadCount((c) => Math.max(0, c - 1));
-                setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)));
-            } catch {
-                // non-blocking
-            }
-        }
+        if (!n.is_read) await markNotificationRead(n.id);
         if (n.link) onNavigate(n.link);
     };
 
-    const markAllRead = async () => {
-        try {
-            await mainAxios.put('/notifications/read-all', {});
-            setUnreadCount(0);
-            setNotifications((prev) => prev.map((x) => ({ ...x, is_read: true })));
-        } catch {
-            // non-blocking
-        }
-    };
+    const markAllRead = () => markAllNotificationsRead();
 
     return (
         <div className="relative" ref={ref}>

@@ -1,7 +1,7 @@
 // src/services/wishlistService.ts
 import mainAxios from '../../Instance/mainAxios';
-import { token } from '../Localstorage';
 import { getGuestCartId, clearGuestCartId } from '../utils/guestCart';
+import { notifyCartUpdated, notifyWishlistUpdated } from '../utils/countEvents';
 
 export interface WishlistItem {
   wishlist_item_id: number;
@@ -33,7 +33,7 @@ export interface WishlistResponse {
 
 // Not logged in? Reuse the same anonymous identity as the guest cart, so the
 // heart icon and wishlist page work without an account too.
-const guestParam = (prefix: '?' | '&' = '&') => (token ? '' : `${prefix}guest_id=${getGuestCartId()}`);
+const guestParam = (prefix: '?' | '&' = '&') => `${prefix}guest_id=${getGuestCartId()}`;
 
 export const wishlistService = {
   // Get user's (or guest's) wishlist
@@ -53,6 +53,7 @@ export const wishlistService = {
       `/wishlist/add?product_id=${productId}&quantity=${quantity}&delivery=${delivery}${guestParam()}`,
       [{ "color": color }]
     );
+    notifyWishlistUpdated();
     return response;
   },
 
@@ -68,6 +69,7 @@ export const wishlistService = {
       [{ "color": color }],
       { skipAuthRedirect: true } as any
     );
+    notifyWishlistUpdated();
     return response.data;
   },
 
@@ -89,21 +91,25 @@ export const wishlistService = {
         quantity,
         delivery,
         color: JSON.stringify(color),
-        ...(token ? {} : { guest_id: getGuestCartId() }),
+        guest_id: getGuestCartId(),
       }
     });
+    notifyWishlistUpdated();
     return response.data;
   },
 
   // Remove item from wishlist
   removeFromWishlist: async (wishlistItemId: number): Promise<{ message: string }> => {
     const response = await mainAxios.delete(`/wishlist/delete/${wishlistItemId}${guestParam('?')}`);
+    notifyWishlistUpdated();
     return response.data;
   },
 
   // Move item to cart
   moveToCart: async (wishlistItemId: number): Promise<{ message: string }> => {
     const response = await mainAxios.post(`/wishlist/move-to-cart/${wishlistItemId}${guestParam('?')}`);
+    notifyWishlistUpdated();
+    notifyCartUpdated();
     return response.data;
   },
 
@@ -115,6 +121,7 @@ export const wishlistService = {
       await mainAxios.post(`/wishlist/merge-guest?guest_id=${guestId}`);
     } finally {
       clearGuestCartId();
+      notifyWishlistUpdated();
     }
   },
 };

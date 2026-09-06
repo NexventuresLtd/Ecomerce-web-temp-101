@@ -1,22 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, UserPlus, ShoppingCart, CreditCard } from 'lucide-react';
-import mainAxios from '../../../Instance/mainAxios';
 import { useAppContext } from '../../../contexts/dashbaord/context';
-import type { ViewType } from '../../../types/dashboard/mainDashbaord';
-
-interface Notification {
-    type: 'new_user' | 'new_cart' | 'payment';
-    color: 'blue' | 'amber' | 'green' | 'red' | 'gray';
-    message: string;
-    at: string | null;
-}
-
-// Which admin tab each notification type should jump to on click.
-const TARGET_VIEW: Record<Notification['type'], ViewType> = {
-    new_user: 'users',
-    new_cart: 'carts',
-    payment: 'orders',
-};
+import {
+    useDashboardNotifications,
+    markDashboardNotificationsSeen,
+    TARGET_VIEW,
+    type DashboardNotification as Notification,
+} from '../../../hooks/useDashboardNotifications';
 
 const DOT_COLOR: Record<Notification['color'], string> = {
     blue: 'bg-blue-500',
@@ -32,12 +22,10 @@ const ICON: Record<Notification['type'], any> = {
     payment: CreditCard,
 };
 
-const LAST_SEEN_KEY = 'dashboardNotificationsLastSeen';
-
 const NotificationBell = () => {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    // Feed + unseen counts come from a shared store the sidebar badges read too.
+    const { notifications, unseenCount } = useDashboardNotifications();
     const [open, setOpen] = useState(false);
-    const [unseenCount, setUnseenCount] = useState(0);
     const ref = useRef<HTMLDivElement>(null);
     const { setCurrentView } = useAppContext();
 
@@ -45,26 +33,6 @@ const NotificationBell = () => {
         setOpen(false);
         setCurrentView?.(TARGET_VIEW[n.type]);
     };
-
-    const load = async () => {
-        try {
-            const res = await mainAxios.get('/dashboard/notifications?limit=20');
-            const items: Notification[] = res.data?.notifications ?? [];
-            setNotifications(items);
-
-            const lastSeen = localStorage.getItem(LAST_SEEN_KEY);
-            const unseen = lastSeen ? items.filter(n => n.at && n.at > lastSeen).length : items.length;
-            setUnseenCount(unseen);
-        } catch {
-            // non-admin viewer or a transient error — silently do nothing
-        }
-    };
-
-    useEffect(() => {
-        load();
-        const interval = setInterval(load, 30000);
-        return () => clearInterval(interval);
-    }, []);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -76,10 +44,7 @@ const NotificationBell = () => {
 
     const toggleOpen = () => {
         setOpen(o => !o);
-        if (!open) {
-            localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString());
-            setUnseenCount(0);
-        }
+        if (!open) markDashboardNotificationsSeen();
     };
 
     return (

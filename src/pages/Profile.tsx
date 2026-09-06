@@ -32,6 +32,7 @@ import { getUserInfo, token } from '../app/Localstorage';
 import { logout } from '../app/utils/HandelLogout';
 import mainAxios from '../Instance/mainAxios';
 import UserNotificationBell from '../components/SharedComp/auth/UserNotificationBell';
+import { useUserNotifications } from '../hooks/useUserNotifications';
 import { resolveImageUrl } from '../app/utils/resolveImageUrl';
 
 const RWF = new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', minimumFractionDigits: 0 });
@@ -52,7 +53,7 @@ interface BillingFormData {
 }
 
 
-type ProfileTab = 'overview' | 'billing' | 'orders' | 'profile' | 'home';
+type ProfileTab = 'overview' | 'billing' | 'orders' | 'profile';
 type OrderStatusFilter = 'all' | 'done' | 'pending' | 'failed';
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -181,7 +182,17 @@ const OrderRow = ({ order }: { order: Order }) => {
     );
 };
 
-const VALID_TABS: ProfileTab[] = ['overview', 'billing', 'orders', 'profile', 'home'];
+// Unread-notification count pill for a sidebar entry.
+const NavBadge = ({ count }: { count?: number }) => {
+    if (!count) return null;
+    return (
+        <span className="min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center flex-shrink-0">
+            {count > 99 ? '99+' : count}
+        </span>
+    );
+};
+
+const VALID_TABS: ProfileTab[] = ['overview', 'billing', 'orders', 'profile'];
 
 const UserDashboard = () => {
     const initialSection = new URLSearchParams(window.location.search).get('section') as ProfileTab | null;
@@ -189,6 +200,8 @@ const UserDashboard = () => {
         initialSection && VALID_TABS.includes(initialSection) ? initialSection : 'overview'
     );
     const [isSidebarOpen, setSidebarOpen] = useState(false);
+    // Drives the per-section unread badges in the sidebar.
+    const { unreadBySection } = useUserNotifications();
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoggedIn, setIsLoggedIn] = useState(true);
     const [billingData, setBillingData] = useState<BillingFormData>({
@@ -247,6 +260,10 @@ const UserDashboard = () => {
         setSavingProfile(true);
         setProfileEditError('');
         setProfileSaved(false);
+        // The avatar endpoint commits on its own, so a photo that uploaded is
+        // already saved even if the details PUT then fails — track it so the
+        // local copy stays in step either way.
+        let uploadedPic: string | null = null;
         try {
             let newProfilePic = getUserInfo.profile_pic;
 
@@ -259,10 +276,18 @@ const UserDashboard = () => {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
                 newProfilePic = avatarRes.data.profile_pic;
+                uploadedPic = newProfilePic;
             }
 
+            // Blank phone/email must go over as null — "" collides with the
+            // UNIQUE index the moment a second user also leaves it empty, and
+            // that failure used to take the photo change down with it.
             const res = await mainAxios.put(`/auth/users/${getUserInfo.id}`, {
-                fname: editFname, lname: editLname, phone: editPhone, email: editEmail, profile_pic: newProfilePic
+                fname: editFname,
+                lname: editLname,
+                phone: editPhone.trim() || null,
+                email: editEmail.trim() || null,
+                profile_pic: newProfilePic,
             });
 
             const store = localStorage.getItem('authToken') ? localStorage : sessionStorage;
@@ -271,7 +296,19 @@ const UserDashboard = () => {
             setProfileSaved(true);
             setTimeout(() => window.location.reload(), 900);
         } catch (error: any) {
-            setProfileEditError(error?.response?.data?.detail || 'Could not update profile. Please try again.');
+            if (uploadedPic) {
+                // Photo went through; only the details failed. Keep the new
+                // photo rather than making the user upload it a second time.
+                const store = localStorage.getItem('authToken') ? localStorage : sessionStorage;
+                store.setItem('userInfo', JSON.stringify({ ...getUserInfo, profile_pic: uploadedPic }));
+                setEditPhotoFile(null);
+                setEditPhotoPreview(uploadedPic);
+            }
+            const detail = error?.response?.data?.detail;
+            setProfileEditError(
+                (typeof detail === 'string' ? detail : '') ||
+                'Could not update profile. Please try again.'
+            );
         } finally {
             setSavingProfile(false);
         }
@@ -867,12 +904,11 @@ const UserDashboard = () => {
         );
     }
 
-    const navItems: { id: ProfileTab; label: string; icon: any }[] = [
+    const navItems: { id: ProfileTab; label: string; icon: any; badge?: number }[] = [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-        { id: 'orders', label: 'My Orders', icon: ShoppingBag },
+        { id: 'orders', label: 'My Orders', icon: ShoppingBag, badge: (unreadBySection.order ?? 0) + (unreadBySection.payment ?? 0) },
         { id: 'billing', label: 'Billing', icon: CreditCard },
         { id: 'profile', label: 'Profile', icon: User },
-        { id: 'home', label: 'Back to Home', icon: User },
     ];
     const pageTitle = navItems.find(n => n.id === activeTab)?.label || 'Dashboard';
 
@@ -884,6 +920,14 @@ const UserDashboard = () => {
                     <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
                 )}
                 <aside className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto`}>
+                    <a
+                        href="/"
+                        className="flex items-center gap-2 px-6 py-4 border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                        title="Go to homepage"
+                    >
+                        <img src="/Umukamezilogo.jpg" alt="Umukamezi" className="h-9 w-9 rounded object-cover flex-shrink-0" />
+                        <span className="font-bold text-gray-900 tracking-tight uppercase text-sm">Umukamezi</span>
+                    </a>
                     <div className="p-6 border-b border-gray-200 flex items-center gap-3">
                         <div className="h-9 w-9 rounded-full bg-black text-white overflow-hidden flex justify-center items-center font-bold text-sm flex-shrink-0">
                             {getUserInfo?.profile_pic ? (
@@ -898,7 +942,7 @@ const UserDashboard = () => {
                         </div>
                     </div>
                     <nav className="mt-4">
-                        {navItems.filter(item => item.id !== 'home').map(item => {
+                        {navItems.map(item => {
                             const Icon = item.icon;
                             return (
                                 <button
@@ -910,35 +954,30 @@ const UserDashboard = () => {
                                     className={`w-full flex items-center gap-3 px-6 py-3 text-left transition-colors ${activeTab === item.id ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
                                 >
                                     <Icon size={20} />
-                                    <span className="font-medium">{item.label}</span>
+                                    <span className="font-medium flex-1">{item.label}</span>
+                                    <NavBadge count={item.badge} />
                                 </button>
                             );
                         })}
                         <div className="mt-2 pt-2 border-t border-gray-100">
-                            <button onClick={() => window.location.href = '/shopping-cart'} className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                            <a href="/shopping-cart" className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
                                 <ShoppingBag size={20} />
-                                <span className="font-medium">Cart</span>
-                            </button>
-                            <button onClick={() => window.location.href = '/wish-list'} className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                                <span className="font-medium flex-1">Cart</span>
+                                <NavBadge count={unreadBySection.cart} />
+                            </a>
+                            <a href="/wish-list" className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
                                 <Heart size={20} />
-                                <span className="font-medium">Wishlist</span>
-                            </button>
+                                <span className="font-medium flex-1">Wishlist</span>
+                                <NavBadge count={unreadBySection.wishlist} />
+                            </a>
                             <div className="mt-3 pt-2 border-t border-gray-100"></div>
-                            {navItems.filter(item => item.id == 'home').map(item => {
-                          
-                                return (
-                                    <button
-                                        key={item.id}
-                                        onClick={() => {
-                                           window.location.href = '/';
-                                        }}
-                                        className={`w-full flex items-center gap-3 px-6 py-3 text-left transition-colors ${activeTab === item.id ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
-                                    >
-                                        <ArrowBigLeft size={20} />
-                                        <span className="font-medium">{item.label}</span>
-                                    </button>
-                                );
-                            })}
+                            <a
+                                href="/"
+                                className="w-full flex items-center gap-3 px-6 py-3 text-left transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                            >
+                                <ArrowBigLeft size={20} />
+                                <span className="font-medium">Back to Home</span>
+                            </a>
                     </div>
                 </nav>
             </aside>

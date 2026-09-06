@@ -111,7 +111,7 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                         </div>
 
                         {/* Desktop Search Bar - Hidden on mobile */}
-                        <div className={`${isMenuOpen ? 'max-xl:hidden' : ''} flex flex-1 justify-end md:mx-4`}>
+                        <div className={`${isMenuOpen ? 'max-xl:hidden' : ''} hidden md:flex flex-1 justify-end md:mx-4`}>
                             <div className="flex gap-2  items-center justify-end">
                                 <div className="relative flex-1">
                                     {/* <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" /> */}
@@ -152,9 +152,10 @@ export default function SecondNav({ isMenuOpen, setIsMenuOpen, setActiveDropdown
                         </div>
 
                         {/* Mobile Search Icon - Visible only on mobile */}
-                        <div className="hidden flex items-center">
+                        <div className="flex md:hidden items-center">
                             <button
                                 onClick={openMobileSearch}
+                                aria-label="Search products"
                                 className="p-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"
                             >
                                 <Search className="w-6 h-6" />

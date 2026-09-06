@@ -49,8 +49,6 @@ const ProductViewPage: React.FC = () => {
             const response = await cartApi.addToCart(id, quantity, color, delivery);
             if (response.status == 200) {
                 setesucess("Added to cart!");
-                // notify navbar to refresh count
-                window.dispatchEvent(new CustomEvent('cartUpdated'));
             }
         } catch (error: any) {
             seterroring(error?.response?.data?.detail);
@@ -65,8 +63,6 @@ const ProductViewPage: React.FC = () => {
             const response = await wishlistService.toggleWishlist(id, quantity, delivery, color);
             setIsWishlisted(response.wishlisted);   // red when added, outline when removed
             setesucess(response.wishlisted ? "Added to wishlist!" : "Removed from wishlist");
-            // notify navbar to refresh count
-            window.dispatchEvent(new CustomEvent('wishlistUpdated'));
         } catch (error: any) {
             seterroring(error?.response?.data?.detail);
         } finally {
