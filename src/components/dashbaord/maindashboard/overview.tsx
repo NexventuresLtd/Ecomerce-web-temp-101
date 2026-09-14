@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useCurrentUser } from '../../../hooks/useCurrentUser';
 import {
   Package,
   Users,
@@ -93,6 +94,10 @@ type ColorType = 'blue' | 'green' | 'orange' | 'purple' | 'pink' | 'indigo' | 't
 
 const umukameziDashboard = () => {
   const { setCurrentView } = useAppContext();
+  // Money is super-admin-only: every other admin gets the same dashboard
+  // minus the revenue row, the transactions strip and the orders card.
+  const { user } = useCurrentUser();
+  const canSeeFinancials = !!user?.is_super_admin;
   
   const [timeRange, setTimeRange] = useState('7d');
   const [dashboardData, setDashboardData] = useState<DashboardSummary | null>(null);
@@ -128,25 +133,27 @@ const umukameziDashboard = () => {
       setLoading(true);
       setError(null);
 
-      // Run both requests in parallel
+      // /payment/admin/orders is super-admin-only — asking for it as a
+      // normal admin would 403 and take the whole dashboard down with it.
       const [response, txData] = await Promise.all([
         mainAxios.get('/dashboard/summary'),
-        paymentService.getAllOrders(1, 1, 'all'),   // same call AdminOrders makes
+        canSeeFinancials ? paymentService.getAllOrders(1, 1, 'all') : Promise.resolve(null),
       ]);
 
       const data = response.data;
       setDashboardData(data);
 
       // Use the summary that AdminOrders already proves is correct
+      const tx = txData?.summary;
       setTxSummary({
-        total_orders:      txData.summary.total_orders      || 0,
-        total_revenue:     txData.summary.total_revenue     || 0,
-        successful_orders: txData.summary.successful_orders || 0,
-        pending_orders:    txData.summary.pending_orders    || 0,
-        failed_orders:     txData.summary.failed_orders     || 0,
+        total_orders:      tx?.total_orders      || 0,
+        total_revenue:     tx?.total_revenue     || 0,
+        successful_orders: tx?.successful_orders || 0,
+        pending_orders:    tx?.pending_orders    || 0,
+        failed_orders:     tx?.failed_orders     || 0,
       });
 
-      animateValues(data, txData.summary);
+      animateValues(data, tx);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError(getAdminErrorMessage(err, 'Failed to load dashboard data'));
@@ -254,15 +261,15 @@ const umukameziDashboard = () => {
       color: 'orange',
       description: `${dashboardData.carts.total} total carts`
     },
-    {
+    ...(canSeeFinancials ? [{
       label: 'Total Orders',
       value: animatedValues.totalBillings,
       icon: DollarSign,
       change: calculateChange(dashboardData.billings, dashboardData.billings * 0.85),
       changeType: getChangeType(calculateChange(dashboardData.billings, dashboardData.billings * 0.85)),
-      color: 'purple',
+      color: 'purple' as const,
       description: 'Completed transactions'
-    },
+    }] : []),
     {
       label: 'Active Wishlists',
       value: animatedValues.activeWishlists,
@@ -474,7 +481,7 @@ const umukameziDashboard = () => {
         </div>
 
         {/* ── Revenue & Sales highlight row ── */}
-        {salesCards.length > 0 && (
+        {canSeeFinancials && salesCards.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-4 h-4 text-green-600" />
@@ -503,7 +510,7 @@ const umukameziDashboard = () => {
         )}
 
         {/* ── Total Orders summary strip ── */}
-        {txSummary.total_orders > 0 && (
+        {canSeeFinancials && txSummary.total_orders > 0 && (
           <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex items-center gap-2 flex-shrink-0">
               <Truck className="w-4 h-4 text-gray-500" />

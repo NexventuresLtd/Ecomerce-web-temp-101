@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { categoryApi } from '../../app/dashcategory/category';
 import { encodeId } from '../../app/products/id_encrypter';
+import { isOthers, othersLast } from '../../app/utils/othersLast';
 
 interface ProductCategory {
   id: number;
@@ -155,7 +156,7 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6">
-          {currentCategory.sub_categories.map((subCategory) => (
+          {othersLast(currentCategory.sub_categories).map((subCategory) => (
             <div key={subCategory.id} className="space-y-4">
               {/* Sub Category Header */}
               <div className="pb-3 border-b border-gray-100">
@@ -164,8 +165,8 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
                   data-category-path={createCategoryPath(currentCategory, subCategory)}
                   className="group block cursor-pointer"
                 >
-                  <h3 className="font-semibold text-gray-900 text-lg group-hover:text-blue-600 transition-colors duration-200">
-                    {subCategory.name}
+                  <h3 className={`font-semibold text-lg group-hover:text-blue-600 transition-colors duration-200 ${isOthers(subCategory.name) ? 'text-gray-500' : 'text-gray-900'}`}>
+                    {isOthers(subCategory.name) ? 'Others' : subCategory.name}
                   </h3>
                   {subCategory.description && (
                     <p className="text-gray-500 text-xs mt-1 line-clamp-2">
@@ -177,14 +178,7 @@ export const GenerateDropdownContent = ({ itemName }: { itemName: string }) => {
 
               {/* Product Categories List */}
               <div className="space-y-2">
-                {subCategory.product_categories
-                  .slice() // avoid mutating original
-                  .sort((a, b) => {
-                    if (a.name.toLowerCase() === "others") return 1;
-                    if (b.name.toLowerCase() === "others") return -1;
-                    return 0;
-                  })
-                  .map((productCat) => (
+                {othersLast(subCategory.product_categories).map((productCat) => (
                     <a
                       key={productCat.id}
                       href="#"

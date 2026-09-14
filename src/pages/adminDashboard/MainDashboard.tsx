@@ -8,7 +8,6 @@ import ProductManagement from '../../components/dashbaord/Productsdash/MainProdu
 import WishlistAdmin from '../../components/dashbaord/Productsdash/WishlistAdmin';
 import CartAdmin from '../../components/dashbaord/Productsdash/CartAdmin';
 import Overview from '../../components/dashbaord/maindashboard/overview';
-import RestrictedOverview from '../../components/dashbaord/maindashboard/RestrictedOverview';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
 import VlogManager from '../../components/dashbaord/vlog/Vlog';
 import DashboardReport from '../../components/dashbaord/maindashboard/DashbaordReport';
@@ -24,9 +23,12 @@ import AdminProfile from '../../components/dashbaord/maindashboard/AdminProfile'
 const MainContent: React.FC = () => {
     const { currentView } = useAppContext();
     const { user } = useCurrentUser();
-    // The full stats/notifications dashboard is reserved for the super admin —
-    // every other admin only gets revenue + role assignment.
-    const DashboardHome = user?.is_super_admin ? Overview : RestrictedOverview;
+    // Every admin gets the same dashboard; money (revenue, transactions,
+    // reports) is the one thing reserved for the super admin. The Overview
+    // hides its financial blocks itself, and the guarded views below fall
+    // back to the dashboard rather than rendering a 403.
+    const isSuperAdmin = !!user?.is_super_admin;
+    const DashboardHome = Overview;
 
     const renderView = () => {
         switch (currentView) {
@@ -41,13 +43,13 @@ const MainContent: React.FC = () => {
             case "vlog":
                 return <VlogManager />;
             case "report":
-                return <DashboardReport />;
+                return isSuperAdmin ? <DashboardReport /> : <DashboardHome />;
             case "wishlists":
                 return <WishlistAdmin />;
             case "carts":
                 return <CartAdmin />;
             case "orders":
-                return <AdminOrders />;
+                return isSuperAdmin ? <AdminOrders /> : <DashboardHome />;
             case "deliveries":
                 return <AdminDeliveries deliveryTypeFilter="delivery" />;
             case "pickups":

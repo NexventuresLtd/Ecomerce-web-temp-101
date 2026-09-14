@@ -18,6 +18,8 @@ import mainAxios from '../../Instance/mainAxios';
 import { notifyApi } from '../../app/notify';
 import { getAdminErrorMessage } from '../../app/utils/getAdminErrorMessage';
 import { resolveImageUrl } from '../../app/utils/resolveImageUrl';
+import { useCurrentUser } from '../../hooks/useCurrentUser';
+import BulkMessageModal from './BulkMessageModal';
 
 
 // Define types based on your backend response
@@ -61,6 +63,12 @@ interface UsersResponse {
 }
 
 const UsersManagement = () => {
+  // Normal admins manage users too, but only a super admin may grant the
+  // super-admin flag or touch a super admin's record (mirrors the API).
+  const { user: me } = useCurrentUser();
+  const iAmSuper = !!me?.is_super_admin;
+  const canEdit = (u: User) => iAmSuper || !u.is_super_admin;
+
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,19 +78,19 @@ const UsersManagement = () => {
   const [verificationFilter, setVerificationFilter] = useState<'all' | 'verified' | 'unverified'>('all');
   const [roleFilter, setRoleFilter] = useState<'all' | string>('all');
   const [currentPage, setCurrentPage] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(200);
+  // 50 per page, fetched from the database page by page (skip/limit) —
+  // never the whole table.
+  const [itemsPerPage, setItemsPerPage] = useState(50);
   const [sortField, setSortField] = useState<keyof User>('created_at');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
   const [updatingUser, setUpdatingUser] = useState<number | null>(null);
 
-  // Bulk SMS — select multiple users, compose one message, send to all their phones
+  // Bulk messaging — tick users in the table (or pick "all") and broadcast
+  // an SMS or email; the modal tracks progress and per-recipient failures.
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [showBulkSmsModal, setShowBulkSmsModal] = useState(false);
-  const [bulkSmsMessage, setBulkSmsMessage] = useState('');
-  const [sendingBulkSms, setSendingBulkSms] = useState(false);
-  const [bulkSmsResult, setBulkSmsResult] = useState<{ sent: string[]; failed: string[] } | null>(null);
+  const [showBulkModal, setShowBulkModal] = useState(false);
 
   // Individual message — one user, choice of email or SMS
   const [messageTarget, setMessageTarget] = useState<User | null>(null);
@@ -160,13 +168,14 @@ const UsersManagement = () => {
         is_active: isActive
       });
       
-      // Update local state
+      // Update local state (table row + open detail modal, if any)
       setUsers(users.map(user => 
         user.id === userId ? { ...user, is_active: isActive } : user
       ));
+      setSelectedUser(prev => (prev && prev.id === userId ? { ...prev, is_active: isActive } : prev));
     } catch (err) {
       console.error('Error updating user status:', err);
-      setError('Failed to update user status');
+      setError(getAdminErrorMessage(err, 'Failed to update user status'));
     } finally {
       setUpdatingUser(null);
     }
@@ -228,30 +237,9 @@ const UsersManagement = () => {
     );
   };
 
-  const selectedPhones = users
-    .filter(u => selectedIds.has(u.id) && u.phone)
-    .map(u => u.phone);
-
-  const handleSendBulkSms = async () => {
-    if (!bulkSmsMessage.trim() || selectedPhones.length === 0) return;
-    setSendingBulkSms(true);
-    setBulkSmsResult(null);
-    try {
-      const result = await notifyApi.sendBulkSms(selectedPhones, bulkSmsMessage.trim());
-      setBulkSmsResult({ sent: result.sent, failed: result.failed });
-    } catch (err) {
-      console.error('Error sending bulk SMS:', err);
-      setError('Failed to send bulk SMS');
-    } finally {
-      setSendingBulkSms(false);
-    }
-  };
-
-  const closeBulkSmsModal = () => {
-    setShowBulkSmsModal(false);
-    setBulkSmsMessage('');
-    setBulkSmsResult(null);
-  };
+  const selectedUsers = users
+    .filter(u => selectedIds.has(u.id))
+    .map(u => ({ id: u.id, name: `${u.fname ?? ''} ${u.lname ?? ''}`.trim() || u.email || u.phone, phone: u.phone, email: u.email }));
 
   const openMessageModal = (user: User) => {
     setMessageTarget(user);
@@ -344,13 +332,13 @@ const UsersManagement = () => {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-              {selectedIds.size > 0 && (
+              {iAmSuper && (
                 <button
-                  onClick={() => setShowBulkSmsModal(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors w-full sm:w-auto"
+                  onClick={() => setShowBulkModal(true)}
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-light transition-colors w-full sm:w-auto"
                 >
                   <MessageSquare size={16} />
-                  Send SMS to Selected ({selectedIds.size})
+                  {selectedIds.size > 0 ? `Message Selected (${selectedIds.size})` : 'Send SMS / Email'}
                 </button>
               )}
    
@@ -546,7 +534,7 @@ const UsersManagement = () => {
                       <select
                         value={user.role}
                         onChange={(e) => updateUserRole(user.id, e.target.value)}
-                        disabled={updatingUser === user.id || !user.email }
+                        disabled={updatingUser === user.id || !user.email || !canEdit(user)}
                         className={`text-xs px-2 py-1 rounded-full border ${getRoleColor(user.role)} focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer`}
                       >
                         {ROLE_OPTIONS.map(r => (
@@ -556,7 +544,10 @@ const UsersManagement = () => {
                       {updatingUser === user.id && (
                         <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 ml-1 inline-block"></div>
                       )}
-                      {(user.role === 'admin' || user.is_super_admin) && (
+                      {(user.role === 'admin' || user.is_super_admin) && !iAmSuper && user.is_super_admin && (
+                        <span className="block mt-1 text-xs px-2 py-0.5 rounded-full border text-amber-700 bg-amber-50 border-amber-200 w-fit">★ Super Admin</span>
+                      )}
+                      {(user.role === 'admin' || user.is_super_admin) && iAmSuper && (
                         <button
                           onClick={() => updateUserSuperAdmin(user.id, !user.is_super_admin)}
                           disabled={updatingUser === user.id}
@@ -576,13 +567,17 @@ const UsersManagement = () => {
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => updateUserStatus(user.id, !user.is_active)}
-                          disabled={updatingUser === user.id}
+                          onClick={() => {
+                            if (user.is_active && !window.confirm(`Deactivate ${user.fname} ${user.lname}? They will not be able to log in until reactivated.`)) return;
+                            updateUserStatus(user.id, !user.is_active);
+                          }}
+                          disabled={updatingUser === user.id || !canEdit(user)}
+                          title={user.is_active ? 'Click to deactivate' : 'Click to reactivate'}
                           className={`text-xs px-2 py-1 rounded-full border transition-colors ${
                             getStatusColor(user.is_active)
                           } hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
-                          {user.is_active ? 'Active' : 'Inactive'}
+                          {user.is_active ? 'Active' : 'Inactive · Reactivate'}
                           {updatingUser === user.id && (
                             <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current ml-1 inline-block"></div>
                           )}
@@ -622,7 +617,7 @@ const UsersManagement = () => {
                         <button
                           onClick={() => openMessageModal(user)}
                           disabled={!user.email && !user.phone}
-                          className="p-1 text-gray-400 hover:text-indigo-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="p-1 text-gray-400 hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Send message"
                         >
                           <MessageSquare size={16} />
@@ -646,9 +641,9 @@ const UsersManagement = () => {
             </div>
           )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+          {/* Pagination — always shown so the page size is discoverable */}
+          {totalUsers > 0 && (
+            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-700">
                   Show
@@ -661,13 +656,12 @@ const UsersManagement = () => {
                   }}
                   className="border border-gray-300 rounded px-2 py-1 text-sm"
                 >
-                  <option value={10}>10</option>
                   <option value={25}>25</option>
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
                 <span className="text-sm text-gray-700">
-                  per page
+                  per page · {startItem}–{endItem} of {totalUsers.toLocaleString()}
                 </span>
               </div>
               
@@ -680,9 +674,32 @@ const UsersManagement = () => {
                   Previous
                 </button>
                 
-                <span className="text-sm text-gray-700">
-                  Page {currentPage + 1} of {totalPages}
-                </span>
+                {/* Numbered pages: first, last, and a window around the current one */}
+                {Array.from({ length: totalPages }, (_, i) => i)
+                  .filter(i => i === 0 || i === totalPages - 1 || Math.abs(i - currentPage) <= 2)
+                  .reduce<(number | 'gap')[]>((acc, i, idx, arr) => {
+                    if (idx > 0 && i - (arr[idx - 1] as number) > 1) acc.push('gap');
+                    acc.push(i);
+                    return acc;
+                  }, [])
+                  .map((item, idx) =>
+                    item === 'gap' ? (
+                      <span key={`gap-${idx}`} className="px-1 text-gray-400">…</span>
+                    ) : (
+                      <button
+                        key={item}
+                        onClick={() => setCurrentPage(item)}
+                        aria-current={item === currentPage ? 'page' : undefined}
+                        className={`min-w-[32px] px-2 py-1 rounded text-sm border ${
+                          item === currentPage
+                            ? 'bg-primary text-white border-primary'
+                            : 'border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {item + 1}
+                      </button>
+                    )
+                  )}
                 
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
@@ -774,7 +791,7 @@ const UsersManagement = () => {
                   </div>
                 </div>
 
-                {(selectedUser.role === 'admin' || selectedUser.is_super_admin) && (
+                {(selectedUser.role === 'admin' || selectedUser.is_super_admin) && iAmSuper && (
                   <div>
                     <span className="font-medium text-gray-700">Super Admin:</span>
                     <button
@@ -826,8 +843,11 @@ const UsersManagement = () => {
 
               <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
                 <button
-                  onClick={() => updateUserStatus(selectedUser.id, !selectedUser.is_active)}
-                  disabled={updatingUser === selectedUser.id}
+                  onClick={() => {
+                    if (selectedUser.is_active && !window.confirm(`Deactivate ${selectedUser.fname} ${selectedUser.lname}? They will not be able to log in until reactivated.`)) return;
+                    updateUserStatus(selectedUser.id, !selectedUser.is_active);
+                  }}
+                  disabled={updatingUser === selectedUser.id || !canEdit(selectedUser)}
                   className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
                     selectedUser.is_active 
                       ? 'border-red-200 text-red-700 bg-red-50 hover:bg-red-100' 
@@ -840,7 +860,7 @@ const UsersManagement = () => {
                       Updating...
                     </div>
                   ) : (
-                    selectedUser.is_active ? 'Deactivate User' : 'Activate User'
+                    selectedUser.is_active ? 'Deactivate User' : 'Reactivate User'
                   )}
                 </button>
                 <button
@@ -855,69 +875,8 @@ const UsersManagement = () => {
         </div>
       )}
 
-      {/* Bulk SMS Modal */}
-      {showBulkSmsModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-lg w-full">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-indigo-600" />
-                  Send SMS to Selected Users
-                </h3>
-                <p className="text-sm text-gray-600 mt-0.5">
-                  {selectedPhones.length} of {selectedIds.size} selected user{selectedIds.size !== 1 ? 's' : ''} have a phone number on file
-                </p>
-              </div>
-              <button onClick={closeBulkSmsModal} className="text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6">
-              {!bulkSmsResult ? (
-                <>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                  <textarea
-                    value={bulkSmsMessage}
-                    onChange={(e) => setBulkSmsMessage(e.target.value)}
-                    rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                    placeholder="Type the SMS message to send to all selected users..."
-                  />
-                  <p className="text-xs text-gray-500 mt-1">{bulkSmsMessage.length} characters</p>
-                </>
-              ) : (
-                <div className="text-sm space-y-2">
-                  <p className="text-green-700 font-medium">✓ Sent to {bulkSmsResult.sent.length} recipient{bulkSmsResult.sent.length !== 1 ? 's' : ''}</p>
-                  {bulkSmsResult.failed.length > 0 && (
-                    <p className="text-red-600">✗ Failed for {bulkSmsResult.failed.length}: {bulkSmsResult.failed.join(', ')}</p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-              <button
-                onClick={closeBulkSmsModal}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-              >
-                {bulkSmsResult ? 'Close' : 'Cancel'}
-              </button>
-              {!bulkSmsResult && (
-                <button
-                  onClick={handleSendBulkSms}
-                  disabled={sendingBulkSms || !bulkSmsMessage.trim() || selectedPhones.length === 0}
-                  className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  {sendingBulkSms ? 'Sending...' : `Send to ${selectedPhones.length}`}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Bulk SMS / Email */}
+      <BulkMessageModal open={showBulkModal} onClose={() => setShowBulkModal(false)} selected={selectedUsers} />
 
       {/* Individual Message Modal */}
       {messageTarget && (
@@ -926,7 +885,7 @@ const UsersManagement = () => {
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-indigo-600" />
+                  <MessageSquare className="w-5 h-5 text-primary" />
                   Message {messageTarget.fname} {messageTarget.lname}
                 </h3>
                 <p className="text-sm text-gray-600 mt-0.5">Send directly to this user by email or SMS</p>
@@ -944,7 +903,7 @@ const UsersManagement = () => {
                       type="button"
                       onClick={() => setMessageChannel('email')}
                       disabled={!messageTarget.email}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${messageChannel === 'email' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${messageChannel === 'email' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
                     >
                       <Mail size={16} /> Email
                     </button>
@@ -952,7 +911,7 @@ const UsersManagement = () => {
                       type="button"
                       onClick={() => setMessageChannel('sms')}
                       disabled={!messageTarget.phone}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${messageChannel === 'sms' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${messageChannel === 'sms' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
                     >
                       <Phone size={16} /> SMS
                     </button>
@@ -1005,7 +964,7 @@ const UsersManagement = () => {
                 <button
                   onClick={handleSendIndividualMessage}
                   disabled={sendingMessage || !messageBody.trim()}
-                  className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   {sendingMessage ? 'Sending...' : 'Send'}

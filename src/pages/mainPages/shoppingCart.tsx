@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, X, Loader, Smartphone, CheckCircle, AlertCircle, Clock, CreditCard } from 'lucide-react';
+import PaymentResultModal from '../../components/SharedComp/PaymentResultModal';
+import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, X, Loader, Smartphone, Clock, CreditCard } from 'lucide-react';
 import Footer from '../../components/SharedComp/footer';
 import Navbar from '../../components/SharedComp/navabaritems/NavBar';
 import { RWF } from '../../app/priceConver';
@@ -316,7 +317,23 @@ const PaymentModal: React.FC<{
 
     if (!isOpen) return null;
 
-    const canClose = stage === 'method' || stage === 'input' || stage === 'success' || stage === 'failed' || stage === 'card-pending';
+    if (stage === 'success' || stage === 'failed') {
+        return (
+            <PaymentResultModal
+                open
+                status={stage}
+                amount={total}
+                message={statusMsg}
+                invoiceNumber={invoiceNumber}
+                invoiceUrl={invoiceNumber ? paymentService.getInvoiceViewUrl(invoiceNumber) : null}
+                onClose={onClose}
+                onContinue={() => { onClose(); window.location.href = '/products'; }}
+                onRetry={() => { setStage('method'); setStatusMsg(''); setPhoneError(''); }}
+            />
+        );
+    }
+
+    const canClose = stage === 'method' || stage === 'input' || stage === 'card-pending';
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -619,52 +636,6 @@ const PaymentModal: React.FC<{
                     </div>
                 )}
 
-                {/* Stage: success */}
-                {stage === 'success' && (
-                    <div className="text-center py-4 space-y-4">
-                        <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
-                        <div>
-                            <p className="text-xl font-bold text-gray-900 mb-1">Payment Successful!</p>
-                            <p className="text-sm text-gray-500">Your order is confirmed. An invoice has been sent to your email.</p>
-                            {invoiceNumber && <p className="text-xs text-gray-400 mt-1 font-mono">{invoiceNumber}</p>}
-                        </div>
-                        {invoiceNumber && (
-                            <a href={paymentService.getInvoiceViewUrl(invoiceNumber)}
-                                target="_blank" rel="noopener noreferrer"
-                                className="block w-full py-2.5 rounded-lg font-medium text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
-                                View Invoice
-                            </a>
-                        )}
-                        <button
-                            onClick={() => { onClose(); window.location.href = '/products'; }}
-                            className="w-full py-3 rounded-lg font-bold text-white text-sm transition-colors"
-                            style={{ backgroundColor: '#1d293d' }}>
-                            Okay
-                        </button>
-                    </div>
-                )}
-
-                {/* Stage: failed */}
-                {stage === 'failed' && (
-                    <div className="text-center py-4 space-y-4">
-                        <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
-                        <div>
-                            <p className="text-xl font-bold text-gray-900 mb-1">Payment Failed</p>
-                            <p className="text-sm text-gray-600">{statusMsg}</p>
-                        </div>
-                        <div className="flex gap-3">
-                            <button onClick={onClose}
-                                className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors">
-                                Close
-                            </button>
-                            <button onClick={() => { setStage('method'); setStatusMsg(''); setPhoneError(''); }}
-                                className="flex-1 py-3 rounded-lg font-medium text-white transition-colors"
-                                style={{ backgroundColor: '#1d293d' }}>
-                                Try Again
-                            </button>
-                        </div>
-                    </div>
-                )}
             </motion.div>
         </div>
     );

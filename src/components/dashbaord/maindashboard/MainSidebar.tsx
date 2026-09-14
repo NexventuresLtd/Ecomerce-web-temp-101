@@ -13,6 +13,7 @@ import {
     Building2,
     Megaphone,
     UserCircle,
+    FileBarChart,
 } from 'lucide-react';
 import type { ViewType } from '../../../types/dashboard/mainDashbaord';
 import { useAppContext } from '../../../contexts/dashbaord/context';
@@ -27,18 +28,19 @@ export const Sidebar: React.FC = () => {
     // Unseen events per tab, shared with the header bell.
     const { unseenByView } = useDashboardNotifications();
 
-    const menuItems =
-    role === "admin" ?
-    [
+    // Every admin sees everything operational. Anything that shows money —
+    // Transactions and Reports — is reserved for the super admin.
+    const menuItems = role === "admin" ? [
         { id: 'dashboard' as ViewType, label: 'Dashboard', icon: LayoutDashboard },
         { id: 'products' as ViewType, label: 'Products', icon: Package },
         { id: 'categories' as ViewType, label: 'Categories', icon: Tag },
-        // { id: 'report' as ViewType, label: 'Report', icon: Dock },
-        // Users & Transactions carry sensitive/financial data — super admin only.
-        ...(isSuperAdmin ? [{ id: 'users' as ViewType, label: 'Users', icon: Users }] : []),
+        { id: 'users' as ViewType, label: 'Users', icon: Users },
         { id: 'wishlists' as ViewType, label: 'Wishlists', icon: Heart },
         { id: 'carts' as ViewType, label: 'Carts', icon: ShoppingBag },
-        ...(isSuperAdmin ? [{ id: 'orders' as ViewType, label: 'Transactions', icon: Receipt }] : []),
+        ...(isSuperAdmin ? [
+            { id: 'orders' as ViewType, label: 'Transactions', icon: Receipt },
+            { id: 'report' as ViewType, label: 'Reports', icon: FileBarChart },
+        ] : []),
         { id: 'deliveries' as ViewType, label: 'Deliveries', icon: Truck },
         { id: 'pickups' as ViewType, label: 'Pickups', icon: Building2 },
         { id: 'vlog' as ViewType, label: 'Vlog', icon: Video },
@@ -46,14 +48,8 @@ export const Sidebar: React.FC = () => {
         { id: 'authSliders' as ViewType, label: 'Login/Register Slider', icon: Sliders },
         { id: 'announcements' as ViewType, label: 'Announcements', icon: Megaphone },
         { id: 'profile' as ViewType, label: 'Profile', icon: UserCircle },
-    ]:
-    [
+    ] : [
         { id: 'dashboard' as ViewType, label: 'Dashboard', icon: LayoutDashboard },
-        { id: 'products' as ViewType, label: 'Products', icon: Package },
-        // { id: 'categories' as ViewType, label: 'Categories', icon: Tag },
-        { id: 'wishlists' as ViewType, label: 'Wishlists', icon: Heart },
-        { id: 'carts' as ViewType, label: 'Carts', icon: ShoppingBag },
-        { id: 'vlog' as ViewType, label: 'Vlog', icon: Video },
         { id: 'profile' as ViewType, label: 'Profile', icon: UserCircle },
     ];
 

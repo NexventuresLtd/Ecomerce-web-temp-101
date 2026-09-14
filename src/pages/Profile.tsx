@@ -33,6 +33,7 @@ import { logout } from '../app/utils/HandelLogout';
 import mainAxios from '../Instance/mainAxios';
 import UserNotificationBell from '../components/SharedComp/auth/UserNotificationBell';
 import { useUserNotifications } from '../hooks/useUserNotifications';
+import PaymentResultModal from '../components/SharedComp/PaymentResultModal';
 import { resolveImageUrl } from '../app/utils/resolveImageUrl';
 
 const RWF = new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', minimumFractionDigits: 0 });
@@ -202,6 +203,40 @@ const UserDashboard = () => {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     // Drives the per-section unread badges in the sidebar.
     const { unreadBySection } = useUserNotifications();
+
+    // Landing here from V-Pay hosted checkout (?payment=<external_id>): look
+    // the payment up and show the verdict, then drop the param so a refresh
+    // doesn't replay it. PENDING keeps polling for a short while.
+    const [paymentResult, setPaymentResult] = useState<{ status: 'success' | 'failed'; amount: number; invoice: string | null } | null>(null);
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const extId = params.get('payment');
+        if (!extId) return;
+        params.delete('payment');
+        const clean = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`;
+        window.history.replaceState(null, '', clean);
+
+        let attempts = 0;
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const check = async () => {
+            try {
+                const r = await paymentService.getPaymentStatus(extId);
+                if (r.status === 'SUCCESSFUL') {
+                    setPaymentResult({ status: 'success', amount: r.amount, invoice: r.invoice_number || null });
+                    setActiveTab('orders');
+                    loadOrders(1, orderStatusFilter);
+                    return;
+                }
+                if (r.status === 'FAILED') {
+                    setPaymentResult({ status: 'failed', amount: r.amount, invoice: r.invoice_number || null });
+                    return;
+                }
+            } catch { /* transient */ }
+            if (++attempts < 15) timer = setTimeout(check, 4000);
+        };
+        check();
+        return () => { if (timer) clearTimeout(timer); };
+    }, []);
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoggedIn, setIsLoggedIn] = useState(true);
     const [billingData, setBillingData] = useState<BillingFormData>({
@@ -914,6 +949,18 @@ const UserDashboard = () => {
 
     return (
         <>
+            {paymentResult && (
+                <PaymentResultModal
+                    open
+                    status={paymentResult.status}
+                    amount={paymentResult.amount}
+                    invoiceNumber={paymentResult.invoice}
+                    invoiceUrl={paymentResult.invoice ? paymentService.getInvoiceViewUrl(paymentResult.invoice) : null}
+                    onClose={() => setPaymentResult(null)}
+                    onContinue={() => { window.location.href = '/products'; }}
+                    onRetry={() => { window.location.href = '/shopping-cart'; }}
+                />
+            )}
             <div className="flex h-screen bg-gray-50">
                 {/* Sidebar */}
                 {isSidebarOpen && (

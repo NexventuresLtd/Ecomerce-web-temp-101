@@ -13,21 +13,28 @@ import {
   Layers
 } from 'lucide-react';
 import mainAxios from '../../../Instance/mainAxios';
-import jsPDF from 'jspdf';
-import { applyPlugin } from 'jspdf-autotable';
+import { BrandPdf, loadLogo, downloadCsv, RWF } from '../../../app/reports/brandPdf';
+import { getAdminErrorMessage } from '../../../app/utils/getAdminErrorMessage';
+import { TrendingUp, Sheet } from 'lucide-react';
 
-// jspdf-autotable v5 no longer patches jsPDF just by importing it — this
-// restores doc.autoTable(...) / doc.lastAutoTable, which this file uses directly.
-applyPlugin(jsPDF);
-
-// Extend jsPDF type to include autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-    lastAutoTable?: {
-      finalY: number;
-    };
-  }
+interface SalesReport {
+  period: { start: string; end: string };
+  generated_at: string;
+  currency: string;
+  totals: {
+    orders: number; successful: number; pending: number; failed: number;
+    revenue: number; items_sold: number; avg_order_value: number; success_rate: number;
+  };
+  daily: Array<{ date: string; orders: number; successful: number; revenue: number }>;
+  by_delivery_type: Record<string, { orders: number; revenue: number }>;
+  top_products: Array<{ product_id: number | null; name: string; quantity: number; revenue: number; orders: number }>;
+  top_customers: Array<{ user_id: number; name: string; phone: string; orders: number; revenue: number }>;
+  orders: Array<{
+    id: number; invoice_number: string | null; external_id: string; date: string | null;
+    customer: string; phone: string; amount: number; currency: string; status: string;
+    delivery_type: string; delivery_status: string; items: number;
+  }>;
+  orders_truncated: boolean;
 }
 
 interface ReportData {
@@ -148,7 +155,9 @@ interface ReportData {
 
 const DashboardReport: React.FC = () => {
   const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [salesData, setSalesData] = useState<SalesReport | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   
@@ -163,18 +172,44 @@ const DashboardReport: React.FC = () => {
   const fetchReport = async () => {
     try {
       setLoading(true);
+      setLoadError(null);
       const params = new URLSearchParams();
       if (startDate) params.append('start_date', startDate);
       if (endDate) params.append('end_date', endDate);
 
-      const response = await mainAxios.get(`/dashboard/comprehensive-report?${params}`);
-      setReportData(response.data);
+      // Sales (money) and operations (users/products/carts) come from two
+      // endpoints; both are super-admin-only.
+      const [ops, sales] = await Promise.all([
+        mainAxios.get(`/dashboard/comprehensive-report?${params}`),
+        mainAxios.get(`/dashboard/sales-report?${params}`),
+      ]);
+      setReportData(ops.data);
+      setSalesData(sales.data);
     } catch (error) {
       console.error('Error fetching report:', error);
-      alert('Failed to fetch report data');
+      setLoadError(getAdminErrorMessage(error, 'Failed to fetch report data'));
     } finally {
       setLoading(false);
     }
+  };
+
+  const periodLabel = () => {
+    if (!salesData) return '';
+    const f = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    return `${f(salesData.period.start)} – ${f(salesData.period.end)}`;
+  };
+
+  // Order ledger as CSV — the thing accountants actually ask for.
+  const downloadOrdersCsv = () => {
+    if (!salesData) return;
+    downloadCsv(
+      `umukamezi-orders-${new Date().toISOString().slice(0, 10)}.csv`,
+      ['Invoice', 'Date', 'Customer', 'Phone', 'Items', 'Amount (RWF)', 'Status', 'Fulfilment', 'Delivery status'],
+      salesData.orders.map(o => [
+        o.invoice_number || o.external_id, o.date ? new Date(o.date).toLocaleString() : '',
+        o.customer, o.phone, o.items, o.amount, o.status, o.delivery_type, o.delivery_status,
+      ]),
+    );
   };
 
   const clearFilters = () => {
@@ -184,222 +219,131 @@ const DashboardReport: React.FC = () => {
   };
 
   const generatePDFReport = async () => {
-    if (!reportData) return;
-
+    if (!reportData || !salesData) return;
     setGeneratingPDF(true);
     try {
-      const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
+      const logo = await loadLogo();
+      const pdf = new BrandPdf('Business Report', `Sales & operations · ${periodLabel()}`, logo);
+      const t = salesData.totals;
+      const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
-      // Report Header
-      doc.setFillColor(59, 130, 246);
-      doc.rect(0, 0, pageWidth, 40, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
-      doc.text('COMPREHENSIVE DASHBOARD REPORT', pageWidth / 2, 25, { align: 'center' });
-      
-      doc.setFontSize(10);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, pageWidth / 2, 32, { align: 'center' });
+      // ── 1. Sales summary ──
+      pdf.section('Sales summary');
+      pdf.kpis([
+        { label: 'Revenue', value: RWF.format(t.revenue), sub: 'successful payments only', tone: 'success' },
+        { label: 'Successful orders', value: String(t.successful), sub: `${t.success_rate.toFixed(0)}% of ${t.orders} attempts`, tone: 'primary' },
+        { label: 'Avg order value', value: RWF.format(t.avg_order_value), tone: 'secondary' },
+        { label: 'Items sold', value: String(t.items_sold), tone: 'primary' },
+        { label: 'Pending', value: String(t.pending), tone: 'warning' },
+        { label: 'Failed', value: String(t.failed), sub: t.orders ? `${((t.failed / t.orders) * 100).toFixed(0)}% of attempts` : undefined, tone: 'accent' },
+        { label: 'Home delivery', value: RWF.format(salesData.by_delivery_type.delivery?.revenue ?? 0), sub: `${salesData.by_delivery_type.delivery?.orders ?? 0} orders`, tone: 'secondary' },
+        { label: 'Office pickup', value: RWF.format(salesData.by_delivery_type.pickup?.revenue ?? 0), sub: `${salesData.by_delivery_type.pickup?.orders ?? 0} orders`, tone: 'secondary' },
+      ]);
 
-      let yPosition = 60;
-
-      // Summary Section
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('EXECUTIVE SUMMARY', 20, yPosition);
-
-      yPosition += 15;
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-
-      const summaryData = [
-        ['Total Users', reportData.summary.total_users.toString()],
-        ['Total Products', reportData.summary.total_products.toString()],
-        ['Total Carts', reportData.summary.total_carts.toString()],
-        ['Total Wishlists', reportData.summary.total_wishlists.toString()],
-        ['Total Billings', reportData.summary.total_billings.toString()],
-        ['Main Categories', reportData.summary.total_main_categories.toString()],
-        ['Sub Categories', reportData.summary.total_sub_categories.toString()],
-        ['Product Categories', reportData.summary.total_product_categories.toString()],
-      ];
-
-      doc.autoTable({
-        startY: yPosition,
-        head: [['Metric', 'Count']],
-        body: summaryData,
-        theme: 'grid',
-        styles: { fontSize: 9 },
-        headStyles: {
-          fillColor: [59, 130, 246],
-          textColor: 255,
-          fontStyle: 'bold'
-        },
-        margin: { left: 20, right: 20 }
-      });
-
-      yPosition = doc.lastAutoTable?.finalY || yPosition + 50;
-
-      // Users Section
-      if (reportData.users.length > 0) {
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('USERS REPORT', 20, yPosition + 10);
-
-        const userData = reportData.users.slice(0, 15).map(user => [
-          user.id.toString(),
-          `${user.first_name} ${user.last_name}`,
-          user.email,
-          user.is_active ? 'Active' : 'Inactive',
-          user.is_verified ? 'Verified' : 'Not Verified',
-          user.cart_count.toString(),
-          user.billing_count.toString()
-        ]);
-
-        doc.autoTable({
-          startY: yPosition + 15,
-          head: [['ID', 'Name', 'Email', 'Status', 'Verified', 'Carts', 'Billings']],
-          body: userData,
-          theme: 'grid',
-          styles: { fontSize: 7 },
-          headStyles: {
-            fillColor: [107, 114, 128],
-            textColor: 255
-          },
-          margin: { left: 20, right: 20 }
-        });
-
-        yPosition = doc.lastAutoTable?.finalY || yPosition + 100;
+      // ── 2. Daily trend ──
+      if (salesData.daily.length) {
+        pdf.section('Daily revenue');
+        pdf.table(
+          ['Date', 'Attempts', 'Successful', 'Revenue'],
+          salesData.daily.map(d => [fmtDate(d.date), d.orders, d.successful, RWF.format(d.revenue)]),
+          { align: ['left', 'right', 'right', 'right'] },
+        );
       }
 
-      // Products Section
-      if (reportData.products.length > 0) {
-        doc.addPage();
-        yPosition = 20;
-
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('PRODUCTS REPORT', 20, yPosition);
-
-        const productData = reportData.products.slice(0, 15).map(product => [
-          product.id.toString(),
-          product.name.substring(0, 30),
-          `$${product.price.toFixed(2)}`,
-          product.stock_quantity.toString(),
-          product.is_active ? 'Active' : 'Inactive',
-          product.cart_appearances.toString()
-        ]);
-
-        doc.autoTable({
-          startY: yPosition + 10,
-          head: [['ID', 'Name', 'Price', 'Stock', 'Status', 'Cart Appearances']],
-          body: productData,
-          theme: 'grid',
-          styles: { fontSize: 7 },
-          headStyles: {
-            fillColor: [16, 185, 129],
-            textColor: 255
-          },
-          margin: { left: 20, right: 20 }
-        });
-
-        yPosition = doc.lastAutoTable?.finalY || yPosition + 100;
+      // ── 3. Top products ──
+      if (salesData.top_products.length) {
+        pdf.section('Top products');
+        pdf.table(
+          ['#', 'Product', 'Qty sold', 'Orders', 'Revenue'],
+          salesData.top_products.map((p, i) => [i + 1, p.name, p.quantity, p.orders, RWF.format(p.revenue)]),
+          { align: ['right', 'left', 'right', 'right', 'right'], widths: [8, undefined, 20, 18, 34] },
+        );
       }
 
-      // Carts Section
-      if (reportData.carts.length > 0) {
-        doc.addPage();
-        yPosition = 20;
-
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('CARTS REPORT', 20, yPosition);
-
-        const cartData = reportData.carts.slice(0, 15).map(cart => [
-          cart.id.toString(),
-          cart.user_name,
-          cart.user_email,
-          cart.total_items.toString(),
-          `$${cart.total_value.toFixed(2)}`,
-          cart.is_active ? 'Active' : 'Inactive',
-          new Date(cart.created_at).toLocaleDateString()
-        ]);
-
-        doc.autoTable({
-          startY: yPosition + 10,
-          head: [['Cart ID', 'User', 'Email', 'Items', 'Total Value', 'Status', 'Created']],
-          body: cartData,
-          theme: 'grid',
-          styles: { fontSize: 7 },
-          headStyles: {
-            fillColor: [139, 92, 246],
-            textColor: 255
-          },
-          margin: { left: 20, right: 20 }
-        });
+      // ── 4. Top customers ──
+      if (salesData.top_customers.length) {
+        pdf.section('Top customers');
+        pdf.table(
+          ['#', 'Customer', 'Phone', 'Orders', 'Revenue'],
+          salesData.top_customers.map((c, i) => [i + 1, c.name, c.phone, c.orders, RWF.format(c.revenue)]),
+          { align: ['right', 'left', 'left', 'right', 'right'], widths: [8, undefined, 34, 18, 34] },
+        );
       }
 
-      // Billings Section
-      if (reportData.billings.length > 0) {
-        doc.addPage();
-        yPosition = 20;
+      // ── 5. Order ledger ──
+      pdf.section('Order ledger');
+      if (salesData.orders_truncated) pdf.note('Showing the most recent 500 orders. Use the CSV export for the full ledger.');
+      pdf.table(
+        ['Invoice', 'Date', 'Customer', 'Items', 'Amount', 'Status', 'Fulfilment'],
+        salesData.orders.map(o => [
+          o.invoice_number || o.external_id, fmtDate(o.date), o.customer, o.items, RWF.format(o.amount),
+          o.status === 'SUCCESSFUL' ? 'Paid' : o.status === 'FAILED' ? 'Failed' : 'Pending',
+          o.delivery_type === 'delivery' ? 'Delivery' : 'Pickup',
+        ]),
+        { align: ['left', 'left', 'left', 'right', 'right', 'left', 'left'], widths: [52, 22, undefined, 12, 26, 14, 18], fontSize: 7.4 },
+      );
 
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('BILLINGS REPORT', 20, yPosition);
+      // ── 6. Operations ──
+      pdf.newPage();
+      pdf.section('Platform overview');
+      const sm = reportData.summary;
+      pdf.kpis([
+        { label: 'Users', value: String(sm.total_users), tone: 'primary' },
+        { label: 'Products', value: String(sm.total_products), tone: 'primary' },
+        { label: 'Carts', value: String(sm.total_carts), tone: 'secondary' },
+        { label: 'Wishlists', value: String(sm.total_wishlists), tone: 'secondary' },
+        { label: 'Main categories', value: String(sm.total_main_categories), tone: 'primary' },
+        { label: 'Sub categories', value: String(sm.total_sub_categories), tone: 'primary' },
+        { label: 'Product categories', value: String(sm.total_product_categories), tone: 'primary' },
+        { label: 'Login records', value: String(sm.total_login_records), tone: 'secondary' },
+      ]);
 
-        const billingData = reportData.billings.slice(0, 15).map(billing => [
-          billing.id.toString(),
-          billing.user_name,
-          billing.user_email,
-          `$${billing.total_amount.toFixed(2)}`,
-          billing.status,
-          billing.payment_method,
-          new Date(billing.created_at).toLocaleDateString()
-        ]);
-
-        doc.autoTable({
-          startY: yPosition + 10,
-          head: [['Billing ID', 'Customer', 'Email', 'Amount', 'Status', 'Payment Method', 'Created']],
-          body: billingData,
-          theme: 'grid',
-          styles: { fontSize: 7 },
-          headStyles: {
-            fillColor: [234, 88, 12],
-            textColor: 255
-          },
-          margin: { left: 20, right: 20 }
-        });
+      if (reportData.users.length) {
+        pdf.section('Users');
+        pdf.table(
+          ['Name', 'Email', 'Phone', 'Status', 'Verified', 'Joined'],
+          reportData.users.map(u => [
+            `${u.first_name} ${u.last_name}`.trim() || '—', u.email || '—', u.phone || '—',
+            u.is_active ? 'Active' : 'Inactive', u.is_verified ? 'Yes' : 'No', fmtDate(u.created_at),
+          ]),
+          { widths: [38, undefined, 30, 18, 16, 24] },
+        );
       }
 
-      // Add footer to all pages
-      const pageCount = doc.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(128, 128, 128);
-        doc.text(`Page ${i} of ${pageCount}`, pageWidth - 20, pageHeight - 10);
-        doc.text(`Dashboard Report - Confidential`, 20, pageHeight - 10);
+      if (reportData.products.length) {
+        pdf.section('Products');
+        pdf.table(
+          ['Product', 'Price', 'Stock', 'Status', 'Featured', 'In carts'],
+          reportData.products.map(p => [
+            p.name, RWF.format(p.price), p.stock_quantity, p.is_active ? 'Active' : 'Inactive',
+            p.is_featured ? 'Yes' : 'No', p.cart_appearances,
+          ]),
+          { align: ['left', 'right', 'right', 'left', 'left', 'right'], widths: [undefined, 30, 16, 18, 18, 18] },
+        );
       }
 
-      // Save PDF
-      const fileName = `dashboard-report-${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(fileName);
+      if (reportData.carts.length) {
+        pdf.section('Active carts');
+        pdf.table(
+          ['Customer', 'Email', 'Items', 'Value', 'Status', 'Created'],
+          reportData.carts.map(c => [
+            c.user_name, c.user_email, c.total_items, RWF.format(c.total_value),
+            c.is_active ? 'Active' : 'Closed', fmtDate(c.created_at),
+          ]),
+          { align: ['left', 'left', 'right', 'right', 'left', 'left'], widths: [40, undefined, 14, 30, 18, 24] },
+        );
+      }
 
+      pdf.finish().save(`umukamezi-report-${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF report');
+      setLoadError('Failed to generate PDF report');
     } finally {
       setGeneratingPDF(false);
     }
   };
 
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat().format(num);
-  };
+  const formatNumber = (n: number) => new Intl.NumberFormat('en-US').format(n ?? 0);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -425,9 +369,9 @@ const DashboardReport: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-semibold text-gray-800">Comprehensive Dashboard Report</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">Business Report</h2>
           <p className="text-gray-600 mt-1">
-            Complete overview of your e-commerce platform
+            Sales &amp; operations{salesData ? ` · ${periodLabel()}` : ''}
           </p>
         </div>
         <div className="flex items-center space-x-3">
@@ -444,11 +388,22 @@ const DashboardReport: React.FC = () => {
             Filter
           </button>
 
+          {/* Orders CSV */}
+          <button
+            onClick={downloadOrdersCsv}
+            disabled={!salesData}
+            className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
+            title="Order ledger as CSV"
+          >
+            <Sheet className="w-4 h-4 mr-2" />
+            Orders CSV
+          </button>
+
           {/* Download PDF */}
           <button
             onClick={generatePDFReport}
-            disabled={!reportData || generatingPDF}
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+            disabled={!reportData || !salesData || generatingPDF}
+            className="flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-light transition-colors disabled:opacity-50"
           >
             <Download className="w-4 h-4 mr-2" />
             {generatingPDF ? 'Generating PDF...' : 'Download PDF'}
@@ -513,6 +468,87 @@ const DashboardReport: React.FC = () => {
               Showing data from {startDate || 'the beginning'} to {endDate || 'now'}
             </div>
           )}
+        </div>
+      )}
+
+      {loadError && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{loadError}</div>
+      )}
+
+      {/* ── Sales ── */}
+      {salesData && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp className="w-4 h-4 text-green-600" />
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Sales</h3>
+            <span className="text-xs text-gray-400">· revenue counts successful payments only</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            {[
+              { label: 'Revenue', value: RWF.format(salesData.totals.revenue), cls: 'text-green-700 border-green-200 bg-green-50' },
+              { label: 'Successful orders', value: `${salesData.totals.successful}`, sub: `${salesData.totals.success_rate.toFixed(0)}% of ${salesData.totals.orders} attempts`, cls: 'text-primary border-gray-200 bg-white' },
+              { label: 'Avg order value', value: RWF.format(salesData.totals.avg_order_value), cls: 'text-secondary border-blue-200 bg-blue-50' },
+              { label: 'Items sold', value: `${salesData.totals.items_sold}`, cls: 'text-primary border-gray-200 bg-white' },
+              { label: 'Pending', value: `${salesData.totals.pending}`, cls: 'text-yellow-700 border-yellow-200 bg-yellow-50' },
+              { label: 'Failed', value: `${salesData.totals.failed}`, cls: 'text-third border-red-200 bg-red-50' },
+              { label: 'Home delivery', value: RWF.format(salesData.by_delivery_type.delivery?.revenue ?? 0), sub: `${salesData.by_delivery_type.delivery?.orders ?? 0} orders`, cls: 'text-primary border-gray-200 bg-white' },
+              { label: 'Office pickup', value: RWF.format(salesData.by_delivery_type.pickup?.revenue ?? 0), sub: `${salesData.by_delivery_type.pickup?.orders ?? 0} orders`, cls: 'text-primary border-gray-200 bg-white' },
+            ].map(k => (
+              <div key={k.label} className={`rounded-lg border p-4 ${k.cls}`}>
+                <p className="text-xs uppercase tracking-wide text-gray-500">{k.label}</p>
+                <p className="text-xl font-bold mt-1">{k.value}</p>
+                {k.sub && <p className="text-xs text-gray-500 mt-0.5">{k.sub}</p>}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="rounded-lg border border-gray-200 overflow-hidden">
+              <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-sm font-semibold text-gray-700">Top products</div>
+              {salesData.top_products.length === 0 ? (
+                <p className="p-4 text-sm text-gray-400">No successful sales in this period</p>
+              ) : (
+                <table className="w-full text-sm">
+                  <tbody>
+                    {salesData.top_products.slice(0, 8).map((p, i) => (
+                      <tr key={`${p.product_id}-${i}`} className="border-b border-gray-100 last:border-0">
+                        <td className="px-4 py-2 text-gray-400 w-8">{i + 1}</td>
+                        <td className="px-2 py-2 text-gray-800 truncate max-w-[220px]" title={p.name}>{p.name}</td>
+                        <td className="px-2 py-2 text-right text-gray-500 whitespace-nowrap">{p.quantity} sold</td>
+                        <td className="px-4 py-2 text-right font-semibold text-gray-900 whitespace-nowrap">{RWF.format(p.revenue)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+            <div className="rounded-lg border border-gray-200 overflow-hidden">
+              <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-sm font-semibold text-gray-700">Recent orders</div>
+              {salesData.orders.length === 0 ? (
+                <p className="p-4 text-sm text-gray-400">No orders in this period</p>
+              ) : (
+                <table className="w-full text-sm">
+                  <tbody>
+                    {salesData.orders.slice(0, 8).map(o => (
+                      <tr key={o.id} className="border-b border-gray-100 last:border-0">
+                        <td className="px-4 py-2 font-mono text-xs text-gray-600 truncate max-w-[150px]" title={o.invoice_number || o.external_id}>{o.invoice_number || o.external_id}</td>
+                        <td className="px-2 py-2 text-gray-800 truncate max-w-[120px]">{o.customer}</td>
+                        <td className="px-2 py-2 text-right font-semibold whitespace-nowrap">{RWF.format(o.amount)}</td>
+                        <td className="px-4 py-2 text-right">
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                            o.status === 'SUCCESSFUL' ? 'bg-green-50 text-green-700 border-green-200'
+                            : o.status === 'FAILED' ? 'bg-red-50 text-red-600 border-red-200'
+                            : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                            {o.status === 'SUCCESSFUL' ? 'Paid' : o.status === 'FAILED' ? 'Failed' : 'Pending'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+/* Brand palette as Tailwind tokens, so every variant works — bg-primary,
+   hover:bg-primary-light, focus:ring-primary, border-third, accent-primary…
+   The hand-written classes below stay for anything already using them. */
+@theme {
+  --color-primary: #1d293d;
+  --color-primary-light: #24364f;
+  --color-primary-dark: #141b29;
+  --color-secondary: #3b82f6;
+  --color-secondary-light: #60a5fa;
+  --color-secondary-dark: #1e40af;
+  --color-third: #f63b3b;
+}
+
 /* colors.css */
 
 /* =========================

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { othersLast } from '../../app/utils/othersLast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ChevronDown,
@@ -641,7 +642,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                         transition={{ duration: 0.2 }}
                     >
                         {/* Sub Categories */}
-                        {category.sub_categories?.map((subCategory) => (
+                        {othersLast(category.sub_categories).map((subCategory) => (
                             <CategoryItem
                                 key={subCategory.id}
                                 category={subCategory}
@@ -654,7 +655,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                         ))}
 
                         {/* Product Categories */}
-                        {category.product_categories?.map((productCategory) => (
+                        {othersLast(category.product_categories).map((productCategory) => (
                             <CategoryItem
                                 key={productCategory.id}
                                 category={productCategory}
