@@ -1092,6 +1092,11 @@ const ShoppingCartPage: React.FC = () => {
     const [updating, setUpdating] = useState(false);
     const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    // What the customer is paying for, frozen at the moment checkout opens.
+    // The live cart is cleared the instant payment succeeds, so anything
+    // derived from it afterwards (total, items) would read as empty/RF 0
+    // exactly when the success card needs it.
+    const [checkoutSnapshot, setCheckoutSnapshot] = useState<{ total: number; items: CartItem[] } | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
@@ -1103,9 +1108,9 @@ const ShoppingCartPage: React.FC = () => {
     // usable user, and an expired token counts as no user.
     const guestParam = () => `?guest_id=${getGuestCartId()}`;
 
-    const fetchCart = async () => {
+    const fetchCart = async (opts: { silent?: boolean } = {}) => {
         try {
-            setLoading(true);
+            if (!opts.silent) setLoading(true);
             const response = await mainAxios.get(`/cart/my-cart${guestParam()}`);
             setCartData(response.data);
             // Keep the navbar badge in step — this runs after every add,
@@ -1205,12 +1210,33 @@ const ShoppingCartPage: React.FC = () => {
             window.location.href = '/login?next=/shopping-cart';
             return;
         }
+        const payable = (cartData?.items ?? []).filter(i => i.in_stock > 0);
+        setCheckoutSnapshot({ total: payable.reduce((sum, i) => sum + i.item_total, 0), items: payable });
         setShowPaymentModal(true);
     };
 
     const handlePaymentSuccess = () => {
-        fetchCart();
+        // Refresh behind the result card without swapping the page to a
+        // spinner — that swap is what used to unmount the modal.
+        fetchCart({ silent: true });
     };
+
+    const closePaymentModal = () => {
+        setShowPaymentModal(false);
+        setCheckoutSnapshot(null);
+    };
+
+    // Rendered in every branch below (loading, empty, full) so the result
+    // card survives the cart emptying out underneath it.
+    const paymentModal = checkoutSnapshot && (
+        <PaymentModal
+            isOpen={showPaymentModal}
+            onClose={closePaymentModal}
+            total={checkoutSnapshot.total}
+            onSuccess={handlePaymentSuccess}
+            items={checkoutSnapshot.items}
+        />
+    );
 
     const showAlert = (message: string, type: 'success' | 'error' | 'info') => {
         setAlert({ message, type });
@@ -1230,6 +1256,7 @@ const ShoppingCartPage: React.FC = () => {
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                     </div>
                 </div>
+                {paymentModal}
             </div>
         );
     }
@@ -1264,6 +1291,7 @@ const ShoppingCartPage: React.FC = () => {
                     </motion.div>
                 </div>
                 <Footer />
+                {paymentModal}
                 {alert && <CustomAlert message={alert.message} type={alert.type} onClose={closeAlert} />}
             </div>
         );
@@ -1317,13 +1345,7 @@ const ShoppingCartPage: React.FC = () => {
             <Footer />
 
             {/* Payment Modal */}
-            <PaymentModal
-                isOpen={showPaymentModal}
-                onClose={() => setShowPaymentModal(false)}
-                total={cartData.items.filter(i => i.in_stock > 0).reduce((s, i) => s + i.item_total, 0)}
-                onSuccess={handlePaymentSuccess}
-                items={cartData.items.filter(i => i.in_stock > 0)}
-            />
+            {paymentModal}
 
             {/* Delete Confirmation Dialog */}
             <ConfirmationDialog
