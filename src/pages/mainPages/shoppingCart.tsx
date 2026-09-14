@@ -32,7 +32,11 @@ interface CartItem {
     product_color: Color[];
     delivery: string;       // user's selected option: "free" | "2000" | "5000" | "0"
     delivery_fee: string;   // product's own delivery note set by admin (e.g. "Free" or custom text)
-    item_total: number;
+    item_total: number;          // charged for the line (after discount)
+    unit_price?: number;         // current list price per unit
+    discount?: number;           // percentage applied
+    discounted_price?: number;   // charged per unit
+    discount_amount?: number;    // saved on this line
     in_stock: number;
     max_available: number;
 }
@@ -917,14 +921,20 @@ const CartItem: React.FC<{
 
                         {/* Price */}
                         <div className="text-right">
-                            <div className="flex items-center gap-2 justify-end mb-2">
+                            <div className="flex items-center gap-2 justify-end mb-2 flex-wrap">
+                                {/* What is charged per unit; list price struck through when a discount applies */}
                                 <span className="text-xl font-bold text-gray-900">
-                                    {RWF.format(item.current_price)}
+                                    {RWF.format(item.discounted_price ?? item.current_price)}
                                 </span>
-                                {item.price_at_time !== item.current_price && (
-                                    <span className="text-sm text-gray-500 line-through">
-                                        {RWF.format(item.price_at_time)}
-                                    </span>
+                                {(item.discount ?? 0) > 0 && (
+                                    <>
+                                        <span className="text-sm text-gray-400 line-through">
+                                            {RWF.format(item.unit_price ?? item.current_price)}
+                                        </span>
+                                        <span className="text-xs font-bold text-third bg-red-50 border border-red-200 rounded px-1.5 py-0.5">
+                                            -{Math.round(item.discount ?? 0)}%
+                                        </span>
+                                    </>
                                 )}
                             </div>
                             <p className="text-sm text-gray-600">
@@ -996,9 +1006,10 @@ const CartSummary: React.FC<{
     items: CartItem[];
     availableItems: CartItem[];
     availableTotal: number;
+    availableDiscount?: number;
     onCheckout: () => void;
     isLoading?: boolean;
-}> = ({ items, availableItems, availableTotal, onCheckout, isLoading = false }) => {
+}> = ({ items, availableItems, availableTotal, availableDiscount = 0, onCheckout, isLoading = false }) => {
     const outOfStockItems = items.filter(i => i.in_stock === 0);
     const totalDelivery = availableItems.reduce((sum, item) => sum + parseDeliveryFee(item.delivery), 0);
     const grandTotal = availableTotal + totalDelivery;
@@ -1020,6 +1031,18 @@ const CartSummary: React.FC<{
                     </div>
                 )}
 
+                {availableDiscount > 0 && (
+                    <>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">Subtotal (before discount)</span>
+                            <span className="text-gray-500">{RWF.format(availableTotal + availableDiscount)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-third font-medium">Discount</span>
+                            <span className="text-third font-semibold">− {RWF.format(availableDiscount)}</span>
+                        </div>
+                    </>
+                )}
                 <div className="flex justify-between">
                     <span className="text-gray-600">
                         Items ({availableItems.length}
@@ -1329,11 +1352,13 @@ const ShoppingCartPage: React.FC = () => {
                         {(() => {
                             const availableItems = cartData.items.filter(i => i.in_stock > 0);
                             const availableTotal = availableItems.reduce((s, i) => s + i.item_total, 0);
+                            const availableDiscount = availableItems.reduce((s, i) => s + (i.discount_amount ?? 0), 0);
                             return (
                                 <CartSummary
                                     items={cartData.items}
                                     availableItems={availableItems}
                                     availableTotal={availableTotal}
+                                    availableDiscount={availableDiscount}
                                     onCheckout={handleCheckout}
                                     isLoading={updating}
                                 />
