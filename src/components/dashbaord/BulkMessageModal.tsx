@@ -22,6 +22,24 @@ type Phase = 'compose' | 'sending' | 'done';
 
 const gsmSegments = (n: number) => (n <= 160 ? 1 : Math.ceil(n / 153));
 
+// Same person can appear twice (two accounts on one number, or 078… vs
+// +25078…). Collapse those before sending so "Send to N" and the progress
+// total are honest, and no one gets the message twice.
+const normalizeContact = (channel: Channel, c: string) => {
+    if (channel === 'email') return c.trim().toLowerCase();
+    const d = c.replace(/\D/g, '');
+    return d.length >= 9 ? d.slice(-9) : d;
+};
+const dedupe = (channel: Channel, list: Recipient[]) => {
+    const seen = new Set<string>(); const out: Recipient[] = []; let dupes = 0;
+    for (const r of list) {
+        const k = normalizeContact(channel, r.contact);
+        if (!k || seen.has(k)) { dupes++; continue; }
+        seen.add(k); out.push(r);
+    }
+    return { list: out, dupes };
+};
+
 const BulkMessageModal = ({ open, onClose, selected }: Props) => {
     const [channel, setChannel] = useState<Channel>('sms');
     const [audience, setAudience] = useState<Audience>('selected');
@@ -36,6 +54,8 @@ const BulkMessageModal = ({ open, onClose, selected }: Props) => {
     const [phase, setPhase] = useState<Phase>('compose');
     const [progress, setProgress] = useState({ total: 0, sent: 0, failed: 0 });
     const [failures, setFailures] = useState<SendFailure[]>([]);
+    const [stopped, setStopped] = useState<string | null>(null); // why we stopped before the end
+    const [showAllFailures, setShowAllFailures] = useState(false);
     const cancelRef = useRef(false);
 
     useEffect(() => {
@@ -52,7 +72,9 @@ const BulkMessageModal = ({ open, onClose, selected }: Props) => {
         .filter(u => (channel === 'sms' ? u.phone : u.email))
         .map(u => ({ id: u.id, name: u.name, contact: (channel === 'sms' ? u.phone : u.email) as string })),
         [selected, channel]);
-    const recipients: Recipient[] = audience === 'all' ? (all[channel] ?? []) : selectedReachable;
+    const { list: recipients, dupes } = useMemo(
+        () => dedupe(channel, audience === 'all' ? (all[channel] ?? []) : selectedReachable),
+        [channel, audience, all, selectedReachable]);
 
     const counts = {
         selectedReachable: selectedReachable.length,
@@ -64,6 +86,7 @@ const BulkMessageModal = ({ open, onClose, selected }: Props) => {
 
     const reset = () => {
         setPhase('compose'); setProgress({ total: 0, sent: 0, failed: 0 }); setFailures([]); setError(null);
+        setStopped(null); setShowAllFailures(false);
         cancelRef.current = false;
     };
     const close = () => { reset(); setMessage(''); setSubject(''); setAudience('selected'); onClose(); };
@@ -76,22 +99,40 @@ const BulkMessageModal = ({ open, onClose, selected }: Props) => {
         setProgress({ total: recipients.length, sent: 0, failed: 0 });
         setFailures([]);
 
+        setStopped(null);
         const size = CHUNK[channel];
         for (let i = 0; i < recipients.length; i += size) {
-            if (cancelRef.current) break;
+            if (cancelRef.current) { setStopped('Stopped by you.'); break; }
             const chunk = recipients.slice(i, i + size);
+            let fails: SendFailure[] = [];
+            let sentCount = 0;
             try {
                 const res = channel === 'sms'
                     ? await notifyApi.sendBulkSms(chunk.map(r => r.contact), message.trim())
                     : await notifyApi.sendBulkEmail(chunk.map(r => ({ email: r.contact, name: r.name })), subject.trim(), message.trim());
-                const fails = res.failures ?? res.failed.map(f => ({ recipient: f, reason: 'Delivery failed' }));
-                setProgress(p => ({ ...p, sent: p.sent + res.sent.length, failed: p.failed + fails.length }));
-                if (fails.length) setFailures(f => [...f, ...fails]);
+                fails = res.failures ?? res.failed.map(f => ({ recipient: f, reason: 'Delivery failed' }));
+                sentCount = res.sent.length;
+                // The server normalises numbers, so match on the normalised form to
+                // find anyone it neither sent to nor reported — never leave a gap.
+                const accounted = new Set([...res.sent, ...fails.map(f => f.recipient)].map(c => normalizeContact(channel, c)));
+                const missing = chunk.filter(r => !accounted.has(normalizeContact(channel, r.contact)));
+                fails = [...fails, ...missing.map(r => ({ recipient: r.contact, reason: 'Skipped by the server (duplicate of another recipient)' }))];
             } catch (err) {
                 // The whole chunk is unaccounted for — record every recipient with the server's reason.
                 const reason = getAdminErrorMessage(err, 'Request failed');
-                setProgress(p => ({ ...p, failed: p.failed + chunk.length }));
-                setFailures(f => [...f, ...chunk.map(r => ({ recipient: r.contact, reason }))]);
+                fails = chunk.map(r => ({ recipient: r.contact, reason }));
+            }
+            setProgress(p => ({ ...p, sent: p.sent + sentCount, failed: p.failed + fails.length }));
+            if (fails.length) setFailures(f => [...f, ...fails]);
+
+            // Nothing in this batch went through and every failure says the same
+            // thing (balance, credentials, mail server down…) — the rest will fail
+            // identically, so stop instead of hammering the gateway.
+            const oneReason = fails.length === chunk.length && sentCount === 0 && new Set(fails.map(f => f.reason)).size === 1
+                && !/valid (phone|email)/i.test(fails[0].reason);
+            if (oneReason && i + size < recipients.length) {
+                setStopped(`Stopped early — the gateway is rejecting every message for the same reason. ${recipients.length - i - size} recipients were not attempted.`);
+                break;
             }
         }
         setPhase('done');
@@ -175,6 +216,9 @@ const BulkMessageModal = ({ open, onClose, selected }: Props) => {
                                 <textarea value={message} onChange={e => setMessage(e.target.value)} rows={6}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                     placeholder={channel === 'sms' ? 'Type the SMS…' : 'Type the email body…'} />
+                                {dupes > 0 && (
+                                    <p className="text-xs text-gray-500 mt-2">{dupes} duplicate {channel === 'sms' ? 'number' : 'address'}{dupes > 1 ? 's' : ''} removed — each person is messaged once.</p>
+                                )}
                                 <div className="flex justify-between text-xs text-gray-500 mt-1">
                                     <span>{message.length} characters</span>
                                     {channel === 'sms' && (
@@ -217,28 +261,53 @@ const BulkMessageModal = ({ open, onClose, selected }: Props) => {
                                         <p className="text-xs text-gray-500 uppercase tracking-wide">Remaining</p>
                                     </div>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-2">{progress.sent + progress.failed} of {progress.total} processed</p>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    {progress.sent + progress.failed} of {progress.total} processed
+                                    {phase === 'done' && remaining > 0 && ` · ${remaining} not attempted`}
+                                </p>
+                                {stopped && (
+                                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                                        <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                        <span>{stopped}</span>
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Failures with reasons */}
-                            {failures.length > 0 && (
-                                <div className="rounded-lg border border-red-200 overflow-hidden">
-                                    <div className="px-4 py-2 bg-red-50 border-b border-red-200 text-sm font-semibold text-red-700 flex items-center gap-2">
-                                        <XCircle className="w-4 h-4" /> Could not send to {failures.length}
-                                    </div>
-                                    <ul className="divide-y divide-gray-100 max-h-56 overflow-y-auto">
-                                        {failures.map((f, i) => (
-                                            <li key={`${f.recipient}-${i}`} className="px-4 py-2 text-sm flex items-start justify-between gap-3">
-                                                <div className="min-w-0">
-                                                    {nameFor(f.recipient) && <p className="text-gray-800 truncate">{nameFor(f.recipient)}</p>}
-                                                    <p className="text-xs font-mono text-gray-500 truncate">{f.recipient}</p>
+                            {/* Failures — grouped by reason, so 119 identical errors read as one line */}
+                            {failures.length > 0 && (() => {
+                                const groups = Array.from(failures.reduce((m, f) => m.set(f.reason, [...(m.get(f.reason) ?? []), f]), new Map<string, SendFailure[]>()).entries())
+                                    .sort((a, b) => b[1].length - a[1].length);
+                                return (
+                                    <div className="rounded-lg border border-red-200 overflow-hidden">
+                                        <div className="px-4 py-2 bg-red-50 border-b border-red-200 text-sm font-semibold text-red-700 flex items-center gap-2">
+                                            <XCircle className="w-4 h-4" /> Could not send to {failures.length}
+                                        </div>
+                                        <div className="divide-y divide-gray-100 max-h-72 overflow-y-auto">
+                                            {groups.map(([reason, list]) => (
+                                                <div key={reason} className="px-4 py-3">
+                                                    <p className="text-sm text-red-700 leading-snug">
+                                                        <span className="font-semibold">{list.length === failures.length ? 'All' : list.length} {list.length === 1 ? 'recipient' : 'recipients'}:</span> {reason}
+                                                    </p>
+                                                    {(showAllFailures || list.length <= 5) ? (
+                                                        <ul className="mt-2 flex flex-wrap gap-1.5">
+                                                            {list.map((f, i) => (
+                                                                <li key={`${f.recipient}-${i}`} title={f.recipient}
+                                                                    className="text-xs bg-gray-50 border border-gray-200 rounded px-2 py-0.5 text-gray-700">
+                                                                    {nameFor(f.recipient) ?? f.recipient}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    ) : (
+                                                        <button onClick={() => setShowAllFailures(true)} className="mt-1 text-xs text-primary hover:underline">
+                                                            Show who ({list.length})
+                                                        </button>
+                                                    )}
                                                 </div>
-                                                <span className="text-xs text-red-600 text-right flex-shrink-0 max-w-[55%]">{f.reason}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     )}
 
