@@ -100,7 +100,7 @@ const VlogForm: React.FC<VlogFormProps> = ({ vlog, onSubmit, onCancel, loading }
                 required
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -114,7 +114,7 @@ const VlogForm: React.FC<VlogFormProps> = ({ vlog, onSubmit, onCancel, loading }
                 value={formData.youtube_id}
                 onChange={(e) => setFormData(prev => ({ ...prev, youtube_id: e.target.value }))}
                 placeholder="dQw4w9WgXcQ"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
@@ -128,7 +128,7 @@ const VlogForm: React.FC<VlogFormProps> = ({ vlog, onSubmit, onCancel, loading }
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
@@ -142,7 +142,7 @@ const VlogForm: React.FC<VlogFormProps> = ({ vlog, onSubmit, onCancel, loading }
                 required
                 value={formData.thumbnail}
                 onChange={(e) => setFormData(prev => ({ ...prev, thumbnail: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div> */}
 
@@ -155,7 +155,7 @@ const VlogForm: React.FC<VlogFormProps> = ({ vlog, onSubmit, onCancel, loading }
                 required
                 value={formData.channel}
                 onChange={(e) => setFormData(prev => ({ ...prev, channel: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -168,7 +168,7 @@ const VlogForm: React.FC<VlogFormProps> = ({ vlog, onSubmit, onCancel, loading }
                 required
                 value={formData.published_at.split('T')[0]}
                 onChange={(e) => setFormData(prev => ({ ...prev, published_at: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -182,7 +182,7 @@ const VlogForm: React.FC<VlogFormProps> = ({ vlog, onSubmit, onCancel, loading }
                 required
                 value={formData.category}
                 onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">Select a category</option>
                 <option value="Tech">Tech</option>
@@ -205,7 +205,7 @@ const VlogForm: React.FC<VlogFormProps> = ({ vlog, onSubmit, onCancel, loading }
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Add a tag and press Enter"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <button
                 type="button"
@@ -258,7 +258,7 @@ const VlogForm: React.FC<VlogFormProps> = ({ vlog, onSubmit, onCancel, loading }
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-light disabled:opacity-50"
             >
               {loading ? 'Saving...' : (vlog ? 'Update' : 'Create')}
             </button>
@@ -440,7 +440,7 @@ const VlogManager: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -458,7 +458,7 @@ const VlogManager: React.FC = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowForm(true)}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-light"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Vlog
@@ -474,13 +474,13 @@ const VlogManager: React.FC = () => {
               placeholder="Search vlogs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">All Categories</option>
             {categories.map(category => (

@@ -130,18 +130,18 @@ const AdminProfile: React.FC = () => {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                             <input type="text" value={fname} onChange={(e) => setFname(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
                             <input type="text" value={lname} onChange={(e) => setLname(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent" />
                         </div>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                         <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="+250781234567" />
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="+250781234567" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
@@ -157,7 +157,7 @@ const AdminProfile: React.FC = () => {
                 <button
                     onClick={handleSaveProfile}
                     disabled={savingProfile || !fname.trim()}
-                    className="mt-6 px-5 py-2.5 bg-primary hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg font-medium"
+                    className="mt-6 px-5 py-2.5 bg-primary hover:bg-primary-light disabled:opacity-50 text-white rounded-lg font-medium"
                 >
                     {savingProfile ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -179,7 +179,7 @@ const AdminProfile: React.FC = () => {
                                 type={showCurrent ? 'text' : 'password'}
                                 value={currentPassword}
                                 onChange={(e) => setCurrentPassword(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
                             />
                             <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                                 {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -194,7 +194,7 @@ const AdminProfile: React.FC = () => {
                                     type={showNew ? 'text' : 'password'}
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
                                     placeholder="At least 6 characters"
                                 />
                                 <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -208,7 +208,7 @@ const AdminProfile: React.FC = () => {
                                 type={showNew ? 'text' : 'password'}
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
                             />
                         </div>
                     </div>

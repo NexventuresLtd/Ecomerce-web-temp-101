@@ -110,7 +110,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                             value={formData.name}
                             onChange={handleInputChange}
                             placeholder="Category Name"
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                             required
                         />
                     </div>
@@ -122,7 +122,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                             value={slug}
                             onChange={(e) => setSlug(e.target.value)}
                             placeholder="Category Slug"
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-gray-50"
                             required
                         />
                         <p className="text-xs text-gray-500 mt-1">Slug will be auto-generated from name</p>
@@ -136,7 +136,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                             onChange={handleInputChange}
                             placeholder="Description"
                             rows={3}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
                     </div>
 
@@ -147,7 +147,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                                 name="main_category_id"
                                 value={formData.main_category_id}
                                 onChange={handleInputChange}
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                                 required
                             >
                                 <option value={0}>Select Main Category</option>
@@ -165,7 +165,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                                 name="sub_category_id"
                                 value={formData.sub_category_id}
                                 onChange={handleInputChange}
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                                 required
                             >
                                 <option value={0}>Select Sub Category</option>
@@ -215,7 +215,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                     <div className="flex gap-3 pt-4 border-t border-gray-50">
                         <button
                             type="submit"
-                            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400 flex-1"
+                            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-light disabled:bg-blue-400 flex-1"
                             disabled={loading}
                         >
                             {loading ? 'Processing...' : editingCategory ? 'Update' : 'Create'} Category

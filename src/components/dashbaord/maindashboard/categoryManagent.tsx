@@ -239,7 +239,7 @@ const CategoriesView: React.FC = () => {
                     <p className="text-gray-500 mt-1">Get started by creating your first category</p>
                     <button
                         onClick={() => handleCreateCategory('main')}
-                        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 inline-flex items-center gap-2"
+                        className="mt-4 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-light inline-flex items-center gap-2"
                     >
                         <Plus size={16} />
                         Create Main Category
@@ -278,7 +278,7 @@ const CategoriesView: React.FC = () => {
                 <div className="flex flex-wrap gap-2">
                     <button
                         onClick={() => handleCreateCategory('main')}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400 flex items-center gap-2"
+                        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-light disabled:bg-blue-400 flex items-center gap-2"
                         disabled={loading}
                     >
                         <Plus size={16} />
@@ -333,7 +333,7 @@ const CategoriesView: React.FC = () => {
                                 placeholder="Search categories..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+                                className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-full"
                             />
                         </div>
                     </div>
@@ -361,7 +361,7 @@ const CategoriesView: React.FC = () => {
 
                 {loading ? (
                     <div className="text-center py-8">
-                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                         <p className="mt-2 text-gray-500">Loading categories...</p>
                     </div>
                 ) : viewMode === 'hierarchy' ? (

@@ -170,7 +170,7 @@ const HeroSliderForm: React.FC<HeroSliderFormProps> = ({ slider, onSubmit, onCan
                 <p className="text-xs text-gray-500 mb-4">
                   PNG, JPG up to 5MB
                 </p>
-                <label className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer disabled:opacity-50">
+                <label className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-light cursor-pointer disabled:opacity-50">
                   Browse Files
                   <input
                     type="file"
@@ -202,7 +202,7 @@ const HeroSliderForm: React.FC<HeroSliderFormProps> = ({ slider, onSubmit, onCan
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter slider title"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 disabled={isUploading}
               />
             </div>
@@ -216,7 +216,7 @@ const HeroSliderForm: React.FC<HeroSliderFormProps> = ({ slider, onSubmit, onCan
                 onChange={(e) => setSubtitle(e.target.value)}
                 placeholder="Enter slider subtitle (optional)"
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 disabled={isUploading}
               />
             </div>
@@ -235,7 +235,7 @@ const HeroSliderForm: React.FC<HeroSliderFormProps> = ({ slider, onSubmit, onCan
             <button
               type="submit"
               disabled={isUploading || loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-light disabled:opacity-50 flex items-center gap-2"
             >
               {isUploading ? (
                 <>
@@ -494,7 +494,7 @@ const HeroSliderManager: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -515,7 +515,7 @@ const HeroSliderManager: React.FC = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-light"
           >
             <Plus className="w-4 h-4" />
             Add New Slider
@@ -550,7 +550,7 @@ const HeroSliderManager: React.FC = () => {
                 placeholder="Search sliders by title or subtitle..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
             
@@ -558,7 +558,7 @@ const HeroSliderManager: React.FC = () => {
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as any)}
-                className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -610,7 +610,7 @@ const HeroSliderManager: React.FC = () => {
               <p className="text-gray-600 mb-6">Get started by adding your first hero slider to engage visitors.</p>
               <button
                 onClick={() => setShowForm(true)}
-                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-light"
               >
                 Create First Slider
               </button>

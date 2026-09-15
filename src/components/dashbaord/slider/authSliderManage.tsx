@@ -120,7 +120,7 @@ const AuthSliderForm: React.FC<AuthSliderFormProps> = ({ slider, onSubmit, onCan
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={isUploading}
             />
           </div>
@@ -131,7 +131,7 @@ const AuthSliderForm: React.FC<AuthSliderFormProps> = ({ slider, onSubmit, onCan
               value={subtitle}
               onChange={(e) => setSubtitle(e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={isUploading}
             />
           </div>
@@ -143,7 +143,7 @@ const AuthSliderForm: React.FC<AuthSliderFormProps> = ({ slider, onSubmit, onCan
                 type="number"
                 value={sortOrder}
                 onChange={(e) => setSortOrder(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 disabled={isUploading}
               />
             </div>
@@ -164,7 +164,7 @@ const AuthSliderForm: React.FC<AuthSliderFormProps> = ({ slider, onSubmit, onCan
             <button type="button" onClick={onCancel} className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50" disabled={isUploading}>
               Cancel
             </button>
-            <button type="submit" disabled={isUploading} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
+            <button type="submit" disabled={isUploading} className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-light disabled:opacity-50 flex items-center gap-2">
               {isUploading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
@@ -251,7 +251,7 @@ const AuthSliderManager: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
@@ -267,7 +267,7 @@ const AuthSliderManager: React.FC = () => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-light"
         >
           <Plus className="w-4 h-4" />
           Add Slide
@@ -322,7 +322,7 @@ const AuthSliderManager: React.FC = () => {
               <ImageIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No auth slides yet</h3>
               <p className="text-gray-600 mb-6">Add slides to show on the login &amp; register pages.</p>
-              <button onClick={() => setShowForm(true)} className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <button onClick={() => setShowForm(true)} className="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-light">
                 Add First Slide
               </button>
             </div>

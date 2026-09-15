@@ -550,7 +550,7 @@ const CartAdmin: React.FC = () => {
             onClick={() => setShowDateFilter(!showDateFilter)}
             className={`flex items-center px-4 py-2 rounded-md transition-colors ${
               showDateFilter 
-                ? 'bg-blue-600 text-white' 
+                ? 'bg-primary text-white' 
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -589,7 +589,7 @@ const CartAdmin: React.FC = () => {
 
           <button
             onClick={() => fetchCarts(currentPage)}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-light transition-colors"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
@@ -618,7 +618,7 @@ const CartAdmin: React.FC = () => {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
             <div>
@@ -629,13 +629,13 @@ const CartAdmin: React.FC = () => {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
             <div className="flex space-x-2">
               <button
                 onClick={applyDateFilter}
-                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                className="flex-1 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-light transition-colors"
               >
                 Apply Filter
               </button>
@@ -1010,7 +1010,7 @@ const CartAdmin: React.FC = () => {
               {selectedCart.phone && (
                 <button
                   onClick={() => openSmsCompose(selectedCart)}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-light transition-colors"
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Send SMS

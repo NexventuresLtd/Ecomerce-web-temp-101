@@ -54,7 +54,7 @@ const ColorPicker: React.FC<{
                 <button
                     type="button"
                     onClick={() => setShowAddForm(!showAddForm)}
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    className="flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-light transition-colors text-sm"
                 >
                     <Plus size={16} />
                     Add Color
@@ -77,7 +77,7 @@ const ColorPicker: React.FC<{
                                     value={currentColor.name}
                                     onChange={(e) => setCurrentColor({ ...currentColor, name: e.target.value })}
                                     placeholder="Enter color name"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                                     disabled={loading}
                                 />
                             </div>
@@ -89,7 +89,7 @@ const ColorPicker: React.FC<{
                                     value={currentColor.stock || ''}
                                     onChange={(e) => setCurrentColor({ ...currentColor, stock: parseInt(e.target.value) || 0 })}
                                     placeholder="Enter stock quantity"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                                     disabled={loading}
                                 />
                             </div>
@@ -103,7 +103,7 @@ const ColorPicker: React.FC<{
                                         key={index}
                                         type="button"
                                         onClick={() => selectPredefinedColor(color)}
-                                        className={`p-2 rounded-lg border-2 transition-all ${currentColor.hex === color.hex ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-300'}`}
+                                        className={`p-2 rounded-lg border-2 transition-all ${currentColor.hex === color.hex ? 'border-primary ring-2 ring-blue-200' : 'border-gray-300'}`}
                                     >
                                         <div className="w-8 h-8 rounded-md" style={{ backgroundColor: color.hex }} />
                                         <div className="text-xs mt-1 text-gray-600 truncate">{color.name}</div>
@@ -127,7 +127,7 @@ const ColorPicker: React.FC<{
                             <button
                                 type="button"
                                 onClick={handleAddColor}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-light transition-colors disabled:bg-gray-400"
                                 disabled={loading || !currentColor.name.trim()}
                             >
                                 Add Color

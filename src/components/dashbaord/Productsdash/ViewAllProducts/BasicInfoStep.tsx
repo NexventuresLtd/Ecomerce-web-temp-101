@@ -55,7 +55,7 @@ const BasicInfoStep: React.FC<{
                                 <select
                                     value={selectedMain || ''}
                                     onChange={(e) => onMainChange(e.target.value ? parseInt(e.target.value) : null)}
-                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
                                     disabled={categoriesLoading || loading}
                                 >
                                     <option value="">Select Main Category</option>
@@ -71,7 +71,7 @@ const BasicInfoStep: React.FC<{
                                     value={selectedSub || ''}
                                     onChange={(e) => onSubChange(e.target.value ? parseInt(e.target.value) : null)}
                                     disabled={!selectedMain || categoriesLoading || loading}
-                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
                                 >
                                     <option value="">Select Sub Category</option>
                                     {categories.subCategories
@@ -89,7 +89,7 @@ const BasicInfoStep: React.FC<{
                                     value={formData.category_id}
                                     onChange={handleChange}
                                     disabled={!selectedSub || categoriesLoading || loading}
-                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
                                     required
                                 >
                                     <option value="">Select Product Category</option>
@@ -112,7 +112,7 @@ const BasicInfoStep: React.FC<{
                                 name="title"
                                 value={formData.title}
                                 onChange={handleChange}
-                                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                                 placeholder="Enter product title"
                                 required
                                 disabled={loading}
@@ -126,7 +126,7 @@ const BasicInfoStep: React.FC<{
                                 value={formData.description}
                                 onChange={handleChange}
                                 rows={4}
-                                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                                 placeholder="Enter product description"
                                 required
                                 disabled={loading}
@@ -146,7 +146,7 @@ const BasicInfoStep: React.FC<{
                                     name="price"
                                     value={formData.price}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                                     placeholder="Enter current price"
                                     required
                                     disabled={loading}
@@ -165,7 +165,7 @@ const BasicInfoStep: React.FC<{
                                     name="original_price"
                                     value={formData.original_price}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                                     placeholder="Enter old price"
                                     disabled={loading}
                                 />
@@ -183,7 +183,7 @@ const BasicInfoStep: React.FC<{
                                     name="discount"
                                     value={formData.discount}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                                     placeholder="Enter discount percentage"
                                     min="0"
                                     max="100"
@@ -203,7 +203,7 @@ const BasicInfoStep: React.FC<{
                                     name="instock"
                                     value={formData.instock}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                                     placeholder="Enter stock quantity"
                                     required
                                     disabled={loading}
@@ -218,7 +218,7 @@ const BasicInfoStep: React.FC<{
                                         name="is_active"
                                         checked={formData.is_active}
                                         onChange={handleChange}
-                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-primary"
                                         disabled={loading}
                                     />
                                     <label className="ml-2 text-sm text-gray-700">Active</label>
@@ -231,7 +231,7 @@ const BasicInfoStep: React.FC<{
                                     name="is_new"
                                     value={formData.is_new}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
                                     disabled={loading}
                                 >
                                     <option value="">Select Product State</option>
@@ -253,7 +253,7 @@ const BasicInfoStep: React.FC<{
                         name="delivery_fee"
                         value={formData.delivery_fee}
                         onChange={handleChange}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
                         disabled={loading}
                     >
                         <option value="">Select delivery option</option>
@@ -269,7 +269,7 @@ const BasicInfoStep: React.FC<{
                         name="warranty"
                         value={formData.warranty}
                         onChange={handleChange}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
                         disabled={loading}
                     >
                         <option value="">Select warranty</option>
@@ -286,7 +286,7 @@ const BasicInfoStep: React.FC<{
                         name="returnDay"
                         value={formData.returnDay}
                         onChange={handleChange}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
                         disabled={loading}
                     >
                         <option value="">Select return policy</option>
@@ -314,7 +314,7 @@ const BasicInfoStep: React.FC<{
                                 ...formData,
                                 is_featured: !formData.is_featured
                             })}
-                            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${formData.is_featured ? 'bg-blue-600' : 'bg-gray-200'
+                            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${formData.is_featured ? 'bg-primary' : 'bg-gray-200'
                                 }`}
                             disabled={loading}
                         >
@@ -340,7 +340,7 @@ const BasicInfoStep: React.FC<{
                     value={formData.brock}
                     onChange={handleChange}
                     rows={3}
-                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="Enter any Brock information"
                     disabled={loading}
                 />

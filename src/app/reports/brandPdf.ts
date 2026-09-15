@@ -179,7 +179,59 @@ export class BrandPdf {
         this.y += rows * (h + gap) + 2;
     }
 
-    table(head: string[], body: (string | number)[][], opts: { align?: ('left' | 'right' | 'center')[]; widths?: (number | undefined)[]; zebra?: boolean; fontSize?: number } = {}) {
+    // Short narrative bullets on a panel — the "so what" above the numbers.
+    highlights(lines: string[]) {
+        if (!lines.length) return;
+        const d = this.doc;
+        d.setFont('helvetica', 'normal'); d.setFontSize(9);
+        const wrapped = lines.map(l => d.splitTextToSize(l, this.contentW - 14) as string[]);
+        const h = wrapped.reduce((a, w) => a + w.length * 4.4, 0) + 8;
+        this.ensure(h + 4);
+        d.setFillColor(...BRAND.panel); d.setDrawColor(...BRAND.line);
+        d.roundedRect(this.margin, this.y, this.contentW, h, 1.8, 1.8, 'FD');
+        d.setFillColor(...BRAND.secondary); d.rect(this.margin, this.y, 1.4, h, 'F');
+        let y = this.y + 6;
+        for (const w of wrapped) {
+            d.setFillColor(...BRAND.primary); d.circle(this.margin + 7, y - 1.2, 0.8, 'F');
+            d.setTextColor(...BRAND.ink); d.text(w, this.margin + 11, y);
+            y += w.length * 4.4;
+        }
+        this.y += h + 6;
+    }
+
+    // Simple vertical bar chart (e.g. revenue per day). Values are scaled to
+    // the tallest bar; labels sit beneath, the value above each bar.
+    bars(series: { label: string; value: number }[], opts: { height?: number; format?: (v: number) => string } = {}) {
+        if (!series.length) return;
+        const H = opts.height ?? 42;
+        this.ensure(H + 16);
+        const d = this.doc;
+        const fmt = opts.format ?? ((v: number) => String(Math.round(v)));
+        const max = Math.max(...series.map(s => s.value), 1);
+        const n = series.length;
+        const gap = 2;
+        const w = Math.max(3, (this.contentW - gap * (n - 1)) / n);
+        const baseY = this.y + H;
+        d.setDrawColor(...BRAND.line); d.setLineWidth(0.2);
+        for (let i = 1; i <= 3; i++) {                     // faint gridlines
+            const gy = baseY - (H * i) / 4;
+            d.line(this.margin, gy, this.pageW - this.margin, gy);
+        }
+        d.line(this.margin, baseY, this.pageW - this.margin, baseY);
+        series.forEach((s, i) => {
+            const x = this.margin + i * (w + gap);
+            const bh = (s.value / max) * (H - 8);
+            d.setFillColor(...(s.value === max ? BRAND.primary : BRAND.secondary));
+            d.roundedRect(x, baseY - bh, w, bh, 0.6, 0.6, 'F');
+            d.setFont('helvetica', 'bold'); d.setFontSize(6); d.setTextColor(...BRAND.ink);
+            if (bh > 0 && (n <= 16 || s.value === max)) d.text(fmt(s.value), x + w / 2, baseY - bh - 1.2, { align: 'center' });
+            d.setFont('helvetica', 'normal'); d.setTextColor(...BRAND.muted);
+            if (n <= 16 || i % Math.ceil(n / 12) === 0) d.text(s.label, x + w / 2, baseY + 3.8, { align: 'center' });
+        });
+        this.y = baseY + 9;
+    }
+
+    table(head: string[], body: (string | number)[][], opts: { align?: ('left' | 'right' | 'center')[]; widths?: (number | undefined)[]; zebra?: boolean; fontSize?: number; cellStyle?: (col: number, value: string) => { textColor?: [number, number, number]; fontStyle?: 'bold' | 'normal' } | null } = {}) {
         this.ensure(20);
         const columnStyles: Record<number, any> = {};
         head.forEach((_, i) => {
@@ -201,6 +253,12 @@ export class BrandPdf {
             columnStyles,
             // autoTable creates its own pages for long tables — brand those too.
             didDrawPage: () => this.slimHeader(),
+            didParseCell: (data: any) => {
+                if (data.section !== 'body' || !opts.cellStyle) return;
+                const st = opts.cellStyle(data.column.index, String(data.cell.raw ?? ''));
+                if (st?.textColor) data.cell.styles.textColor = st.textColor;
+                if (st?.fontStyle) data.cell.styles.fontStyle = st.fontStyle;
+            },
         });
         this.y = ((this.doc as any).lastAutoTable?.finalY ?? this.y) + 6;
     }

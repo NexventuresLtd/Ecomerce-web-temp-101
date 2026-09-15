@@ -112,7 +112,7 @@ const ImageManager: React.FC<ImageManagerProps> = ({
                                     className="w-full h-24 object-cover rounded-lg"
                                 />
                                 {index === 0 && (
-                                    <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">
+                                    <div className="absolute top-2 left-2 bg-primary text-white px-2 py-1 rounded text-xs font-medium">
                                         Primary
                                     </div>
                                 )}
@@ -156,7 +156,7 @@ const ImageManager: React.FC<ImageManagerProps> = ({
                                     className="w-full h-24 object-cover rounded-lg"
                                 />
                                 {image.is_primary && (
-                                    <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">
+                                    <div className="absolute top-2 left-2 bg-primary text-white px-2 py-1 rounded text-xs font-medium">
                                         Primary
                                     </div>
                                 )}

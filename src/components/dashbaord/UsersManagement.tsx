@@ -311,7 +311,7 @@ const UsersManagement = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="text-gray-600 mt-4">Loading users data...</p>
         </div>
       </div>
@@ -368,7 +368,7 @@ const UsersManagement = () => {
                   placeholder="Search by name, email, or phone..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
             </div>
@@ -381,7 +381,7 @@ const UsersManagement = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -397,7 +397,7 @@ const UsersManagement = () => {
               <select
                 value={verificationFilter}
                 onChange={(e) => setVerificationFilter(e.target.value as any)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 <option value="all">All</option>
                 <option value="verified">Verified</option>
@@ -413,7 +413,7 @@ const UsersManagement = () => {
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 <option value="all">All Roles</option>
                 {uniqueRoles.map(role => (
@@ -535,14 +535,14 @@ const UsersManagement = () => {
                         value={user.role}
                         onChange={(e) => updateUserRole(user.id, e.target.value)}
                         disabled={updatingUser === user.id || !user.email || !canEdit(user)}
-                        className={`text-xs px-2 py-1 rounded-full border ${getRoleColor(user.role)} focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer`}
+                        className={`text-xs px-2 py-1 rounded-full border ${getRoleColor(user.role)} focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer`}
                       >
                         {ROLE_OPTIONS.map(r => (
                           <option key={r.value} value={r.value}>{r.label}</option>
                         ))}
                       </select>
                       {updatingUser === user.id && (
-                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 ml-1 inline-block"></div>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary ml-1 inline-block"></div>
                       )}
                       {(user.role === 'admin' || user.is_super_admin) && !iAmSuper && user.is_super_admin && (
                         <span className="block mt-1 text-xs px-2 py-0.5 rounded-full border text-amber-700 bg-amber-50 border-amber-200 w-fit">★ Super Admin</span>
@@ -928,7 +928,7 @@ const UsersManagement = () => {
                         type="text"
                         value={messageSubject}
                         onChange={(e) => setMessageSubject(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                         placeholder="Message subject"
                       />
                     </div>
@@ -940,7 +940,7 @@ const UsersManagement = () => {
                       value={messageBody}
                       onChange={(e) => setMessageBody(e.target.value)}
                       rows={5}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                       placeholder="Type your message..."
                     />
                     <p className="text-xs text-gray-500 mt-1">{messageBody.length} characters</p>

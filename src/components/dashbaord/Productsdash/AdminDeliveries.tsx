@@ -176,7 +176,7 @@ const InvoiceVerifier = () => {
                     value={input}
                     onChange={e => { setInput(e.target.value); setError(''); setResult(null); }}
                     placeholder="e.g. UMK-20260514-000042-A1B2C3D4"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono"
                     onKeyDown={e => e.key === 'Enter' && verify()}
                 />
                 <button
@@ -327,7 +327,7 @@ const AdminDeliveries = ({ deliveryTypeFilter = 'all' }: { deliveryTypeFilter?: 
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input type="text" value={search} onChange={e => setSearch(e.target.value)}
                     placeholder="Search by name, email, phone, invoice or address…"
-                    className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
 
             {/* List */}

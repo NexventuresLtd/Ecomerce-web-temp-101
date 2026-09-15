@@ -410,7 +410,7 @@ const umukameziDashboard = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="text-gray-600 mt-4">Loading dashboard data...</p>
         </div>
       </div>
@@ -453,7 +453,7 @@ const umukameziDashboard = () => {
               <select
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-auto"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-auto"
                 aria-label="Select time range"
               >
                 <option value="7d">Last 7 days</option>
@@ -462,7 +462,7 @@ const umukameziDashboard = () => {
               </select>
               <button
                 onClick={downloadReport}
-                className="hidden gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto"
+                className="hidden gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-light transition-colors w-full sm:w-auto"
                 aria-label="Export report"
               >
                 <Download size={16} />

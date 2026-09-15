@@ -37,7 +37,7 @@ const ViewProdTable = ({
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
                         <p className="text-gray-600 text-lg">Loading products...</p>
                         <p className="text-gray-400 text-sm mt-2">Please wait while we fetch your products</p>
                     </div>
@@ -98,7 +98,7 @@ const ViewProdTable = ({
                                                     {!searchTerm && (
                                                         <button
                                                             onClick={() => setShowAddForm(true)}
-                                                            className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors text-sm font-medium"
+                                                            className="mt-4 bg-primary text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-primary-light transition-colors text-sm font-medium"
                                                         >
                                                             <Plus size={16} />
                                                             Add Your First Product

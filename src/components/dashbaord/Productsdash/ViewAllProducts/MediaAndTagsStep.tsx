@@ -58,14 +58,14 @@ const MediaAndTagsStep: React.FC<{
                                 value={currentTag}
                                 onChange={(e) => setCurrentTag(e.target.value)}
                                 placeholder="Enter a tag"
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                                 disabled={loading}
                                 onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
                             />
                             <button
                                 type="button"
                                 onClick={handleAddTag}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-light transition-colors disabled:bg-gray-400"
                                 disabled={loading || !currentTag.trim()}
                             >
                                 Add
@@ -99,7 +99,7 @@ const MediaAndTagsStep: React.FC<{
                         value={formData.tutorial_video}
                         onChange={(e) => onChange({ ...formData, tutorial_video: e.target.value })}
                         placeholder="Enter YouTube or video URL"
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         disabled={loading}
                     />
                     <p className="text-sm text-gray-500">Enter a URL for product tutorial or demonstration video</p>

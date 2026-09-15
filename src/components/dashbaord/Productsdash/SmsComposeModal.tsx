@@ -55,7 +55,7 @@ const SmsComposeModal: React.FC<SmsComposeModalProps> = ({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm"
             placeholder="Type the SMS message..."
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -73,7 +73,7 @@ const SmsComposeModal: React.FC<SmsComposeModalProps> = ({
           <button
             onClick={() => onSend(message)}
             disabled={sending || !message.trim()}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <MessageSquare className="w-4 h-4 mr-2" />
             {sending ? 'Sending...' : 'Send SMS'}

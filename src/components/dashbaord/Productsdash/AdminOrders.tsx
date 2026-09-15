@@ -16,7 +16,8 @@ import {
     Download,
 } from 'lucide-react';
 import { paymentService, type AdminOrder } from '../../../app/products/paymentService';
-import { createReportDoc, addReportFooter, drawSummaryBand, REPORT_TABLE_THEME } from '../../../app/utils/pdfReport';
+import { BrandPdf, loadLogo, downloadCsv } from '../../../app/reports/brandPdf';
+import { getAdminErrorMessage } from '../../../app/utils/getAdminErrorMessage';
 
 const RWF = new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', minimumFractionDigits: 0 });
 
@@ -108,7 +109,7 @@ const OrderRow = ({ order }: { order: AdminOrder }) => {
 
                         {/* Items expand */}
                         <button onClick={() => setExpanded(!expanded)}
-                            className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800">
+                            className="flex items-center gap-1 text-xs font-medium text-primary hover:text-blue-800">
                             {order.items_count} item{order.items_count !== 1 ? 's' : ''}
                             {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                         </button>
@@ -191,55 +192,93 @@ const AdminOrders = () => {
 
     useEffect(() => { loadOrders(1, statusFilter); }, []);
 
+    // The API caps a page at 100 rows, so an export walks every page of the
+    // current filter instead of asking for everything at once (that request
+    // was rejected with 422 and the button silently did nothing).
+    const fetchAllMatching = async (status: string) => {
+        const all: AdminOrder[] = [];
+        let summaryOut = summary;
+        let next = 1;
+        for (let guard = 0; guard < 50; guard++) {            // hard stop at 5,000 rows
+            const data = await paymentService.getAllOrders(next, 100, status);
+            all.push(...(data.orders || []));
+            if (data.summary) summaryOut = { ...summaryOut, ...data.summary };
+            if (!data.pagination?.has_next) break;
+            next = (data.pagination.page || next) + 1;
+        }
+        return { orders: all, summary: summaryOut };
+    };
+
+    const statusLabel = (st: string) => st === 'SUCCESSFUL' ? 'Paid' : st === 'FAILED' ? 'Failed' : 'Pending';
+    const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
     const generatePDFReport = async () => {
         setGeneratingReport(true);
         try {
-            // Pull every matching transaction (not just the current page) for the export.
-            const data = await paymentService.getAllOrders(1, 1000, statusFilter.toLowerCase());
-            const reportOrders = data.orders || [];
+            const { orders: rows, summary: sm } = await fetchAllMatching(statusFilter.toLowerCase());
+            const logo = await loadLogo();
+            const subtitle = statusFilter === 'ALL' ? 'All customer purchases' : `${statusLabel(statusFilter)} purchases only`;
+            const pdf = new BrandPdf('Transactions Report', `${subtitle} · generated ${fmtDate(new Date().toISOString())}`, logo);
 
-            const subtitle = statusFilter !== 'ALL' ? `Filter: ${statusFilter}` : undefined;
-            const doc = await createReportDoc('TRANSACTIONS REPORT', subtitle);
-            const pageWidth = doc.internal.pageSize.getWidth();
+            const total = sm.total_orders ?? rows.length;
+            const paid = sm.successful_orders ?? 0;
+            const failed = sm.failed_orders ?? 0;
+            const pending = sm.pending_orders ?? 0;
+            const revenue = sm.total_revenue ?? rows.filter(o => o.status === 'SUCCESSFUL').reduce((a, o) => a + o.total_amount, 0);
+            const rate = total ? (paid / total) * 100 : 0;
 
-            const reportSummary = data.summary || summary;
-            let yPosition = drawSummaryBand(doc, 48, [
-                { label: 'Total Orders', value: (reportSummary.total_orders ?? 0).toString() },
-                { label: 'Revenue', value: RWF.format(reportSummary.total_revenue ?? 0) },
-                { label: 'Successful', value: (reportSummary.successful_orders ?? 0).toString() },
-                { label: 'Pending', value: (reportSummary.pending_orders ?? 0).toString() },
-                { label: 'Failed', value: (reportSummary.failed_orders ?? 0).toString() },
+            pdf.section('Summary');
+            pdf.kpis([
+                { label: 'Revenue', value: RWF.format(revenue), sub: 'successful payments only', tone: 'success' },
+                { label: 'Total attempts', value: String(total), tone: 'primary' },
+                { label: 'Paid', value: String(paid), sub: `${rate.toFixed(0)}% success rate`, tone: 'success' },
+                { label: 'Avg order value', value: RWF.format(paid ? revenue / paid : 0), tone: 'secondary' },
+                { label: 'Pending', value: String(pending), tone: 'warning' },
+                { label: 'Failed', value: String(failed), sub: total ? `${((failed / total) * 100).toFixed(0)}% of attempts` : undefined, tone: 'accent' },
+                { label: 'Home delivery', value: String(rows.filter(o => o.delivery_type === 'delivery').length), sub: 'orders', tone: 'secondary' },
+                { label: 'Office pickup', value: String(rows.filter(o => o.delivery_type === 'pickup').length), sub: 'orders', tone: 'secondary' },
             ]);
 
-            if (reportOrders.length > 0) {
-                const tableData = reportOrders.map((o) => [
-                    o.external_id,
-                    o.buyer_name || '—',
-                    o.buyer_email || '—',
-                    o.payer_phone || 'N/A',
-                    RWF.format(o.total_amount),
-                    o.status,
-                    new Date(o.created_at).toLocaleDateString(),
-                ]);
-
-                doc.autoTable({
-                    ...REPORT_TABLE_THEME,
-                    startY: yPosition,
-                    head: [['Order ID', 'Buyer', 'Email', 'Phone', 'Amount', 'Status', 'Date']],
-                    body: tableData,
-                    margin: { left: 14, right: 14 },
-                });
+            pdf.section(`Transactions (${rows.length})`);
+            if (rows.length === 0) {
+                pdf.note('No transactions match the selected filter.');
             } else {
-                doc.setFontSize(11);
-                doc.setFont('helvetica', 'italic');
-                doc.text('No transactions found for the selected filter.', pageWidth / 2, yPosition + 10, { align: 'center' });
+                pdf.table(
+                    ['Invoice', 'Date', 'Customer', 'Phone', 'Items', 'Amount', 'Status', 'Fulfilment'],
+                    rows.map(o => [
+                        o.invoice_number || o.external_id, fmtDate(o.created_at), o.buyer_name || '—', o.payer_phone || '—',
+                        o.items_count ?? o.items?.length ?? 0, RWF.format(o.total_amount), statusLabel(o.status),
+                        o.delivery_type === 'delivery' ? 'Delivery' : 'Pickup',
+                    ]),
+                    {
+                        align: ['left', 'left', 'left', 'left', 'right', 'right', 'left', 'left'],
+                        widths: [50, 21, undefined, 26, 11, 25, 14, 17], fontSize: 7.2,
+                        cellStyle: (col, v) => col === 6
+                            ? (v === 'Paid' ? { textColor: [21, 128, 61], fontStyle: 'bold' } : v === 'Failed' ? { textColor: [185, 28, 28], fontStyle: 'bold' } : { textColor: [161, 98, 7] })
+                            : null,
+                    },
+                );
             }
 
-            addReportFooter(doc);
-            doc.save(`transactions-report-${new Date().toISOString().split('T')[0]}.pdf`);
+            pdf.finish().save(`umukamezi-transactions-${statusFilter.toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`);
         } catch (e) {
             console.error('Error generating transactions report:', e);
-            alert('Failed to generate PDF report. Please try again.');
+            setError(getAdminErrorMessage(e, 'Failed to generate the transactions report'));
+        } finally {
+            setGeneratingReport(false);
+        }
+    };
+
+    const exportCsv = async () => {
+        setGeneratingReport(true);
+        try {
+            const { orders: rows } = await fetchAllMatching(statusFilter.toLowerCase());
+            downloadCsv(`umukamezi-transactions-${statusFilter.toLowerCase()}-${new Date().toISOString().split('T')[0]}.csv`,
+                ['Invoice', 'External ID', 'Transaction ID', 'Date', 'Customer', 'Email', 'Phone', 'Items', 'Amount (RWF)', 'Status', 'Fulfilment', 'Delivery status', 'Address'],
+                rows.map(o => [o.invoice_number, o.external_id, o.transaction_id ?? '', o.created_at ? new Date(o.created_at).toLocaleString() : '',
+                    o.buyer_name, o.buyer_email, o.payer_phone, o.items_count ?? o.items?.length ?? 0, o.total_amount, o.status, o.delivery_type, o.delivery_status, o.delivery_address ?? '']));
+        } catch (e) {
+            setError(getAdminErrorMessage(e, 'Failed to export CSV'));
         } finally {
             setGeneratingReport(false);
         }
@@ -272,12 +311,20 @@ const AdminOrders = () => {
                 </div>
                 <div className="flex gap-2">
                     <button
-                        onClick={generatePDFReport}
+                        onClick={exportCsv}
                         disabled={generatingReport}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
                     >
                         <Download className="w-4 h-4" />
-                        {generatingReport ? 'Generating...' : 'Export Report'}
+                        CSV
+                    </button>
+                    <button
+                        onClick={generatePDFReport}
+                        disabled={generatingReport}
+                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-light transition-colors disabled:opacity-50"
+                    >
+                        <Download className="w-4 h-4" />
+                        {generatingReport ? 'Generating…' : 'Export PDF'}
                     </button>
                     <button
                         onClick={() => loadOrders(page, statusFilter)}
@@ -293,7 +340,7 @@ const AdminOrders = () => {
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div className="bg-white border border-gray-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-1">
-                        <ShoppingBag className="w-4 h-4 text-blue-600" />
+                        <ShoppingBag className="w-4 h-4 text-primary" />
                         <span className="text-xs text-gray-500 uppercase tracking-wide">Total</span>
                     </div>
                     <p className="text-2xl font-bold text-gray-900">{summary.total_orders}</p>
@@ -337,7 +384,7 @@ const AdminOrders = () => {
                         placeholder="Search by name, email, phone or order ID…"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                 </div>
                 <div className="flex gap-1 bg-gray-100 rounded-lg p-1 flex-wrap">

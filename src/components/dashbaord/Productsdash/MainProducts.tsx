@@ -294,7 +294,7 @@ const ProductManagement: React.FC = () => {
                             <select
                                 value={entriesPerPage}
                                 onChange={(e) => setEntriesPerPage(Number(e.target.value))}
-                                className="bg-white border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="bg-white border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
                             >
                                 <option value={10}>10</option>
                                 <option value={25}>25</option>
@@ -343,7 +343,7 @@ const ProductManagement: React.FC = () => {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 onKeyPress={handleKeyPress}
-                                className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 bg-white"
+                                className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent w-64 bg-white"
                             />
                             <button
                                 onClick={handleSearch}
@@ -358,7 +358,7 @@ const ProductManagement: React.FC = () => {
                         <select
                             value={currentSort}
                             onChange={(e) => setCurrentSort(e.target.value as SortOption)}
-                            className="bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
                         >
                             <option value="newest">Newest First</option>
                             <option value="oldest">Oldest First</option>
@@ -390,7 +390,7 @@ const ProductManagement: React.FC = () => {
                                 ...prev,
                                 productCategoryId: e.target.value === 'all' ? 'all' : Number(e.target.value)
                             }))}
-                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
                         >
                             <option value="all">All Categories</option>
                             {productCategories.map(cat => (
@@ -410,7 +410,7 @@ const ProductManagement: React.FC = () => {
                                 ...prev,
                                 stockStatus: e.target.value as StockStatus
                             }))}
-                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
                         >
                             <option value="all">All Products</option>
                             <option value="active">Active</option>
@@ -431,7 +431,7 @@ const ProductManagement: React.FC = () => {
                                 ...prev,
                                 condition: e.target.value as Condition
                             }))}
-                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
                         >
                             <option value="all">New & Used</option>
                             <option value="new">New Only</option>
@@ -450,7 +450,7 @@ const ProductManagement: React.FC = () => {
                                 ...prev,
                                 featuredOnly: e.target.value === 'featured'
                             }))}
-                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
                         >
                             <option value="all">All Products</option>
                             <option value="featured">Featured Only</option>
@@ -514,7 +514,7 @@ const ProductManagement: React.FC = () => {
                                 ...prev,
                                 minRating: Number(e.target.value)
                             }))}
-                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
                         >
                             <option value={0}>Any Rating</option>
                             <option value={4}>4★ & above</option>

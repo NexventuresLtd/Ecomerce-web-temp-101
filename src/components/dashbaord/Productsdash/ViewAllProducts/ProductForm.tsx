@@ -329,8 +329,8 @@ const ProductForm: React.FC<{
                             return (
                                 <div key={stepItem.number} className="flex items-center flex-shrink-0">
                                     <div className="flex items-center">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${isCompleted ? 'bg-blue-600 border-blue-600 text-white' :
-                                            isCurrent ? 'border-blue-600 text-blue-600 bg-blue-50' :
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${isCompleted ? 'bg-primary border-primary text-white' :
+                                            isCurrent ? 'border-primary text-blue-600 bg-blue-50' :
                                                 'border-gray-300 text-gray-400'
                                             }`}>
                                             {isCompleted ? <Check size={16} /> : <Icon size={16} />}
@@ -341,7 +341,7 @@ const ProductForm: React.FC<{
                                         </span>
                                     </div>
                                     {index < steps.length - 1 && (
-                                        <div className={`w-6 h-0.5 mx-3 ${stepItem.number < step ? 'bg-blue-600' : 'bg-gray-300'}`} />
+                                        <div className={`w-6 h-0.5 mx-3 ${stepItem.number < step ? 'bg-primary' : 'bg-gray-300'}`} />
                                     )}
                                 </div>
                             );
@@ -408,7 +408,7 @@ const ProductForm: React.FC<{
                             <button
                                 onClick={handlePartialUpdate}
                                 disabled={partialUpdateLoading || loading}
-                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors font-medium"
+                                className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-light disabled:bg-blue-400 transition-colors font-medium"
                             >
                                 {partialUpdateLoading ? (
                                     <>
